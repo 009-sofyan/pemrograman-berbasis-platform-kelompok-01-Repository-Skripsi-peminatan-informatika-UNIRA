@@ -1,0 +1,24 @@
+import { Router } from "express";
+import {
+    createSkripsi,
+    getSkripsi,
+    getSkripsiById,
+    updateSkripsi,
+    deleteSkripsi,
+    submitSkripsi,
+    getPengajuanSkripsi,
+} from "../controllers/skripsiControllers.js";
+import { authMiddleware } from "../middlewares/authMiddleware.js";
+
+
+const router = Router();
+
+router.get("/pengajuan", authMiddleware, getPengajuanSkripsi);
+router.post("/", authMiddleware,createSkripsi);
+router.get("/", authMiddleware, getSkripsi);
+router.get("/:id", authMiddleware,getSkripsiById);
+router.put("/:id", authMiddleware, updateSkripsi);
+router.delete("/:id", authMiddleware, deleteSkripsi);
+router.patch("/:id/submit", authMiddleware, submitSkripsi);
+
+export default router;

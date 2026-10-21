@@ -40,7 +40,6 @@ export function authMiddleware(
         }
 
         const decoded = jwt.verify(token, getJwtSecret());
-        
         if (
             typeof decoded === "string" ||
             typeof decoded.id !== "number" ||

@@ -8,6 +8,13 @@
       "when": 1792110065782,
       "tag": "0000_abandoned_lord_tyger",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1792550040470,
+      "tag": "0001_new_nekra",
+      "breakpoints": true
     }
   ]
 }
