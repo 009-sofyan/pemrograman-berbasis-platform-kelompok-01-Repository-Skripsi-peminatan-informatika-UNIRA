@@ -4,6 +4,7 @@ import { db } from './db/index.js';
 import authRoutes from "./routes/authRoutes.js";
 import skripsiRoutes from "./routes/skripsiRoutes.js";
 import mahasiswaRoutes from "./routes/mahasiswaRoutes.js";
+import persetujuanRoutes from "./routes/persetujuanRoutes.js";
 
 const app = express();
 
@@ -29,6 +30,8 @@ app.get('/health', async (_req, res) => {
 app.use("/api/auth",authRoutes);
 app.use("/api/skripsi", skripsiRoutes);
 app.use("/api/mahasiswa", mahasiswaRoutes);
+app.use("/api/persetujuan", persetujuanRoutes);
+
 app.listen(3000, () => {
   console.log('Server berjalan di http://localhost:3000');
 });

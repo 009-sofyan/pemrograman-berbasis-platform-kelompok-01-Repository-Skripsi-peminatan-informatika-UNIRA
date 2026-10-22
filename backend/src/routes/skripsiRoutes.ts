@@ -6,14 +6,12 @@ import {
     updateSkripsi,
     deleteSkripsi,
     submitSkripsi,
-    getPengajuanSkripsi,
 } from "../controllers/skripsiControllers.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 
 
 const router = Router();
 
-router.get("/pengajuan", authMiddleware, getPengajuanSkripsi);
 router.post("/", authMiddleware,createSkripsi);
 router.get("/", authMiddleware, getSkripsi);
 router.get("/:id", authMiddleware,getSkripsiById);
