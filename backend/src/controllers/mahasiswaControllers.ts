@@ -19,13 +19,11 @@ export const createMahasiswa = async (
       });
     }
 
-    const { nama, email, password, nim, programStudi, peminatan } =
-      req.body;
+    const { email, nim, programStudi } = req.body;
 
-    if (!nama || !email || !password || !nim || !programStudi) {
+    if (!email || !nim || !programStudi) {
       return res.status(400).json({
-        message:
-          "Nama, email, password, NIM, dan program studi wajib diisi",
+        message: "Email, NIM, dan program studi wajib diisi",
       });
     }
 
@@ -38,51 +36,58 @@ export const createMahasiswa = async (
       .where(eq(users.email, emailNormalized))
       .limit(1);
 
-    if (existingUser) {
-      return res.status(409).json({
-        message: "Email sudah terdaftar",
+    if (!existingUser) {
+      return res.status(404).json({
+        message: "Akun mahasiswa belum terdaftar. Mahasiswa harus register terlebih dahulu",
       });
     }
 
-    const [existingMahasiswa] = await db
+    if (existingUser.role !== "mahasiswa") {
+      return res.status(400).json({
+        message: "Email tersebut bukan akun mahasiswa",
+      });
+    }
+
+    const [existingData] = await db
+      .select()
+      .from(mahasiswa)
+      .where(eq(mahasiswa.userId, existingUser.id))
+      .limit(1);
+
+    if (existingData) {
+      return res.status(409).json({
+        message: "Akun ini sudah memiliki data mahasiswa",
+      });
+    }
+
+    const [existingNim] = await db
       .select()
       .from(mahasiswa)
       .where(eq(mahasiswa.nim, nimNormalized))
       .limit(1);
 
-    if (existingMahasiswa) {
+    if (existingNim) {
       return res.status(409).json({
         message: "NIM sudah terdaftar",
       });
     }
 
-    const hashedPassword = await bcrypt.hash(String(password), 10);
-
-    const result = await db.insert(users).values({
-      nama: String(nama).trim(),
-      email: emailNormalized,
-      password: hashedPassword,
-      role: "mahasiswa",
-    });
-
-    const userId = Number(result[0].insertId);
-
     await db.insert(mahasiswa).values({
-      userId,
+      userId: existingUser.id,
       nim: nimNormalized,
       programStudi: String(programStudi).trim(),
-      peminatan: peminatan ? String(peminatan).trim() : null,
+      peminatan: null,
     });
 
     return res.status(201).json({
       message: "Data mahasiswa berhasil ditambahkan",
       data: {
-        userId,
-        nama: String(nama).trim(),
-        email: emailNormalized,
+        userId: existingUser.id,
+        nama: existingUser.nama,
+        email: existingUser.email,
         nim: nimNormalized,
         programStudi: String(programStudi).trim(),
-        peminatan: peminatan ? String(peminatan).trim() : null,
+        peminatan: null,
       },
     });
   } catch (error) {
@@ -93,6 +98,7 @@ export const createMahasiswa = async (
     });
   }
 };
+
 
 
 export const getMahasiswa = async (

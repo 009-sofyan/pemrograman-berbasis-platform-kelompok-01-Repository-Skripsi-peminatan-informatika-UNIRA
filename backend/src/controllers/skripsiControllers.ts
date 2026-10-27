@@ -1,5 +1,5 @@
 import type { Response } from "express";
-import { eq, desc } from "drizzle-orm";
+import { count, eq, desc, and, like} from "drizzle-orm";
 import { db } from "../db/index.js";
 import { skripsi } from "../db/skripsi.js";
 import { mahasiswa } from "../db/mahasiswa.js";
@@ -63,42 +63,83 @@ export async function createSkripsi(
     }
 }
 
-export async function getSkripsi(
-    _req: AuthRequest,
-    res: Response
-) {
-    try {
-        const data = await db
-            .select({
-                id: skripsi.id,
-                judul: skripsi.judul,
-                abstrak: skripsi.abstrak,
-                tahun: skripsi.tahun,
-                fileUrl: skripsi.fileUrl,
-                status: skripsi.status,
-                createAt: skripsi.createdAt,
-                mahasiswaId: mahasiswa.id,
-                nim: mahasiswa.nim,
-                programStudi: mahasiswa.programStudi,
-                peminatan: mahasiswa.peminatan,
-            })
-            .from(skripsi)
-            .innerJoin(
-                mahasiswa,
-                eq(skripsi.mahasiswaId, mahasiswa.id)
-            )
-            .orderBy(desc(skripsi.createdAt));
-        return res.status(200).json({
-            message: "Daftar skripsi berhasil diambil", data
-        });
-    } catch (error) {
-        console.log("Gagal mengambil daftar skripsi:", error);
-        return res.status(500).json({
-            message: "Terjadi kesalahan pada server",
-        });
-    }
-}
 
+export async function getSkripsi(
+  req: AuthRequest,
+  res: Response
+) {
+  try {
+    const { search, tahun, programStudi, peminatan } = req.query;
+
+    const conditions = [];
+
+    if (typeof search === "string" && search.trim()) {
+      conditions.push(like(skripsi.judul, `%${search.trim()}%`));
+    }
+
+    if (typeof tahun === "string" && tahun.trim()) {
+      const tahunNumber = Number(tahun);
+
+      if (!Number.isInteger(tahunNumber) || tahunNumber < 1900) {
+        return res.status(400).json({
+          message: "Filter tahun tidak valid",
+        });
+      }
+
+      conditions.push(eq(skripsi.tahun, tahunNumber));
+    }
+
+    if (typeof programStudi === "string" && programStudi.trim()) {
+      conditions.push(
+        like(mahasiswa.programStudi, `%${programStudi.trim()}%`)
+      );
+    }
+
+    if (typeof peminatan === "string" && peminatan.trim()) {
+      conditions.push(
+        like(mahasiswa.peminatan, `%${peminatan.trim()}%`)
+      );
+    }
+
+    const query = db
+      .select({
+        id: skripsi.id,
+        judul: skripsi.judul,
+        abstrak: skripsi.abstrak,
+        tahun: skripsi.tahun,
+        fileUrl: skripsi.fileUrl,
+        status: skripsi.status,
+        createdAt: skripsi.createdAt,
+        mahasiswaId: mahasiswa.id,
+        nim: mahasiswa.nim,
+        programStudi: mahasiswa.programStudi,
+        peminatan: mahasiswa.peminatan,
+      })
+      .from(skripsi)
+      .innerJoin(
+        mahasiswa,
+        eq(skripsi.mahasiswaId, mahasiswa.id)
+      );
+
+    const data = await (
+      conditions.length > 0
+        ? query.where(and(...conditions))
+        : query
+    ).orderBy(desc(skripsi.createdAt));
+
+    return res.status(200).json({
+      message: "Daftar skripsi berhasil diambil",
+      total: data.length,
+      data,
+    });
+  } catch (error) {
+    console.error("Gagal mengambil daftar skripsi:", error);
+
+    return res.status(500).json({
+      message: "Terjadi kesalahan pada server",
+    });
+  }
+}
 
 export async function getSkripsiById(
     req: AuthRequest,
