@@ -8,8 +8,14 @@ import persetujuanRoutes from "./routes/persetujuanRoutes.js";
 import peminatanRoutes from "./routes/peminatanRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import pemetaanRoutes from "./routes/pemetaanRoutes.js";
+import path from "node:path";
 
 const app = express();
+
+app.use(
+  "/uploads",
+  express.static(path.resolve("upload"))
+);
 
 app.get("/", (_req, res) => {
   res.json({

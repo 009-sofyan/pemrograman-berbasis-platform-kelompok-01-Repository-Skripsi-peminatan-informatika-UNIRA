@@ -4,6 +4,8 @@ import { db } from "../db/index.js";
 import { skripsi } from "../db/skripsi.js";
 import { mahasiswa } from "../db/mahasiswa.js";
 import type { AuthRequest } from "../middlewares/authMiddleware";
+import fs from "node:fs";
+import path from "node:path";
 
 export async function createSkripsi(
     req: AuthRequest,
@@ -507,6 +509,99 @@ export async function submitSkripsi(
     }
 }
 
+export async function uploadFileSkripsi(
+    req: AuthRequest,
+    res: Response
+) {
+    try {
+        if (!req.user) {
+            return res.status(401).json({
+                message: "Autentikasi diperlukan",
+            });
+        }
+
+        if (req.user.role !== "mahasiswa") {
+            return res.status(403).json({
+                message: "Hanya mahasiswa yang dapat mengunggah file skripsi",
+            });
+        }
+
+        const id = Number(req.params.id);
+
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(400).json({
+                message: "ID skripsi tidak valid",
+            });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({
+                message: "File PDF wajib diunggah",
+            });
+        }
+
+        const [dataMahasiswa] = await db
+            .select({ id: mahasiswa.id })
+            .from(mahasiswa)
+            .where(eq(mahasiswa.userId, req.user.id))
+            .limit(1);
+
+        if (!dataMahasiswa) {
+            fs.unlinkSync(req.file.path);
+
+            return res.status(404).json({
+                message: "Data mahasiswa belum terdaftar",
+            });
+        }
+
+        const [dataSkripsi] = await db
+            .select({
+                id: skripsi.id,
+                mahasiswaId: skripsi.mahasiswaId,
+            })
+            .from(skripsi)
+            .where(eq(skripsi.id, id))
+            .limit(1);
+
+        if (!dataSkripsi) {
+            fs.unlinkSync(req.file.path);
+
+            return res.status(404).json({
+                message: "Skripsi tidak ditemukan",
+            });
+        }
+
+        if (dataSkripsi.mahasiswaId !== dataMahasiswa.id) {
+            fs.unlinkSync(req.file.path);
+
+            return res.status(403).json({
+                message: "Kamu hanya dapat mengunggah file skripsi milik sendiri",
+            });
+        }
+
+        const fileUrl = `/uploads/skripsi/${path.basename(req.file.path)}`;
+
+        await db
+            .update(skripsi)
+            .set({ fileUrl })
+            .where(eq(skripsi.id, id));
+
+        return res.status(200).json({
+            message: "File skripsi berhasil diunggah",
+            fileUrl,
+        });
+    } catch (error) {
+        if (req.file && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
+
+        console.error("Gagal mengunggah file skripsi:", error);
+
+        return res.status(500).json({
+            message: "Terjadi kesalahan pada server",
+        });
+    }
+}
 
 
 
