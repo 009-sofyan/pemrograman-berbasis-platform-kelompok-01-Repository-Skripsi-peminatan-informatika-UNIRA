@@ -8,7 +8,7 @@ const router = Router();
 router.get(
   "/",
   authMiddleware,
-  allowRoles("kaprodi"),
+  allowRoles("mahasiswa", "kaprodi"),
   getPemetaanPeminatan
 );
 

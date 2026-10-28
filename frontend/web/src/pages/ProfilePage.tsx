@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
+import { useApiQuery } from "../hooks/useApiQuery";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { peminatanService } from "../services/peminatanService";
 import {
@@ -36,10 +37,6 @@ import {
 import type { Role } from "../types";
 import { getApiErrorMessage } from "../lib/errors";
 import { formatDate, formatDateTime, parseJwtExpiry } from "../lib/format";
-import {
-  getCachedPeminatan,
-  setCachedPeminatan,
-} from "../lib/storage";
 import { cn } from "../lib/cn";
 import { PageHeader } from "../components/ui/PageHeader";
 import { Card, CardHeader } from "../components/ui/Card";
@@ -47,6 +44,7 @@ import { Button } from "../components/ui/Button";
 import { Avatar } from "../components/ui/Avatar";
 import { Badge } from "../components/ui/Badge";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { Skeleton } from "../components/ui/Skeleton";
 
 const ROLE_ACTIONS: Record<
   Role,
@@ -80,13 +78,15 @@ export default function ProfilePage() {
   const [refreshing, setRefreshing] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [choice, setChoice] = useState<"Business Intelligence" | "Smart Agriculture" | "">("");
-  const [savedChoice, setSavedChoice] = useState<string | null>(() =>
-    user ? getCachedPeminatan(user.id) : null,
-  );
+  const [savedChoice, setSavedChoice] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [choiceError, setChoiceError] = useState<string | null>(null);
   const [locked, setLocked] = useState(false);
+
+  const saya = useApiQuery(() => peminatanService.getSaya(), [], {
+    enabled: user?.role === "mahasiswa",
+  });
 
   const expiresAt = useMemo(
     () => (token ? parseJwtExpiry(token) : null),
@@ -99,12 +99,14 @@ export default function ProfilePage() {
   const roleMeta = ROLE_META[user.role];
   const capabilities = ROLE_CAPABILITIES[user.role];
   const action = ROLE_ACTIONS[user.role];
-  const hasPeminatan = Boolean(savedChoice);
+  const currentPeminatan = saya.data?.data.peminatan ?? savedChoice;
+  const hasPeminatan = Boolean(currentPeminatan);
 
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
       await refreshProfile();
+      if (user.role === "mahasiswa") saya.refetch();
       toast.success("Profil diperbarui", "Data akun berhasil dimuat ulang dari server.");
     } catch (err) {
       toast.error("Gagal memuat profil", getApiErrorMessage(err));
@@ -137,8 +139,15 @@ export default function ProfilePage() {
     setChoiceError(null);
     try {
       const response = await peminatanService.pilih({ peminatan: choice });
-      setCachedPeminatan(user.id, response.peminatan);
       setSavedChoice(response.peminatan);
+      saya.setData((prev) =>
+        prev
+          ? {
+              ...prev,
+              data: { ...prev.data, peminatan: response.peminatan },
+            }
+          : prev,
+      );
       setConfirmOpen(false);
       toast.success(
         "Peminatan berhasil dipilih",
@@ -296,7 +305,13 @@ export default function ProfilePage() {
               description="Pilihan peminatan bersifat final dan hanya dapat ditentukan satu kali."
               icon={<Sparkles className="size-5" />}
               action={
-                hasPeminatan ? (
+                saya.loading ? (
+                  <Skeleton className="h-5 w-20" />
+                ) : saya.error ? (
+                  <Badge tone="coral" size="xs" dot>
+                    Gagal dimuat
+                  </Badge>
+                ) : hasPeminatan ? (
                   <Badge tone="mint" size="xs" dot>
                     Sudah dipilih
                   </Badge>
@@ -308,7 +323,31 @@ export default function ProfilePage() {
               }
             />
 
-            {hasPeminatan ? (
+            {saya.loading ? (
+              <div className="mt-4 space-y-3">
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-12 w-full" />
+              </div>
+            ) : saya.error ? (
+              <div className="mt-4 rounded-2xl border border-coral-100 bg-coral-50/60 p-4">
+                <p className="flex items-center gap-2 text-xs font-bold text-coral-800">
+                  <Info className="size-4" />
+                  Data peminatan belum dapat dimuat
+                </p>
+                <p className="mt-1.5 text-[11px] leading-relaxed text-coral-700/80">
+                  {saya.error}
+                </p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon={<RefreshCw />}
+                  onClick={saya.refetch}
+                  className="mt-3"
+                >
+                  Coba lagi
+                </Button>
+              </div>
+            ) : hasPeminatan ? (
               <div className="mt-4 rounded-2xl border border-mint-200 bg-mint-50/60 p-4">
                 <div className="flex items-start gap-3">
                   <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-white text-mint-600 shadow-sm ring-1 ring-mint-100">
@@ -319,17 +358,17 @@ export default function ProfilePage() {
                       Peminatan kamu
                     </p>
                     <p className="mt-0.5 flex items-center gap-1.5 text-sm font-extrabold text-ink">
-                      {savedChoice === SA ? (
+                      {currentPeminatan === SA ? (
                         <Sprout className="size-4 text-mint-600" />
                       ) : (
                         <BrainCircuit className="size-4 text-sky-600" />
                       )}
-                      {savedChoice}
+                      {currentPeminatan}
                     </p>
                     <p className="mt-1.5 text-[11px] leading-relaxed text-mint-800/80">
-                      Pilihan ini tersimpan di perangkat ini setelah berhasil dikirim ke
-                      server. Perubahan hanya dapat dilakukan oleh Tendik melalui menu
-                      Data Mahasiswa.
+                      Pilihan ini tersimpan di server dan menjadi dasar pemetaan peminatan
+                      prodi. Perubahan hanya dapat dilakukan oleh Tendik melalui menu Data
+                      Mahasiswa.
                     </p>
                   </div>
                 </div>

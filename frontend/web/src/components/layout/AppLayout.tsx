@@ -26,13 +26,13 @@ export function AppLayout() {
         />
       ) : null}
 
-      <div className="lg:pl-[304px]">
-        <div className="mx-auto max-w-[1560px] px-3 pb-8 pt-3 sm:px-4 lg:px-6 lg:pt-4">
+      <div className="min-h-screen lg:pl-[280px]">
+        <div className="mx-auto flex min-h-screen w-full max-w-[1560px] flex-col px-4 pb-8 pt-4 sm:px-6 lg:px-6 xl:px-8">
           <Topbar onOpenMenu={() => setMobileOpen(true)} />
-          <main className="mt-5 animate-fade-in">
+          <main className="mt-6 flex-1 animate-fade-in pb-10">
             <Outlet />
           </main>
-          <footer className="mt-10 flex flex-col items-center justify-between gap-2 border-t border-slate-200/70 pt-5 text-[11px] text-slate-400 sm:flex-row">
+          <footer className="mt-auto flex flex-col items-center justify-between gap-2 border-t border-slate-200/70 pt-5 text-[11px] text-slate-400 sm:flex-row">
             <p>
               © {new Date().getFullYear()} {APP_NAME} · Fakultas Teknik UNIRA
             </p>

@@ -129,13 +129,13 @@ src/
 | Skripsi | `GET/POST /api/skripsi`, `GET/PUT/DELETE /api/skripsi/:id`, `POST /api/skripsi/:id/upload`, `PATCH /api/skripsi/:id/submit` |
 | Data mahasiswa (Tendik) | `GET/POST /api/mahasiswa`, `GET/PUT/DELETE /api/mahasiswa/:id` |
 | Verifikasi (Kaprodi) | `GET /api/persetujuan`, `PATCH /api/persetujuan/:id/approve`, `PATCH /api/persetujuan/:id/reject` |
-| Pemilihan peminatan | `PATCH /api/peminatan/peminatan` |
+| Pemilihan peminatan (Mahasiswa) | `GET /api/peminatan/saya`, `PATCH /api/peminatan/peminatan` |
 | Dashboard | `GET /api/dashboard` |
-| Pemetaan (Kaprodi) | `GET /api/pemetaan` |
+| Pemetaan (Kaprodi & Mahasiswa) | `GET /api/pemetaan` |
 
 ## Batasan yang Diketahui
 
-1. **Tidak ada endpoint mahasiswa untuk membaca data akademiknya sendiri.** Backend tidak menyediakan `GET` data mahasiswa untuk peran mahasiswa, sehingga halaman Profil tidak dapat menampilkan NIM/prodi secara langsung. Pilihan peminatan disimpan sebagai cache lokal setelah berhasil dikirim, dan status "sudah memilih" tetap divalidasi oleh backend.
+1. **Status peminatan dibaca langsung dari backend.** Halaman Profil dan Peminatan Riset sama-sama memakai `GET /api/peminatan/saya`, sehingga pilihan yang sudah tersimpan tetap tampil meskipun pengguna berganti perangkat. Status final tetap divalidasi oleh backend.
 2. **Daftar pengajuan mahasiswa disimpan di browser.** Backend tidak menyediakan endpoint daftar skripsi milik pengguna. ID pengajuan yang dibuat atau dilacak disimpan di `localStorage`; akses detail tetap diverifikasi backend.
 3. **Peminatan final.** Backend menolak perubahan peminatan yang sudah pernah dipilih. Perbaikan hanya dapat dilakukan melalui Tendik di halaman Data Mahasiswa.
 4. **Path file statis backend.** `backend/src/index.ts` sebelumnya menyajikan folder `upload`, sedangkan multer menulis ke `uploads/skripsi`. Path sudah diperbaiki menjadi `uploads` agar tautan PDF berfungsi.

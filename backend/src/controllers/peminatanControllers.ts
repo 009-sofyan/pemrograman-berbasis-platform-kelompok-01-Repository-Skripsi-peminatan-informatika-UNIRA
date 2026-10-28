@@ -10,6 +10,54 @@ const pilihanPeminatan = [
   "Smart Agriculture",
 ];
 
+export async function getPeminatanSaya(
+  req: AuthRequest,
+  res: Response
+) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        message: "Autentikasi diperlukan",
+      });
+    }
+
+    if (req.user.role !== "mahasiswa") {
+      return res.status(403).json({
+        message: "Hanya mahasiswa yang dapat melihat peminatan sendiri",
+      });
+    }
+
+    const [dataMahasiswa] = await db
+      .select({
+        id: mahasiswa.id,
+        nim: mahasiswa.nim,
+        programStudi: mahasiswa.programStudi,
+        peminatan: mahasiswa.peminatan,
+      })
+      .from(mahasiswa)
+      .where(eq(mahasiswa.userId, req.user.id))
+      .limit(1);
+
+    if (!dataMahasiswa) {
+      return res.status(404).json({
+        message:
+          "Data akademik belum tersedia. Hubungi Tendik untuk melengkapi NIM dan program studi.",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Data peminatan berhasil diambil",
+      data: dataMahasiswa,
+    });
+  } catch (error) {
+    console.error("Gagal mengambil peminatan mahasiswa:", error);
+
+    return res.status(500).json({
+      message: "Terjadi kesalahan pada server",
+    });
+  }
+}
+
 export async function pilihPeminatan(
   req: AuthRequest,
   res: Response

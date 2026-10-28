@@ -168,3 +168,15 @@ export interface PilihPeminatanResponse {
   message: string;
   peminatan: string;
 }
+
+export interface PeminatanSaya {
+  id: number;
+  nim: string;
+  programStudi: string;
+  peminatan: PeminatanValue;
+}
+
+export interface PeminatanSayaResponse {
+  message: string;
+  data: PeminatanSaya;
+}

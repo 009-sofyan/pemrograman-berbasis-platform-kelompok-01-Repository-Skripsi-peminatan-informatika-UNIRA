@@ -41,48 +41,49 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        "fixed bottom-4 left-4 top-4 z-50 flex w-[272px] flex-col overflow-hidden rounded-[28px] border border-white/10 bg-slate-950 text-white shadow-2xl transition-transform duration-300",
+        "fixed inset-y-0 left-0 z-50 flex h-screen w-[280px] flex-col overflow-hidden border-r border-white/10 bg-slate-950 text-white transition-transform duration-300",
         "lg:translate-x-0",
-        mobileOpen ? "translate-x-0" : "-translate-x-[120%]",
+        mobileOpen ? "translate-x-0" : "-translate-x-full",
       )}
       aria-label="Navigasi utama"
     >
-      <div className="pointer-events-none absolute inset-0 bg-mesh opacity-40" />
-      <div className="pointer-events-none absolute -left-24 top-1/3 size-64 rounded-full bg-primary-500/20 blur-3xl" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+      <div className="pointer-events-none absolute inset-0 bg-mesh opacity-30" />
+      <div className="pointer-events-none absolute -left-24 top-1/3 size-64 rounded-full bg-primary-500/15 blur-3xl" />
 
-      <div className="relative flex items-center justify-between px-5 pb-5 pt-6">
+      <div className="relative flex h-20 shrink-0 items-center justify-between border-b border-white/10 px-5">
         <Logo tone="light" />
         <button
           type="button"
           onClick={onClose}
-          className="grid size-8 place-items-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white lg:hidden"
+          className="grid size-8 place-items-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-white lg:hidden"
           aria-label="Tutup navigasi"
         >
           <X className="size-4" />
         </button>
       </div>
 
-      <div className="relative mx-4 mb-5 rounded-2xl border border-white/10 bg-white/[0.06] p-3 backdrop-blur">
-        <div className="flex items-center gap-2.5">
-          <span className="grid size-8 place-items-center rounded-xl bg-gradient-to-br from-primary-400/30 to-violet-400/20 text-primary-200 ring-1 ring-white/10">
-            <GraduationCap className="size-4" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
-              Fakultas Teknik
-            </p>
-            <p className="truncate text-xs font-semibold text-slate-100">UNIRA</p>
+      <div className="relative shrink-0 px-4 pt-4">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3 backdrop-blur">
+          <div className="flex items-center gap-2.5">
+            <span className="grid size-8 place-items-center rounded-xl bg-gradient-to-br from-primary-400/30 to-violet-400/20 text-primary-200 ring-1 ring-white/10">
+              <GraduationCap className="size-4" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                Fakultas Teknik
+              </p>
+              <p className="truncate text-xs font-semibold text-slate-100">UNIRA</p>
+            </div>
+            <Badge tone={roleMeta.tone} size="xs" className="ring-0">
+              {roleMeta.label}
+            </Badge>
           </div>
-          <Badge tone={roleMeta.tone} size="xs" className="ring-0">
-            {roleMeta.label}
-          </Badge>
         </div>
       </div>
 
-      <nav className="relative min-h-0 flex-1 space-y-5 overflow-y-auto px-3 pb-4">
+      <nav className="no-scrollbar relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-3 py-4">
         {sections.map((group) => (
-          <div key={group.section}>
+          <div key={group.section} className="mb-4 last:mb-0">
             <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
               {group.section}
             </p>
@@ -130,25 +131,27 @@ export function Sidebar({
         ))}
       </nav>
 
-      <div className="relative mx-3 mb-3 rounded-2xl border border-white/10 bg-gradient-to-br from-primary-500/15 to-violet-500/10 p-4">
-        <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-200">
-          <Sparkles className="size-3.5" />
-          Workspace
+      <div className="relative shrink-0 border-t border-white/10 p-3">
+        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-primary-500/15 to-violet-500/10 p-3.5">
+          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-primary-200">
+            <Sparkles className="size-3.5" />
+            Workspace
+          </div>
+          <p className="mt-1.5 text-[11px] leading-relaxed text-slate-300">
+            {roleMeta.description}
+          </p>
+          <NavLink
+            to="/profil"
+            onClick={onClose}
+            className="mt-2.5 inline-flex items-center gap-1 text-[11px] font-bold text-primary-200 transition hover:text-white"
+          >
+            Kelola profil
+            <ArrowUpRight className="size-3.5" />
+          </NavLink>
         </div>
-        <p className="mt-2 text-xs leading-relaxed text-slate-300">
-          {roleMeta.description}
-        </p>
-        <NavLink
-          to="/profil"
-          onClick={onClose}
-          className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-primary-200 transition hover:text-white"
-        >
-          Kelola profil
-          <ArrowUpRight className="size-3.5" />
-        </NavLink>
       </div>
 
-      <div className="relative border-t border-white/10 p-3">
+      <div className="relative shrink-0 border-t border-white/10 p-3">
         <div className="flex items-center gap-3 rounded-2xl p-2 transition hover:bg-white/[0.05]">
           <Avatar name={user.nama} size="md" className="ring-white/20" />
           <div className="min-w-0 flex-1">

@@ -15,6 +15,7 @@ import {
   Search,
   Sparkles,
   Sprout,
+  Target,
   TrendingUp,
   UserRound,
   Users,
@@ -83,10 +84,10 @@ const QUICK_ACTIONS: Record<Role, QuickAction[]> = {
       tone: "sky",
     },
     {
-      title: "Profil Saya",
-      description: "Lihat akun dan pilihan peminatan.",
-      to: "/profil",
-      icon: UserRound,
+      title: "Peminatan Riset",
+      description: "Pilih atau lihat peminatan BI & SA.",
+      to: "/peminatan",
+      icon: Target,
       tone: "mint",
     },
   ],
@@ -259,7 +260,7 @@ export default function DashboardPage() {
       : { label: "Telusuri repository", to: "/repository", icon: Library };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <section className="relative overflow-hidden rounded-3xl bg-slate-950 p-6 text-white shadow-card sm:p-8">
         <div className="pointer-events-none absolute inset-0 bg-mesh opacity-55" />
         <div className="pointer-events-none absolute inset-0 bg-grid-slate bg-[size:30px_30px] opacity-25" />
@@ -446,6 +447,14 @@ export default function DashboardPage() {
                   className="inline-flex items-center gap-1 text-[11px] font-bold text-primary-600 hover:text-primary-700"
                 >
                   Detail
+                  <ArrowUpRight className="size-3.5" />
+                </Link>
+              ) : user.role === "mahasiswa" ? (
+                <Link
+                  to="/peminatan"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-primary-600 hover:text-primary-700"
+                >
+                  Pilih peminatan
                   <ArrowUpRight className="size-3.5" />
                 </Link>
               ) : null
@@ -690,7 +699,7 @@ export default function DashboardPage() {
             </p>
             <p className="mt-1 text-[11px] leading-relaxed text-slate-600">
               {user.role === "mahasiswa"
-                ? "Lengkapi peminatan di halaman profil agar data pemetaan prodi makin akurat."
+                ? "Tentukan peminatan risetmu lewat menu Peminatan Riset agar data pemetaan prodi makin akurat."
                 : user.role === "kaprodi"
                   ? "Gunakan filter peminatan di repository untuk melihat sebaran topik riset."
                   : "Tambahkan data akademik mahasiswa setelah akun mereka terdaftar."}

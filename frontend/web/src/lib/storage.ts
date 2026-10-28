@@ -3,7 +3,6 @@ import type { User } from "../types";
 const TOKEN_KEY = "repository-skripsi.token";
 const USER_KEY = "repository-skripsi.user";
 const TRACKED_PREFIX = "repository-skripsi.tracked";
-const PEMINATAN_PREFIX = "repository-skripsi.peminatan";
 
 export const AUTH_UNAUTHORIZED_EVENT = "repository-skripsi:unauthorized";
 
@@ -87,22 +86,6 @@ export function untrackSkripsiId(userId: number, skripsiId: number) {
   const ids = getTrackedSkripsiIds(userId).filter((id) => id !== skripsiId);
   try {
     localStorage.setItem(`${TRACKED_PREFIX}.${userId}`, JSON.stringify(ids));
-  } catch {
-    /* ignore */
-  }
-}
-
-export function getCachedPeminatan(userId: number): string | null {
-  try {
-    return localStorage.getItem(`${PEMINATAN_PREFIX}.${userId}`);
-  } catch {
-    return null;
-  }
-}
-
-export function setCachedPeminatan(userId: number, peminatan: string) {
-  try {
-    localStorage.setItem(`${PEMINATAN_PREFIX}.${userId}`, peminatan);
   } catch {
     /* ignore */
   }

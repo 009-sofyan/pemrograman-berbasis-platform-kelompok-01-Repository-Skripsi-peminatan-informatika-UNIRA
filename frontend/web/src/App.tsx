@@ -10,6 +10,7 @@ import DashboardPage from "./pages/DashboardPage";
 import RepositoryPage from "./pages/RepositoryPage";
 import SkripsiDetailPage from "./pages/SkripsiDetailPage";
 import PengajuanPage from "./pages/PengajuanPage";
+import PeminatanPage from "./pages/PeminatanPage";
 import PersetujuanPage from "./pages/PersetujuanPage";
 import MahasiswaPage from "./pages/MahasiswaPage";
 import PemetaanPage from "./pages/PemetaanPage";
@@ -41,6 +42,7 @@ export default function App() {
 
           <Route element={<ProtectedRoute roles={["mahasiswa"]} />}>
             <Route path="/pengajuan" element={<PengajuanPage />} />
+            <Route path="/peminatan" element={<PeminatanPage />} />
           </Route>
 
           <Route element={<ProtectedRoute roles={["kaprodi"]} />}>
