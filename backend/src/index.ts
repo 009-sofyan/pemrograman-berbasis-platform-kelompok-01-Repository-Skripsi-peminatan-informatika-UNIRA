@@ -14,7 +14,7 @@ const app = express();
 
 app.use(
   "/uploads",
-  express.static(path.resolve("upload"))
+  express.static(path.resolve("uploads"))
 );
 
 app.get("/", (_req, res) => {
