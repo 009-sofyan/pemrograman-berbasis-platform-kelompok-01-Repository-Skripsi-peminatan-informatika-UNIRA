@@ -10,6 +10,7 @@ import peminatanRoutes from "./routes/peminatanRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import pemetaanRoutes from "./routes/pemetaanRoutes.js";
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
+import { apiRateLimiter } from "./middlewares/rateLimit.js";
 
 const app = express();
 
@@ -36,6 +37,8 @@ app.get("/health", async (_req, res) => {
     return res.status(500).json({ status: "error" });
   }
 });
+
+app.use("/api", apiRateLimiter);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/skripsi", skripsiRoutes);

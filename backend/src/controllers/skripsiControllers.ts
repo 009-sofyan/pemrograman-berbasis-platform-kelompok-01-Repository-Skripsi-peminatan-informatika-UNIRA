@@ -60,7 +60,7 @@ async function getMahasiswaIdByUserId(
  * - Mahasiswa boleh melihat skripsi miliknya sendiri (semua status)
  *   dan skripsi milik mahasiswa lain yang sudah disetujui.
  */
-function canAccessSkripsi(
+export function canAccessSkripsi(
     role: UserRole,
     viewerMahasiswaId: number | null,
     skripsiMahasiswaId: number,

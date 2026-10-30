@@ -70,14 +70,14 @@ export const registerSchema = z
         email: emailSchema,
         password: passwordRegistrationSchema,
     })
-    .strict("Field tidak diizinkan pada request registrasi");
+    .strict();
 
 export const loginSchema = z
     .object({
         email: emailSchema,
         password: passwordLoginSchema,
     })
-    .strict("Field tidak diizinkan pada request login");
+    .strict();
 
 export const idParamSchema = z.object({
     id: z
@@ -102,7 +102,7 @@ export const createMahasiswaSchema = z
             .regex(/^\d{5,20}$/, "NIM harus terdiri dari 5-20 digit angka"),
         programStudi: requiredString("Program studi", 2, 100),
     })
-    .strict("Field tidak diizinkan pada data mahasiswa");
+    .strict();
 
 export const updateMahasiswaSchema = z
     .object({
@@ -125,7 +125,7 @@ export const updateMahasiswaSchema = z
             .nullable()
             .optional(),
     })
-    .strict("Field tidak diizinkan pada data mahasiswa");
+    .strict();
 
 export const pilihPeminatanSchema = z
     .object({
@@ -133,7 +133,7 @@ export const pilihPeminatanSchema = z
             error: "Peminatan harus Business Intelligence atau Smart Agriculture",
         }),
     })
-    .strict("Field tidak diizinkan pada data peminatan");
+    .strict();
 
 const tahunSkripsiSchema = z.coerce
     .number({ error: "Tahun skripsi wajib diisi" })
@@ -152,7 +152,7 @@ export const createSkripsiSchema = z
             .optional(),
         tahun: tahunSkripsiSchema,
     })
-    .strict("Field tidak diizinkan pada data skripsi");
+    .strict();
 
 export const updateSkripsiSchema = z
     .object({
@@ -165,7 +165,7 @@ export const updateSkripsiSchema = z
             .optional(),
         tahun: tahunSkripsiSchema.optional(),
     })
-    .strict("Field tidak diizinkan pada data skripsi")
+    .strict()
     .refine(
         (value) => Object.keys(value).length > 0,
         "Tidak ada data skripsi yang diubah"
@@ -218,7 +218,21 @@ export const skripsiListQuerySchema = z
         page: pageQuerySchema,
         limit: limitQuerySchema,
     })
-    .strict("Parameter query tidak dikenal");
+    .strict();
+
+/**
+ * Endpoint yang tidak menerima query/body tetap divalidasi agar properti
+ * tambahan tidak diam-diam diabaikan. Body kosong dari PATCH tanpa payload
+ * tetap diterima.
+ */
+export const emptyQuerySchema = z
+    .object({})
+    .strict();
+
+export const emptyBodySchema = z.preprocess(
+    (value) => (value === undefined ? {} : value),
+    z.object({}).strict()
+);
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;

@@ -90,7 +90,9 @@ export async function login(
       getJwtSecret(),
       {
         algorithm: "HS256",
-        expiresIn: getJwtExpiresIn() as SignOptions["expiresIn"],
+        expiresIn: getJwtExpiresIn() as NonNullable<
+          SignOptions["expiresIn"]
+        >,
       }
     );
 

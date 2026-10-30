@@ -15,6 +15,7 @@ import { uploadFileSkripsi } from "../controllers/skripsiControllers.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { allowRoles } from "../middlewares/roleMiddleware.js";
 import { precheckSkripsiUpload } from "../middlewares/precheckSkripsiUpload.js";
+import { uploadRateLimiter } from "../middlewares/rateLimit.js";
 import {
     validateBody,
     validateParams,
@@ -22,6 +23,7 @@ import {
 } from "../validation/validate.js";
 import {
     createSkripsiSchema,
+    emptyBodySchema,
     idParamSchema,
     skripsiListQuerySchema,
     updateSkripsiSchema,
@@ -49,6 +51,7 @@ router.post(
     authMiddleware,
     allowRoles("mahasiswa"),
     validateParams(idParamSchema),
+    uploadRateLimiter,
     precheckSkripsiUpload,
     uploadSkripsi,
     uploadFileSkripsi
@@ -94,6 +97,7 @@ router.patch(
     authMiddleware,
     allowRoles("mahasiswa"),
     validateParams(idParamSchema),
+    validateBody(emptyBodySchema),
     submitSkripsi
 );
 

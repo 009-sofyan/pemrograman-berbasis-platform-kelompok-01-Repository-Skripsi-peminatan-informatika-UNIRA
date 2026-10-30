@@ -1,4 +1,5 @@
 import "dotenv/config";
+import jwt, { type SignOptions } from "jsonwebtoken";
 
 const NODE_ENV = process.env.NODE_ENV ?? "development";
 export const isProduction = NODE_ENV === "production";
@@ -48,6 +49,33 @@ export const authRateLimitConfig = {
     },
 } as const;
 
+/**
+ * API umum dan upload memakai kuota terpisah. Nilai default sengaja longgar
+ * agar navigasi normal tidak terhambat, tetapi tetap membatasi penyalahgunaan.
+ */
+export const apiRateLimitConfig = {
+    api: {
+        windowMs: readPositiveInt(
+            "API_RATE_LIMIT_WINDOW_MS",
+            FIFTEEN_MINUTES
+        ),
+        limit: readPositiveInt(
+            "API_RATE_LIMIT_MAX",
+            isProduction ? 600 : 3000
+        ),
+    },
+    upload: {
+        windowMs: readPositiveInt(
+            "UPLOAD_RATE_LIMIT_WINDOW_MS",
+            ONE_HOUR
+        ),
+        limit: readPositiveInt(
+            "UPLOAD_RATE_LIMIT_MAX",
+            isProduction ? 20 : 100
+        ),
+    },
+} as const;
+
 export function getJwtSecret(): string {
     const secret = process.env.JWT_SECRET;
 
@@ -61,6 +89,26 @@ export function getJwtSecret(): string {
 export function getJwtExpiresIn(): string {
     const value = process.env.JWT_EXPIRES_IN?.trim();
     return value || "1d";
+}
+
+/**
+ * jsonwebtoken baru memvalidasi format expiresIn saat token dibuat. Dengan
+ * menandatangani token dummy ketika startup, konfigurasi yang salah tidak
+ * menunggu sampai request login pertama.
+ */
+function validateJwtExpiresIn(): void {
+    try {
+        jwt.sign({}, getJwtSecret(), {
+            algorithm: "HS256",
+            expiresIn: getJwtExpiresIn() as NonNullable<
+                SignOptions["expiresIn"]
+            >,
+        });
+    } catch {
+        throw new Error(
+            "JWT_EXPIRES_IN tidak valid. Gunakan format seperti 1d, 12h, atau 30m"
+        );
+    }
 }
 
 /**
@@ -83,10 +131,11 @@ export function validateEnvironment(): void {
         );
     }
 
-    getJwtExpiresIn();
+    validateJwtExpiresIn();
 
     // Memicu validasi konfigurasi rate limit saat startup.
     void authRateLimitConfig;
+    void apiRateLimitConfig;
 }
 
 export function getTrustProxy(): boolean | number | string {

@@ -2,6 +2,7 @@ import type { ErrorRequestHandler, RequestHandler } from "express";
 import { MulterError } from "multer";
 import { ZodError } from "zod";
 import { AppError } from "../errors/AppError.js";
+import { isProduction } from "../config/env.js";
 
 interface ErrorRecord {
     [key: string]: unknown;
@@ -33,6 +34,31 @@ function zodErrorBody(error: ZodError) {
         message: errors[0]?.message ?? "Data permintaan tidak valid",
         errors,
     };
+}
+
+/**
+ * Log internal tetap tersedia untuk operator, tetapi objek error mentah hanya
+ * dicetak di development. Di production hanya metadata aman yang dicatat agar
+ * query/parameter database tidak ikut masuk ke log.
+ */
+function logServerError(
+    req: { method: string; originalUrl: string },
+    error: unknown
+): void {
+    const prefix = `[${req.method} ${req.originalUrl}]`;
+
+    if (!isProduction) {
+        console.error(prefix, error);
+        return;
+    }
+
+    const record = asErrorRecord(error);
+
+    console.error(prefix, {
+        name: error instanceof Error ? error.name : "UnknownError",
+        code: typeof record?.code === "string" ? record.code : undefined,
+        status: typeof record?.status === "number" ? record.status : undefined,
+    });
 }
 
 function duplicateEntryMessage(sqlMessage: string | undefined): string {
@@ -124,10 +150,7 @@ export const errorHandler: ErrorRequestHandler = (
 
     if (error instanceof AppError) {
         if (error.statusCode >= 500) {
-            console.error(
-                `[${req.method} ${req.originalUrl}]`,
-                error
-            );
+            logServerError(req, error);
 
             res.status(error.statusCode).json({
                 message: "Terjadi kesalahan pada server",
@@ -149,7 +172,7 @@ export const errorHandler: ErrorRequestHandler = (
             record.code === "ECONNREFUSED" ||
             record.code === "PROTOCOL_CONNECTION_LOST")
     ) {
-        console.error(`[${req.method} ${req.originalUrl}]`, error);
+        logServerError(req, error);
 
         res.status(500).json({
             message: "Terjadi kesalahan pada server",
@@ -157,7 +180,7 @@ export const errorHandler: ErrorRequestHandler = (
         return;
     }
 
-    console.error(`[${req.method} ${req.originalUrl}]`, error);
+    logServerError(req, error);
 
     res.status(500).json({
         message: "Terjadi kesalahan pada server",

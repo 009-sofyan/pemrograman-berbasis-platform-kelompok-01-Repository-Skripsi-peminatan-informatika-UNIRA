@@ -2,6 +2,8 @@ import { Router } from "express";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { allowRoles } from "../middlewares/roleMiddleware.js";
 import { getDashboard } from "../controllers/dashboardControllers.js";
+import { validateQuery } from "../validation/validate.js";
+import { emptyQuerySchema } from "../validation/schemas.js";
 
 const router = Router();
 
@@ -11,6 +13,7 @@ router.get(
   "/",
   authMiddleware,
   allowRoles("mahasiswa", "kaprodi", "tendik"),
+  validateQuery(emptyQuerySchema),
   getDashboard
 );
 

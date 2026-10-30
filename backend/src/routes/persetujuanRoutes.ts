@@ -6,8 +6,11 @@ import {
   approveSkripsi,
   rejectSkripsi,
 } from "../controllers/persetujuanControllers.js";
-import { validateParams } from "../validation/validate.js";
-import { idParamSchema } from "../validation/schemas.js";
+import { validateBody, validateParams } from "../validation/validate.js";
+import {
+  emptyBodySchema,
+  idParamSchema,
+} from "../validation/schemas.js";
 
 const router = Router();
 
@@ -22,6 +25,7 @@ router.patch(
   authMiddleware,
   allowRoles("kaprodi"),
   validateParams(idParamSchema),
+  validateBody(emptyBodySchema),
   approveSkripsi
 );
 router.patch(
@@ -29,6 +33,7 @@ router.patch(
   authMiddleware,
   allowRoles("kaprodi"),
   validateParams(idParamSchema),
+  validateBody(emptyBodySchema),
   rejectSkripsi
 );
 
