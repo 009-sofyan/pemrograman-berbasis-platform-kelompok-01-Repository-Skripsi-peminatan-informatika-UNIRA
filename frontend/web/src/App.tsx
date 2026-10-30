@@ -1,9 +1,8 @@
-import { Navigate, Route, Routes } from "react-router-dom";
-import { useAuth } from "./contexts/AuthContext";
+import { Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 import { PublicOnlyRoute } from "./routes/PublicOnlyRoute";
 import { AppLayout } from "./components/layout/AppLayout";
-import { ROLE_LANDING } from "./constants";
+import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -18,15 +17,11 @@ import ProfilePage from "./pages/ProfilePage";
 import NotFoundPage from "./pages/NotFoundPage";
 import UnauthorizedPage from "./pages/UnauthorizedPage";
 
-function RoleRedirect() {
-  const { user } = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
-  return <Navigate to={ROLE_LANDING[user.role]} replace />;
-}
-
 export default function App() {
   return (
     <Routes>
+      <Route path="/" element={<LandingPage />} />
+
       <Route element={<PublicOnlyRoute />}>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
@@ -34,7 +29,6 @@ export default function App() {
 
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
-          <Route path="/" element={<RoleRedirect />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/repository" element={<RepositoryPage />} />
           <Route path="/repository/:id" element={<SkripsiDetailPage />} />

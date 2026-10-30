@@ -10,6 +10,9 @@ export interface User {
   email: string;
   role: Role;
   createdAt?: string | null;
+  telepon?: string;
+  bio?: string;
+  avatarUrl?: string | null;
 }
 
 export interface LoginPayload {
@@ -44,6 +47,7 @@ export interface Skripsi {
   abstrak: string | null;
   tahun: number;
   fileUrl: string | null;
+  coverUrl?: string | null;
   status: SkripsiStatus;
   createdAt: string | null;
   mahasiswaId: number;

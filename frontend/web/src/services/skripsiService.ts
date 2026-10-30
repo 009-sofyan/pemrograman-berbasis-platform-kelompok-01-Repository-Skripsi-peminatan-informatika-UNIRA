@@ -27,6 +27,23 @@ export const skripsiService = {
     return data;
   },
 
+  async listPublic(params: SkripsiListParams = {}): Promise<SkripsiListResponse> {
+    const { data } = await api.get<SkripsiListResponse>("/skripsi/public", {
+      params: {
+        ...(params.search ? { search: params.search } : {}),
+        ...(params.tahun ? { tahun: params.tahun } : {}),
+        ...(params.programStudi ? { programStudi: params.programStudi } : {}),
+        ...(params.peminatan ? { peminatan: params.peminatan } : {}),
+      },
+    });
+    return data;
+  },
+
+  async getPublicById(id: number): Promise<SkripsiDetailResponse> {
+    const { data } = await api.get<SkripsiDetailResponse>(`/skripsi/public/${id}`);
+    return data;
+  },
+
   async create(payload: CreateSkripsiPayload): Promise<CreateSkripsiResponse> {
     const { data } = await api.post<CreateSkripsiResponse>("/skripsi", payload);
     return data;

@@ -17,7 +17,7 @@ import {
   Sparkles,
   Sprout,
 } from "lucide-react";
-import { useAuth } from "../contexts/AuthContext";
+import { RoleMismatchError, useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
@@ -95,27 +95,26 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const user = await login({
-        email: email.trim().toLowerCase(),
-        password,
-      });
+      const user = await login(
+        {
+          email: email.trim().toLowerCase(),
+          password,
+        },
+        role,
+      );
       const firstName = user.nama.split(" ")[0] ?? user.nama;
-      if (user.role !== role) {
-        toast.warning(
-          "Peran akun berbeda",
-          `Akun ini terdaftar sebagai ${ROLE_META[user.role].label}. Kamu diarahkan ke dashboard ${ROLE_META[user.role].label}.`,
-        );
-      } else {
-        toast.success(
-          `Selamat datang, ${firstName}!`,
-          `Kamu masuk sebagai ${ROLE_META[user.role].label}.`,
-        );
-      }
+      toast.success(
+        `Selamat datang, ${firstName}!`,
+        `Kamu masuk sebagai ${ROLE_META[user.role].label}.`,
+      );
       navigate(ROLE_LANDING[user.role], { replace: true });
     } catch (err) {
-      const message = getApiErrorMessage(err, "Email atau password salah.");
+      const mismatch = err instanceof RoleMismatchError;
+      const message = mismatch
+        ? err.message
+        : getApiErrorMessage(err, "Email atau password salah.");
       setError(message);
-      toast.error("Gagal masuk", message);
+      toast.error(mismatch ? "Role tidak sesuai" : "Gagal masuk", message);
     } finally {
       setLoading(false);
     }

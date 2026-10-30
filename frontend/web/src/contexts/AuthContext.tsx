@@ -24,18 +24,39 @@ import {
   setToken,
 } from "../lib/storage";
 import { isForbidden, isUnauthorized } from "../lib/errors";
+import {
+  applyLocalProfile,
+  saveLocalProfile,
+  type ProfilePatch,
+} from "../lib/profile";
+import { ROLE_META } from "../constants";
 import { useToast } from "./ToastContext";
 import { LoadingScreen } from "../components/ui/LoadingScreen";
+
+export class RoleMismatchError extends Error {
+  readonly expectedRole: Role;
+  readonly actualRole: Role;
+
+  constructor(expectedRole: Role, actualRole: Role) {
+    super(
+      `Akun ini bukan merupakan akun ${ROLE_META[expectedRole].label}. Silakan pilih role yang sesuai.`,
+    );
+    this.name = "RoleMismatchError";
+    this.expectedRole = expectedRole;
+    this.actualRole = actualRole;
+  }
+}
 
 interface AuthContextValue {
   user: User | null;
   token: string | null;
   initializing: boolean;
   isAuthenticated: boolean;
-  login: (payload: LoginPayload) => Promise<User>;
+  login: (payload: LoginPayload, expectedRole?: Role) => Promise<User>;
   register: (payload: RegisterPayload) => Promise<string>;
   logout: () => void;
   refreshProfile: () => Promise<void>;
+  updateProfile: (patch: ProfilePatch) => User | null;
   hasRole: (...roles: Role[]) => boolean;
 }
 
@@ -46,7 +67,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
   const toast = useToast();
   const [token, setTokenState] = useState<string | null>(() => getToken());
-  const [user, setUser] = useState<User | null>(() => getStoredUser());
+  const [user, setUser] = useState<User | null>(() => {
+    const storedUser = getStoredUser();
+    return storedUser ? applyLocalProfile(storedUser) : null;
+  });
   const [initializing, setInitializing] = useState(() => Boolean(getToken()));
 
   useEffect(() => {
@@ -62,8 +86,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .me()
       .then((response) => {
         if (!active) return;
-        setUser(response.user);
-        setStoredUser(response.user);
+        const nextUser = applyLocalProfile(response.user);
+        setUser(nextUser);
+        setStoredUser(nextUser);
         setTokenState(currentToken);
       })
       .catch((error: unknown) => {
@@ -105,14 +130,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, handler);
   }, [navigate, location.pathname, toast]);
 
-  const login = useCallback(async (payload: LoginPayload) => {
-    const response = await authService.login(payload);
-    setToken(response.token);
-    setTokenState(response.token);
-    setStoredUser(response.user);
-    setUser(response.user);
-    return response.user;
-  }, []);
+  const login = useCallback(
+    async (payload: LoginPayload, expectedRole?: Role) => {
+      const response = await authService.login(payload);
+
+      if (expectedRole && response.user.role !== expectedRole) {
+        throw new RoleMismatchError(expectedRole, response.user.role);
+      }
+
+      const nextUser = applyLocalProfile(response.user);
+      setToken(response.token);
+      setTokenState(response.token);
+      setStoredUser(nextUser);
+      setUser(nextUser);
+      return nextUser;
+    },
+    [],
+  );
 
   const register = useCallback(async (payload: RegisterPayload) => {
     const response = await authService.register(payload);
@@ -129,9 +163,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshProfile = useCallback(async () => {
     const response = await authService.me();
-    setUser(response.user);
-    setStoredUser(response.user);
+    const nextUser = applyLocalProfile(response.user);
+    setUser(nextUser);
+    setStoredUser(nextUser);
   }, []);
+
+  const updateProfile = useCallback(
+    (patch: ProfilePatch) => {
+      if (!user) return null;
+      const localProfile = saveLocalProfile(user.id, patch);
+      const nextUser = { ...user, ...localProfile };
+      setUser(nextUser);
+      setStoredUser(nextUser);
+      return nextUser;
+    },
+    [user],
+  );
 
   const hasRole = useCallback(
     (...roles: Role[]) => {
@@ -151,9 +198,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       register,
       logout,
       refreshProfile,
+      updateProfile,
       hasRole,
     }),
-    [user, token, initializing, login, register, logout, refreshProfile, hasRole],
+    [
+      user,
+      token,
+      initializing,
+      login,
+      register,
+      logout,
+      refreshProfile,
+      updateProfile,
+      hasRole,
+    ],
   );
 
   if (initializing) {

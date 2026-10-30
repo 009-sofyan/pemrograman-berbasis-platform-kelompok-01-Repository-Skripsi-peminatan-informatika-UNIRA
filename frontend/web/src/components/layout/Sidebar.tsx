@@ -1,12 +1,6 @@
 import { useMemo } from "react";
 import { NavLink } from "react-router-dom";
-import {
-  ArrowUpRight,
-  GraduationCap,
-  LogOut,
-  Sparkles,
-  X,
-} from "lucide-react";
+import { GraduationCap, LogOut, X } from "lucide-react";
 import { cn } from "../../lib/cn";
 import { NAV_ITEMS, ROLE_META } from "../../constants";
 import { useAuth } from "../../contexts/AuthContext";
@@ -132,28 +126,13 @@ export function Sidebar({
       </nav>
 
       <div className="relative shrink-0 border-t border-white/10 p-3">
-        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-primary-500/15 to-violet-500/10 p-3.5">
-          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-primary-200">
-            <Sparkles className="size-3.5" />
-            Workspace
-          </div>
-          <p className="mt-1.5 text-[11px] leading-relaxed text-slate-300">
-            {roleMeta.description}
-          </p>
-          <NavLink
-            to="/profil"
-            onClick={onClose}
-            className="mt-2.5 inline-flex items-center gap-1 text-[11px] font-bold text-primary-200 transition hover:text-white"
-          >
-            Kelola profil
-            <ArrowUpRight className="size-3.5" />
-          </NavLink>
-        </div>
-      </div>
-
-      <div className="relative shrink-0 border-t border-white/10 p-3">
         <div className="flex items-center gap-3 rounded-2xl p-2 transition hover:bg-white/[0.05]">
-          <Avatar name={user.nama} size="md" className="ring-white/20" />
+          <Avatar
+            name={user.nama}
+            src={user.avatarUrl}
+            size="md"
+            className="ring-white/20"
+          />
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-bold text-white">{user.nama}</p>
             <p className="truncate text-[10px] text-slate-400">{user.email}</p>

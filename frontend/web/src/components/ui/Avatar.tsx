@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { cn } from "../../lib/cn";
 import { initials } from "../../lib/format";
 
@@ -11,13 +12,21 @@ const GRADIENTS = [
 
 export function Avatar({
   name,
+  src,
   size = "md",
   className,
 }: {
   name: string;
+  src?: string | null;
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }) {
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [src]);
+
   const index = name
     .split("")
     .reduce((total, char) => total + char.charCodeAt(0), 0) % GRADIENTS.length;
@@ -29,17 +38,28 @@ export function Avatar({
     xl: "size-24 rounded-[1.75rem] text-2xl",
   }[size];
 
+  const showImage = Boolean(src) && !imageFailed;
+
   return (
     <span
       className={cn(
-        "grid shrink-0 place-items-center bg-gradient-to-br font-extrabold text-white shadow-sm ring-2 ring-white",
+        "relative grid shrink-0 place-items-center overflow-hidden bg-gradient-to-br font-extrabold text-white shadow-sm ring-2 ring-white",
         GRADIENTS[index],
         sizeClass,
         className,
       )}
       aria-hidden="true"
     >
-      {initials(name)}
+      {showImage ? (
+        <img
+          src={src ?? undefined}
+          alt=""
+          className="absolute inset-0 size-full object-cover"
+          onError={() => setImageFailed(true)}
+        />
+      ) : (
+        initials(name)
+      )}
     </span>
   );
 }

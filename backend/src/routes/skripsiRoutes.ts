@@ -3,6 +3,8 @@ import {
     createSkripsi,
     getSkripsi,
     getSkripsiById,
+    getPublicSkripsi,
+    getPublicSkripsiById,
     updateSkripsi,
     deleteSkripsi,
     submitSkripsi,
@@ -13,6 +15,10 @@ import { authMiddleware } from "../middlewares/authMiddleware.js";
 
 
 const router = Router();
+
+// Katalog publik: hanya skripsi dengan status "disetujui".
+router.get("/public", getPublicSkripsi);
+router.get("/public/:id", getPublicSkripsiById);
 
 router.post("/", authMiddleware,createSkripsi);
 router.post(

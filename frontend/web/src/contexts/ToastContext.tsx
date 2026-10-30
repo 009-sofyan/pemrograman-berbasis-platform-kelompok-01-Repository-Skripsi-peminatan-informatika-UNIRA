@@ -95,7 +95,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         id,
         title: options.title,
         variant: options.variant ?? "info",
-        duration: options.duration ?? 4800,
+        duration: options.duration ?? 2800,
         ...(options.description ? { description: options.description } : {}),
       };
       setToasts((current) => [item, ...current].slice(0, 4));

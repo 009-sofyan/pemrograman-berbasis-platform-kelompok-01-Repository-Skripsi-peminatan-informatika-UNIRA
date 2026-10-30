@@ -95,7 +95,7 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
           aria-haspopup="menu"
           aria-expanded={menuOpen}
         >
-          <Avatar name={user.nama} size="sm" />
+          <Avatar name={user.nama} src={user.avatarUrl} size="sm" />
           <span className="hidden max-w-[120px] truncate text-xs font-bold text-ink md:block">
             {user.nama}
           </span>
@@ -114,7 +114,7 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
           >
             <div className="border-b border-slate-100 bg-gradient-to-br from-primary-50/70 to-white p-4">
               <div className="flex items-center gap-3">
-                <Avatar name={user.nama} size="md" />
+                <Avatar name={user.nama} src={user.avatarUrl} size="md" />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold text-ink">{user.nama}</p>
                   <p className="truncate text-[11px] text-ink-soft">{user.email}</p>

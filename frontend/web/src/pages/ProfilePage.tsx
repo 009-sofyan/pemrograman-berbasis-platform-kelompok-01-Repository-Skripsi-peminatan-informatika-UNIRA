@@ -1,10 +1,19 @@
-import { useMemo, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
   BadgeCheck,
   BrainCircuit,
   CalendarDays,
+  Camera,
   Check,
   CheckCircle2,
   Copy,
@@ -15,10 +24,13 @@ import {
   LockKeyhole,
   LogOut,
   Mail,
+  Phone,
   RefreshCw,
+  Save,
   ShieldCheck,
   Sparkles,
   Sprout,
+  Trash2,
   UserRound,
   Users,
 } from "lucide-react";
@@ -37,10 +49,12 @@ import {
 import type { Role } from "../types";
 import { getApiErrorMessage } from "../lib/errors";
 import { formatDate, formatDateTime, parseJwtExpiry } from "../lib/format";
+import { fileToAvatarDataUrl } from "../lib/profile";
 import { cn } from "../lib/cn";
 import { PageHeader } from "../components/ui/PageHeader";
 import { Card, CardHeader } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
+import { Input, Textarea } from "../components/ui/Input";
 import { Avatar } from "../components/ui/Avatar";
 import { Badge } from "../components/ui/Badge";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
@@ -72,7 +86,7 @@ const ROLE_ACTIONS: Record<
 
 export default function ProfilePage() {
   useDocumentTitle("Profil Saya");
-  const { user, token, logout, refreshProfile } = useAuth();
+  const { user, token, logout, refreshProfile, updateProfile } = useAuth();
   const toast = useToast();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -83,10 +97,26 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [choiceError, setChoiceError] = useState<string | null>(null);
   const [locked, setLocked] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const syncedUserIdRef = useRef<number | null>(null);
+  const [nama, setNama] = useState(user?.nama ?? "");
+  const [telepon, setTelepon] = useState(user?.telepon ?? "");
+  const [bio, setBio] = useState(user?.bio ?? "");
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const saya = useApiQuery(() => peminatanService.getSaya(), [], {
     enabled: user?.role === "mahasiswa",
   });
+
+  useEffect(() => {
+    if (!user || syncedUserIdRef.current === user.id) return;
+    syncedUserIdRef.current = user.id;
+    setNama(user.nama);
+    setTelepon(user.telepon ?? "");
+    setBio(user.bio ?? "");
+  }, [user]);
 
   const expiresAt = useMemo(
     () => (token ? parseJwtExpiry(token) : null),
@@ -168,6 +198,59 @@ export default function ProfilePage() {
     }
   };
 
+  const handlePhotoSelected = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setPhotoError(null);
+    setUploadingPhoto(true);
+    try {
+      const avatarUrl = await fileToAvatarDataUrl(file);
+      updateProfile({ avatarUrl });
+      toast.success(
+        "Foto profil diperbarui",
+        "Foto baru langsung tampil di topbar dan sidebar.",
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Gagal memproses foto.";
+      setPhotoError(message);
+      toast.error("Gagal mengunggah foto", message);
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    updateProfile({ avatarUrl: null });
+    setPhotoError(null);
+    toast.info("Foto profil dihapus", "Avatar kembali menggunakan inisial namamu.");
+  };
+
+  const handleSaveProfile = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const trimmedName = nama.trim();
+    const trimmedPhone = telepon.trim();
+    const trimmedBio = bio.trim();
+
+    if (trimmedName.length < 2) {
+      setProfileError("Nama lengkap minimal 2 karakter.");
+      return;
+    }
+    if (trimmedPhone && !/^[0-9+()\-\s]{6,20}$/.test(trimmedPhone)) {
+      setProfileError("Nomor telepon tidak valid. Gunakan 6–20 digit angka.");
+      return;
+    }
+    if (trimmedBio.length > 280) {
+      setProfileError("Bio maksimal 280 karakter.");
+      return;
+    }
+
+    updateProfile({ nama: trimmedName, telepon: trimmedPhone, bio: trimmedBio });
+    setProfileError(null);
+    toast.success("Profil tersimpan", "Data diri berhasil diperbarui.");
+  };
+
   return (
     <div className="space-y-5">
       <PageHeader
@@ -205,6 +288,7 @@ export default function ProfilePage() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
               <Avatar
                 name={user.nama}
+                src={user.avatarUrl}
                 size="xl"
                 className="ring-4 ring-white shadow-card"
               />
@@ -221,6 +305,17 @@ export default function ProfilePage() {
                   <Mail className="size-3.5 text-slate-400" />
                   {user.email}
                 </p>
+                {user.telepon ? (
+                  <p className="mt-1 flex items-center gap-1.5 text-xs text-ink-soft">
+                    <Phone className="size-3.5 text-slate-400" />
+                    {user.telepon}
+                  </p>
+                ) : null}
+                {user.bio ? (
+                  <p className="mt-2 max-w-xl text-[11px] leading-relaxed text-slate-500">
+                    {user.bio}
+                  </p>
+                ) : null}
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -264,6 +359,135 @@ export default function ProfilePage() {
           </div>
         </div>
       </section>
+
+      <Card>
+        <CardHeader
+          title="Data diri & foto profil"
+          description="Perbarui identitas yang tampil di topbar, sidebar, dan halaman profil."
+          icon={<UserRound className="size-5" />}
+          action={
+            <Badge tone={roleMeta.tone} size="xs">
+              {roleMeta.label}
+            </Badge>
+          }
+        />
+        <div className="mt-5 grid gap-5 lg:grid-cols-[240px_minmax(0,1fr)]">
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/60 p-4 text-center">
+            <Avatar
+              name={user.nama}
+              src={user.avatarUrl}
+              size="xl"
+              className="ring-4 ring-white shadow-card"
+            />
+            <div>
+              <p className="text-xs font-bold text-ink">Foto profil</p>
+              <p className="mt-1 text-[10px] leading-relaxed text-slate-400">
+                JPG, PNG, atau WebP. Maksimal 5 MB.
+              </p>
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="sr-only"
+              aria-label="Pilih foto profil"
+              onChange={(event) => void handlePhotoSelected(event)}
+            />
+            <div className="flex w-full flex-col gap-2">
+              <Button
+                type="button"
+                size="sm"
+                icon={<Camera />}
+                loading={uploadingPhoto}
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full"
+              >
+                {user.avatarUrl ? "Ganti foto" : "Unggah foto"}
+              </Button>
+              {user.avatarUrl ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  icon={<Trash2 />}
+                  onClick={handleRemovePhoto}
+                  className="w-full text-coral-600 hover:bg-coral-50 hover:text-coral-700"
+                >
+                  Hapus foto
+                </Button>
+              ) : null}
+            </div>
+            {photoError ? (
+              <p className="text-[10px] leading-relaxed text-coral-600">{photoError}</p>
+            ) : null}
+          </div>
+
+          <form onSubmit={handleSaveProfile} className="space-y-3.5">
+            <div className="grid gap-3.5 sm:grid-cols-2">
+              <Input
+                label="Nama lengkap"
+                value={nama}
+                onChange={(event) => {
+                  setNama(event.target.value);
+                  setProfileError(null);
+                }}
+                icon={UserRound}
+                maxLength={100}
+                placeholder="Nama lengkap kamu"
+                required
+              />
+              <Input
+                label="Email akun"
+                value={user.email}
+                icon={Mail}
+                hint="Email dipakai untuk login dan tidak dapat diubah di sini."
+                disabled
+                readOnly
+              />
+            </div>
+            <Input
+              label="Nomor telepon"
+              value={telepon}
+              onChange={(event) => {
+                setTelepon(event.target.value);
+                setProfileError(null);
+              }}
+              icon={Phone}
+              inputMode="tel"
+              maxLength={20}
+              placeholder="08xxxxxxxxxx"
+              hint="Opsional. Hanya tersimpan di perangkat ini."
+            />
+            <Textarea
+              label="Bio singkat"
+              value={bio}
+              onChange={(event) => {
+                setBio(event.target.value);
+                setProfileError(null);
+              }}
+              rows={3}
+              maxLength={280}
+              placeholder="Ceritakan minat riset atau peranmu di fakultas…"
+              hint={`${bio.length}/280 karakter`}
+            />
+            {profileError ? (
+              <p className="rounded-xl border border-coral-200 bg-coral-50 px-3 py-2.5 text-[11px] text-coral-700">
+                {profileError}
+              </p>
+            ) : null}
+            <div className="flex flex-col gap-2 border-t border-slate-100 pt-3.5 sm:flex-row sm:items-center sm:justify-between">
+              <p className="flex items-start gap-1.5 text-[10px] leading-relaxed text-slate-400">
+                <Info className="mt-0.5 size-3 shrink-0 text-amber-500" />
+                Perubahan disimpan lokal di browser ini karena server belum menyediakan
+                endpoint profil.
+              </p>
+              <Button type="submit" size="sm" icon={<Save />}>
+                Simpan perubahan
+              </Button>
+            </div>
+          </form>
+        </div>
+      </Card>
 
       <section className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
         <Card>

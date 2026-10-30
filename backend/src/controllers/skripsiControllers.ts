@@ -1,8 +1,9 @@
 import type { Response } from "express";
-import { count, eq, desc, and, like} from "drizzle-orm";
+import { count, eq, desc, and, like, or} from "drizzle-orm";
 import { db } from "../db/index.js";
 import { skripsi } from "../db/skripsi.js";
 import { mahasiswa } from "../db/mahasiswa.js";
+import { users } from "../db/users.js";
 import type { AuthRequest } from "../middlewares/authMiddleware";
 import fs from "node:fs";
 import path from "node:path";
@@ -136,6 +137,128 @@ export async function getSkripsi(
     });
   } catch (error) {
     console.error("Gagal mengambil daftar skripsi:", error);
+
+    return res.status(500).json({
+      message: "Terjadi kesalahan pada server",
+    });
+  }
+}
+
+export async function getPublicSkripsi(
+  req: AuthRequest,
+  res: Response
+) {
+  try {
+    const { search, tahun, peminatan } = req.query;
+    const conditions = [eq(skripsi.status, "disetujui")];
+
+    if (typeof search === "string" && search.trim()) {
+      const keyword = `%${search.trim()}%`;
+      const searchCondition = or(
+        like(skripsi.judul, keyword),
+        like(users.nama, keyword)
+      );
+
+      if (searchCondition) conditions.push(searchCondition);
+    }
+
+    if (typeof tahun === "string" && tahun.trim()) {
+      const tahunNumber = Number(tahun);
+
+      if (!Number.isInteger(tahunNumber) || tahunNumber < 1900) {
+        return res.status(400).json({
+          message: "Filter tahun tidak valid",
+        });
+      }
+
+      conditions.push(eq(skripsi.tahun, tahunNumber));
+    }
+
+    if (typeof peminatan === "string" && peminatan.trim()) {
+      conditions.push(like(mahasiswa.peminatan, `%${peminatan.trim()}%`));
+    }
+
+    const data = await db
+      .select({
+        id: skripsi.id,
+        judul: skripsi.judul,
+        abstrak: skripsi.abstrak,
+        tahun: skripsi.tahun,
+        fileUrl: skripsi.fileUrl,
+        status: skripsi.status,
+        createdAt: skripsi.createdAt,
+        mahasiswaId: mahasiswa.id,
+        nim: mahasiswa.nim,
+        programStudi: mahasiswa.programStudi,
+        peminatan: mahasiswa.peminatan,
+        namaMahasiswa: users.nama,
+      })
+      .from(skripsi)
+      .innerJoin(mahasiswa, eq(skripsi.mahasiswaId, mahasiswa.id))
+      .innerJoin(users, eq(mahasiswa.userId, users.id))
+      .where(and(...conditions))
+      .orderBy(desc(skripsi.tahun), desc(skripsi.createdAt));
+
+    return res.status(200).json({
+      message: "Katalog skripsi publik berhasil diambil",
+      total: data.length,
+      data,
+    });
+  } catch (error) {
+    console.error("Gagal mengambil katalog skripsi publik:", error);
+
+    return res.status(500).json({
+      message: "Terjadi kesalahan pada server",
+    });
+  }
+}
+
+export async function getPublicSkripsiById(
+  req: AuthRequest,
+  res: Response
+) {
+  try {
+    const id = Number(req.params.id);
+
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({
+        message: "ID skripsi tidak valid",
+      });
+    }
+
+    const [data] = await db
+      .select({
+        id: skripsi.id,
+        judul: skripsi.judul,
+        abstrak: skripsi.abstrak,
+        tahun: skripsi.tahun,
+        fileUrl: skripsi.fileUrl,
+        status: skripsi.status,
+        createdAt: skripsi.createdAt,
+        mahasiswaId: mahasiswa.id,
+        nim: mahasiswa.nim,
+        programStudi: mahasiswa.programStudi,
+        peminatan: mahasiswa.peminatan,
+        namaMahasiswa: users.nama,
+      })
+      .from(skripsi)
+      .innerJoin(mahasiswa, eq(skripsi.mahasiswaId, mahasiswa.id))
+      .innerJoin(users, eq(mahasiswa.userId, users.id))
+      .where(and(eq(skripsi.id, id), eq(skripsi.status, "disetujui")))
+      .limit(1);
+
+    if (!data) {
+      return res.status(404).json({
+        message: "Skripsi tidak ditemukan atau belum disetujui",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Detail skripsi publik berhasil diambil",
+      data,
+    });
+  } catch (error) {
+    console.error("Gagal mengambil detail skripsi publik:", error);
 
     return res.status(500).json({
       message: "Terjadi kesalahan pada server",
