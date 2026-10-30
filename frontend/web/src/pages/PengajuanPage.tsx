@@ -4,7 +4,6 @@ import {
   ArrowRight,
   CheckCircle2,
   Clock3,
-  Download,
   Edit3,
   Eye,
   FilePlus2,
@@ -30,7 +29,6 @@ import { CURRENT_YEAR } from "../constants";
 import type { Skripsi, SkripsiDetailResponse } from "../types";
 import { getApiErrorMessage } from "../lib/errors";
 import { formatDate, formatNumber, truncate } from "../lib/format";
-import { resolveFileUrl } from "../lib/files";
 import {
   getTrackedSkripsiIds,
   trackSkripsiId,
@@ -47,6 +45,7 @@ import { PeminatanBadge } from "../components/ui/PeminatanBadge";
 import { TableSkeleton } from "../components/ui/Skeleton";
 import { PageHeader } from "../components/ui/PageHeader";
 import { cn } from "../lib/cn";
+import { SkripsiPdfButton } from "../components/skripsi/SkripsiPdfButton";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -815,7 +814,6 @@ export default function PengajuanPage() {
                   <tbody>
                     {tracked.map((item) => {
                       const editable = item.status === "draft" || item.status === "ditolak";
-                      const fileUrl = resolveFileUrl(item.fileUrl);
                       return (
                         <tr key={item.id} className="table-row">
                           <td className="px-6 py-4">
@@ -834,17 +832,15 @@ export default function PengajuanPage() {
                             <PeminatanBadge value={item.peminatan} size="xs" short />
                           </td>
                           <td className="px-3 py-4">
-                            {fileUrl ? (
-                              <a
-                                href={fileUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                download
-                                className="inline-flex items-center gap-1 text-[11px] font-bold text-primary-600 hover:text-primary-700"
-                              >
-                                <Download className="size-3.5" />
-                                PDF
-                              </a>
+                            {item.fileUrl ? (
+                              <SkripsiPdfButton
+                                id={item.id}
+                                title={item.judul}
+                                variant="ghost"
+                                size="sm"
+                                label="PDF"
+                                className="h-auto px-0 text-[11px] font-bold text-primary-600 hover:bg-transparent hover:text-primary-700"
+                              />
                             ) : (
                               <span className="text-[11px] text-amber-600">Belum ada</span>
                             )}

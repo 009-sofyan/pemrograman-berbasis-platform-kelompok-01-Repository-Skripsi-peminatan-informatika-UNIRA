@@ -4,7 +4,6 @@ import {
   BadgeCheck,
   CheckCircle2,
   Clock3,
-  Download,
   Eye,
   FileText,
   Inbox,
@@ -22,7 +21,6 @@ import { skripsiService } from "../services/skripsiService";
 import type { Skripsi, SkripsiStatus } from "../types";
 import { getApiErrorMessage } from "../lib/errors";
 import { formatDate, formatNumber, truncate } from "../lib/format";
-import { resolveFileUrl } from "../lib/files";
 import { cn } from "../lib/cn";
 import { PageHeader } from "../components/ui/PageHeader";
 import { Card } from "../components/ui/Card";
@@ -36,6 +34,7 @@ import { Pagination } from "../components/ui/Pagination";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import { PeminatanBadge } from "../components/ui/PeminatanBadge";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { SkripsiPdfButton } from "../components/skripsi/SkripsiPdfButton";
 
 type Tab = "pending" | "history";
 type DecisionAction = "approve" | "reject";
@@ -410,15 +409,15 @@ export default function PersetujuanPage() {
               : "Skripsi akan berstatus ditolak. Mahasiswa masih dapat memperbaiki data dan mengajukannya kembali."}
           </p>
           {decisionTarget?.item.fileUrl ? (
-            <a
-              href={resolveFileUrl(decisionTarget.item.fileUrl) ?? "#"}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-primary-600 hover:border-primary-200 hover:bg-primary-50"
-            >
-              <Download className="size-3.5" />
-              Periksa berkas PDF
-            </a>
+            <SkripsiPdfButton
+              id={decisionTarget.item.id}
+              title={decisionTarget.item.judul}
+              mode="open"
+              variant="secondary"
+              size="sm"
+              label="Periksa berkas PDF"
+              className="w-fit"
+            />
           ) : (
             <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-[11px] text-amber-700">
               <FileText className="mt-0.5 size-3.5 shrink-0" />
@@ -558,15 +557,14 @@ function PendingCard({
 
         <div className="flex shrink-0 flex-wrap items-center gap-2 xl:flex-col xl:items-stretch">
           {item.fileUrl ? (
-            <a
-              href={resolveFileUrl(item.fileUrl) ?? "#"}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <Button variant="secondary" size="sm" icon={<Download />} className="w-full">
-                Berkas PDF
-              </Button>
-            </a>
+            <SkripsiPdfButton
+              id={item.id}
+              title={item.judul}
+              variant="secondary"
+              size="sm"
+              label="Berkas PDF"
+              className="w-full"
+            />
           ) : (
             <Button variant="secondary" size="sm" icon={<FileText />} disabled className="w-full">
               Tanpa berkas

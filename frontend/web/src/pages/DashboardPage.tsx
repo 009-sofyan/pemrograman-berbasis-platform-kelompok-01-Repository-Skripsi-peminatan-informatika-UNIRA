@@ -7,7 +7,6 @@ import {
   BrainCircuit,
   ChartPie,
   Clock3,
-  Download,
   FilePlus2,
   GraduationCap,
   Library,
@@ -43,7 +42,6 @@ import {
   todayLabel,
   truncate,
 } from "../lib/format";
-import { resolveFileUrl } from "../lib/files";
 import { cn } from "../lib/cn";
 import { Card, CardHeader } from "../components/ui/Card";
 import { StatCard } from "../components/ui/StatCard";
@@ -52,6 +50,7 @@ import { Skeleton, TableSkeleton } from "../components/ui/Skeleton";
 import { EmptyState } from "../components/ui/EmptyState";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import { PeminatanBadge } from "../components/ui/PeminatanBadge";
+import { SkripsiPdfButton } from "../components/skripsi/SkripsiPdfButton";
 import {
   PeminatanDonut,
   PeminatanLegend,
@@ -640,16 +639,14 @@ export default function DashboardPage() {
                       </td>
                       <td className="px-3 py-3">
                         {item.fileUrl ? (
-                          <a
-                            href={resolveFileUrl(item.fileUrl) ?? "#"}
-                            target="_blank"
-                            rel="noreferrer"
-                            download
-                            className="inline-flex items-center gap-1 text-[11px] font-bold text-primary-600 hover:text-primary-700"
-                          >
-                            <Download className="size-3.5" />
-                            PDF
-                          </a>
+                          <SkripsiPdfButton
+                            id={item.id}
+                            title={item.judul}
+                            variant="ghost"
+                            size="sm"
+                            label="PDF"
+                            className="h-auto px-0 text-[11px] font-bold text-primary-600 hover:bg-transparent hover:text-primary-700"
+                          />
                         ) : (
                           <span className="text-[11px] text-slate-400">Belum ada</span>
                         )}

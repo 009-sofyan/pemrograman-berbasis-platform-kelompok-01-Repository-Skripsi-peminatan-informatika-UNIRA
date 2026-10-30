@@ -17,7 +17,6 @@ import {
   CalendarDays,
   ChartPie,
   CheckCircle2,
-  Download,
   FileText,
   GraduationCap,
   LayoutDashboard,
@@ -41,7 +40,6 @@ import { skripsiService } from "../services/skripsiService";
 import { BI, SA } from "../constants";
 import type { Skripsi } from "../types";
 import { clampPercent, formatDate, formatNumber, percent } from "../lib/format";
-import { resolveFileUrl } from "../lib/files";
 import { cn } from "../lib/cn";
 import { Logo } from "../components/layout/Logo";
 import { Avatar } from "../components/ui/Avatar";
@@ -54,6 +52,7 @@ import { PeminatanBadge } from "../components/ui/PeminatanBadge";
 import { Skeleton } from "../components/ui/Skeleton";
 import { SkripsiCard } from "../components/skripsi/SkripsiCard";
 import { SkripsiCover } from "../components/skripsi/SkripsiCover";
+import { SkripsiPdfButton } from "../components/skripsi/SkripsiPdfButton";
 
 type CatalogTab = "all" | typeof BI | typeof SA;
 
@@ -184,7 +183,7 @@ export default function LandingPage() {
     [SA]: saCount,
   };
 
-  const selectedFileUrl = resolveFileUrl(selected?.fileUrl);
+  const selectedHasFile = Boolean(selected?.fileUrl);
 
   const scrollToCatalog = () => {
     catalogRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -742,10 +741,17 @@ export default function LandingPage() {
               <Button variant="secondary" onClick={() => setSelected(null)}>
                 Tutup
               </Button>
-              {selectedFileUrl ? (
-                <a href={selectedFileUrl} target="_blank" rel="noreferrer" download>
-                  <Button icon={<Download />}>Unduh PDF</Button>
-                </a>
+              {selected.fileUrl ? (
+                user ? (
+                  <SkripsiPdfButton
+                    id={selected.id}
+                    title={selected.judul}
+                  />
+                ) : (
+                  <Link to="/login">
+                    <Button icon={<LogIn />}>Masuk untuk mengunduh</Button>
+                  </Link>
+                )
               ) : (
                 <Button variant="secondary" icon={<FileText />} disabled>
                   PDF belum tersedia
@@ -835,7 +841,7 @@ export default function LandingPage() {
                 )}
               </div>
 
-              {!selectedFileUrl ? (
+              {!selectedHasFile ? (
                 <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-3.5 py-3 text-[11px] font-semibold text-amber-700 ring-1 ring-inset ring-amber-100">
                   <FileText className="size-4 shrink-0" />
                   Berkas PDF belum tersedia untuk skripsi ini.

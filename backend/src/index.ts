@@ -1,48 +1,23 @@
-import express from "express";
-import { sql } from 'drizzle-orm';
-import { db } from './db/index.js';
-import authRoutes from "./routes/authRoutes.js";
-import skripsiRoutes from "./routes/skripsiRoutes.js";
-import mahasiswaRoutes from "./routes/mahasiswaRoutes.js";
-import persetujuanRoutes from "./routes/persetujuanRoutes.js";
-import peminatanRoutes from "./routes/peminatanRoutes.js";
-import dashboardRoutes from "./routes/dashboardRoutes.js";
-import pemetaanRoutes from "./routes/pemetaanRoutes.js";
-import path from "node:path";
+import app from "./app.js";
+import { validateEnvironment } from "./config/env.js";
 
-const app = express();
-
-app.use(
-  "/uploads",
-  express.static(path.resolve("uploads"))
-);
-
-app.get("/", (_req, res) => {
-  res.json({
-    message: "API Repository Skripsi FT UNIRA berhasil berjalan!",
-  });
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled promise rejection:", reason);
 });
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true}));
+try {
+  validateEnvironment();
 
-app.get('/health', async (_req, res) => {
-  try {
-    await db.execute(sql`SELECT 1`);
-    return res.json({status: 'ok'});
-  } catch {
-    return res.status(500).json({ status: 'error' });
+  const port = Number(process.env.PORT ?? 3000);
+
+  if (!Number.isInteger(port) || port <= 0 || port > 65535) {
+    throw new Error("PORT harus berupa bilangan bulat antara 1 dan 65535");
   }
-});
 
-app.use("/api/auth",authRoutes);
-app.use("/api/skripsi", skripsiRoutes);
-app.use("/api/mahasiswa", mahasiswaRoutes);
-app.use("/api/persetujuan", persetujuanRoutes);
-app.use("/api/peminatan", peminatanRoutes);
-app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/pemetaan", pemetaanRoutes);
-
-app.listen(3000, () => {
-  console.log('Server berjalan di http://localhost:3000');
-});
+  app.listen(port, () => {
+    console.log(`Server berjalan di http://localhost:${port}`);
+  });
+} catch (error) {
+  console.error("Gagal menjalankan server:", error);
+  process.exit(1);
+}

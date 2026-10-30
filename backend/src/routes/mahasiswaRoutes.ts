@@ -1,17 +1,51 @@
-
 import { Router } from "express";
-import { createMahasiswa } from "../controllers/mahasiswaControllers.js";
+import {
+    createMahasiswa,
+    getMahasiswa,
+    getMahasiswaById,
+    updateMahasiswa,
+    deleteMahasiswa,
+} from "../controllers/mahasiswaControllers.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
-import { getMahasiswa } from "../controllers/mahasiswaControllers.js";
-import { getMahasiswaById } from "../controllers/mahasiswaControllers.js";
-import { updateMahasiswa } from "../controllers/mahasiswaControllers.js";
-import { deleteMahasiswa } from "../controllers/mahasiswaControllers.js";
+import { allowRoles } from "../middlewares/roleMiddleware.js";
+import { validateBody, validateParams } from "../validation/validate.js";
+import {
+    createMahasiswaSchema,
+    idParamSchema,
+    updateMahasiswaSchema,
+} from "../validation/schemas.js";
+
 const router = Router();
 
-router.post("/", authMiddleware, createMahasiswa);
-router.get("/", authMiddleware, getMahasiswa);
-router.get("/:id", authMiddleware, getMahasiswaById);
-router.put("/:id", authMiddleware, updateMahasiswa);
-router.delete("/:id", authMiddleware, deleteMahasiswa);
+router.post(
+    "/",
+    authMiddleware,
+    allowRoles("tendik"),
+    validateBody(createMahasiswaSchema),
+    createMahasiswa
+);
+router.get("/", authMiddleware, allowRoles("tendik"), getMahasiswa);
+router.get(
+    "/:id",
+    authMiddleware,
+    allowRoles("tendik"),
+    validateParams(idParamSchema),
+    getMahasiswaById
+);
+router.put(
+    "/:id",
+    authMiddleware,
+    allowRoles("tendik"),
+    validateParams(idParamSchema),
+    validateBody(updateMahasiswaSchema),
+    updateMahasiswa
+);
+router.delete(
+    "/:id",
+    authMiddleware,
+    allowRoles("tendik"),
+    validateParams(idParamSchema),
+    deleteMahasiswa
+);
 
 export default router;

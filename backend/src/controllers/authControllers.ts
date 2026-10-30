@@ -1,98 +1,83 @@
-import type { Request, Response } from 'express';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import { eq } from 'drizzle-orm';
+import type { NextFunction, Request, Response } from "express";
+import bcrypt from "bcrypt";
+import jwt, { type SignOptions } from "jsonwebtoken";
+import { eq } from "drizzle-orm";
 
-import { db } from '../db/index.js';
-import { users } from '../db/users.js';
+import { getJwtExpiresIn, getJwtSecret } from "../config/env.js";
+import { db } from "../db/index.js";
+import { users } from "../db/users.js";
+import type {
+  LoginInput,
+  RegisterInput,
+} from "../validation/schemas.js";
 
-function getJwtSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error("JWT_SECRET belum diatur di file .env");
-  }
-  return secret;
-}
+const BCRYPT_ROUNDS = 10;
 
 export async function register(
   req: Request,
-  res: Response
+  res: Response,
+  next: NextFunction
 ) {
   try {
-    const { nama, email, password } = req.body;
+    // Body sudah dinormalisasi (trim/lowercase email) oleh registerSchema.
+    const { nama, email, password } = req.body as RegisterInput;
 
-    if (!nama || !email || !password) {
-      return res.status(400).json({
-        message: 'Nama, email, dan password wajib diisi',
-      });
-    }
-
-    const existingUser = await db
-      .select()
+    const [existingUser] = await db
+      .select({ id: users.id })
       .from(users)
-      .where(eq(users.email, email));
+      .where(eq(users.email, email))
+      .limit(1);
 
-    if (existingUser.length > 0) {
+    if (existingUser) {
       return res.status(409).json({
-        message: 'Email sudah terdaftar',
+        message: "Email sudah terdaftar",
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
+    // Role tidak pernah diambil dari body. Registrasi publik hanya boleh
+    // membuat akun mahasiswa.
     await db.insert(users).values({
       nama,
       email,
       password: hashedPassword,
-      role: 'mahasiswa',
+      role: "mahasiswa",
     });
 
     return res.status(201).json({
-      message: 'Registrasi berhasil',
+      message: "Registrasi berhasil",
     });
   } catch (error) {
-    console.error('Register error:', error);
-
-    return res.status(500).json({
-      message: 'Terjadi kesalahan pada server',
-    });
+    next(error);
   }
 }
 
 export async function login(
   req: Request,
-  res: Response
+  res: Response,
+  next: NextFunction
 ) {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body as LoginInput;
 
-    if (!email || !password) {
-      return res.status(400).json({
-        message: 'Email dan password wajib diisi',
-      });
-    }
-
-    const result = await db
+    const [dataUser] = await db
       .select()
       .from(users)
-      .where(eq(users.email, email));
+      .where(eq(users.email, email))
+      .limit(1);
 
-    if (result.length === 0) {
+    if (!dataUser) {
       return res.status(401).json({
-        message: 'Email atau password salah',
+        message: "Email atau password salah",
       });
     }
 
-    const dataUser = result[0]!;
-
-    const isMatch = await bcrypt.compare(
-      password,
-      dataUser.password
-    );
+    const isMatch = await bcrypt.compare(password, dataUser.password);
 
     if (!isMatch) {
       return res.status(401).json({
-        message: 'Email atau password salah',
+        message: "Email atau password salah",
       });
     }
 
@@ -104,12 +89,13 @@ export async function login(
       },
       getJwtSecret(),
       {
-        expiresIn: '1d',
+        algorithm: "HS256",
+        expiresIn: getJwtExpiresIn() as SignOptions["expiresIn"],
       }
     );
 
     return res.status(200).json({
-      message: 'Login berhasil',
+      message: "Login berhasil",
       token,
       user: {
         id: dataUser.id,
@@ -119,10 +105,6 @@ export async function login(
       },
     });
   } catch (error) {
-    console.error('Login error:', error);
-
-    return res.status(500).json({
-      message: 'Terjadi kesalahan pada server',
-    });
+    next(error);
   }
 }

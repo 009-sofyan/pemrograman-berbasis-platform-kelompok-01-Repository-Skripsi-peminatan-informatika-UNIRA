@@ -1,20 +1,16 @@
 import {
   BadgeCheck,
   CalendarDays,
-  Download,
   Eye,
   FileText,
 } from "lucide-react";
 import type { Skripsi } from "../../types";
-import { resolveFileUrl } from "../../lib/files";
 import { Badge } from "../ui/Badge";
 import { Avatar } from "../ui/Avatar";
 import { Button } from "../ui/Button";
 import { PeminatanBadge } from "../ui/PeminatanBadge";
 import { SkripsiCover } from "./SkripsiCover";
-
-const SECONDARY_ACTION =
-  "inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 text-[10px] font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2";
+import { SkripsiPdfButton } from "./SkripsiPdfButton";
 
 export function SkripsiCard({
   item,
@@ -23,7 +19,6 @@ export function SkripsiCard({
   item: Skripsi;
   onOpen: () => void;
 }) {
-  const fileUrl = resolveFileUrl(item.fileUrl);
   const authorName = item.namaMahasiswa ?? "Mahasiswa Informatika";
 
   return (
@@ -84,18 +79,15 @@ export function SkripsiCard({
             Detail &amp; Abstrak
           </Button>
 
-          {fileUrl ? (
-            <a
-              href={fileUrl}
-              target="_blank"
-              rel="noreferrer"
-              download
-              className={SECONDARY_ACTION}
-              aria-label={`Unduh PDF skripsi: ${item.judul}`}
-            >
-              <Download className="size-3.5" />
-              Unduh PDF
-            </a>
+          {item.fileUrl ? (
+            <SkripsiPdfButton
+              id={item.id}
+              title={item.judul}
+              variant="secondary"
+              size="sm"
+              label="Unduh PDF"
+              className="h-9 shrink-0 whitespace-nowrap px-2.5 text-[10px]"
+            />
           ) : (
             <button
               type="button"

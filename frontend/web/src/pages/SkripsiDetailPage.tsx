@@ -9,8 +9,6 @@ import {
   Circle,
   Clock3,
   Copy,
-  Download,
-  ExternalLink,
   FileText,
   GraduationCap,
   Hash,
@@ -26,7 +24,6 @@ import { skripsiService } from "../services/skripsiService";
 import { ROLE_META, STATUS_META } from "../constants";
 import { cn } from "../lib/cn";
 import { formatDate, formatDateTime, truncate } from "../lib/format";
-import { resolveFileUrl } from "../lib/files";
 import { Card, CardHeader } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Badge } from "../components/ui/Badge";
@@ -34,6 +31,7 @@ import { EmptyState } from "../components/ui/EmptyState";
 import { Skeleton } from "../components/ui/Skeleton";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import { PeminatanBadge } from "../components/ui/PeminatanBadge";
+import { SkripsiPdfButton } from "../components/skripsi/SkripsiPdfButton";
 
 export default function SkripsiDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -143,7 +141,6 @@ export default function SkripsiDetailPage() {
     );
   }
 
-  const fileUrl = resolveFileUrl(skripsi.fileUrl);
   const meta = STATUS_META[skripsi.status];
   const submitted = ["diajukan", "disetujui", "ditolak"].includes(skripsi.status);
   const decided = ["disetujui", "ditolak"].includes(skripsi.status);
@@ -187,16 +184,20 @@ export default function SkripsiDetailPage() {
           </div>
 
           <div className="mt-5 flex flex-wrap items-center gap-2">
-            {fileUrl ? (
+            {skripsi.fileUrl ? (
               <>
-                <a href={fileUrl} target="_blank" rel="noreferrer" download>
-                  <Button icon={<Download />}>Unduh berkas PDF</Button>
-                </a>
-                <a href={fileUrl} target="_blank" rel="noreferrer">
-                  <Button variant="secondary" icon={<ExternalLink />}>
-                    Buka di tab baru
-                  </Button>
-                </a>
+                <SkripsiPdfButton
+                  id={skripsi.id}
+                  title={skripsi.judul}
+                  label="Unduh berkas PDF"
+                />
+                <SkripsiPdfButton
+                  id={skripsi.id}
+                  title={skripsi.judul}
+                  mode="open"
+                  variant="secondary"
+                  label="Buka di tab baru"
+                />
               </>
             ) : (
               <Button variant="secondary" icon={<FileText />} disabled>
@@ -287,7 +288,7 @@ export default function SkripsiDetailPage() {
               description="Dokumen PDF yang diunggah mahasiswa."
               icon={<FileText className="size-5" />}
             />
-            {fileUrl ? (
+            {skripsi.fileUrl ? (
               <div className="mt-4 rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white p-4">
                 <div className="flex items-center gap-3">
                   <span className="grid size-11 place-items-center rounded-xl bg-white text-coral-500 shadow-sm ring-1 ring-slate-200">
@@ -296,15 +297,17 @@ export default function SkripsiDetailPage() {
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-ink">Berkas PDF</p>
                     <p className="mt-0.5 truncate text-[10px] text-slate-400">
-                      {skripsi.fileUrl}
+                      skripsi-{skripsi.id}.pdf
                     </p>
                   </div>
                 </div>
-                <a href={fileUrl} target="_blank" rel="noreferrer" className="mt-3 block">
-                  <Button size="sm" className="w-full" icon={<Download />}>
-                    Unduh dokumen
-                  </Button>
-                </a>
+                <SkripsiPdfButton
+                  id={skripsi.id}
+                  title={skripsi.judul}
+                  size="sm"
+                  label="Unduh dokumen"
+                  className="mt-3 w-full"
+                />
               </div>
             ) : (
               <div className="mt-4">

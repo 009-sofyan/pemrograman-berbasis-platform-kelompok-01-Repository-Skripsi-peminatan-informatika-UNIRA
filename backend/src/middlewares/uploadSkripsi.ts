@@ -1,46 +1,106 @@
-
-import multer from "multer";
+import crypto from "node:crypto";
 import path from "node:path";
-import fs from "node:fs";
+import type { RequestHandler } from "express";
+import multer from "multer";
+import {
+    SKRIPSI_UPLOAD_DIR,
+    deleteUploadedTempFile,
+} from "../utils/uploads.js";
 
-const uploadDir = path.resolve("uploads/skripsi");
-
-fs.mkdirSync(uploadDir, { recursive: true });
+class UploadValidationError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "UploadValidationError";
+    }
+}
 
 const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (_req, file, cb) => {
-    const uniqueName = `${Date.now()}-${Math.round(
-      Math.random() * 1e9
-    )}.pdf`;
-
-    cb(null, uniqueName);
-  },
+    destination: (_req, _file, cb) => {
+        cb(null, SKRIPSI_UPLOAD_DIR);
+    },
+    filename: (_req, _file, cb) => {
+        cb(null, `${crypto.randomUUID()}.pdf`);
+    },
 });
 
 const fileFilter: multer.Options["fileFilter"] = (
-  _req,
-  file,
-  cb
+    _req,
+    file,
+    cb
 ) => {
-  const isPdf =
-    file.mimetype === "application/pdf" &&
-    path.extname(file.originalname).toLowerCase() === ".pdf";
+    const hasPdfExtension =
+        path.extname(file.originalname).toLowerCase() === ".pdf";
+    const hasPdfMimeType = file.mimetype === "application/pdf";
 
-  if (!isPdf) {
-    return cb(new Error("File harus berformat PDF"));
-  }
+    if (!hasPdfExtension) {
+        return cb(
+            new UploadValidationError(
+                "File harus memiliki ekstensi .pdf"
+            )
+        );
+    }
 
-  cb(null, true);
+    if (!hasPdfMimeType) {
+        return cb(
+            new UploadValidationError(
+                "MIME type file harus application/pdf"
+            )
+        );
+    }
+
+    cb(null, true);
 };
 
-export const uploadSkripsi = multer({
-  storage,
-  fileFilter,
-  limits: {
-    fileSize: 10 * 1024 * 1024,
-    files: 1,
-  },
+const uploadSinglePdf = multer({
+    storage,
+    fileFilter,
+    limits: {
+        fileSize: 10 * 1024 * 1024,
+        files: 1,
+    },
 }).single("file");
+
+export const uploadSkripsi: RequestHandler = (req, res, next) => {
+    uploadSinglePdf(req, res, (error: unknown) => {
+        if (!error) {
+            next();
+            return;
+        }
+
+        void deleteUploadedTempFile(req.file?.path);
+
+        if (error instanceof multer.MulterError) {
+            if (error.code === "LIMIT_FILE_SIZE") {
+                return res.status(413).json({
+                    message: "Ukuran file melebihi batas maksimal 10 MB",
+                });
+            }
+
+            if (
+                error.code === "LIMIT_FILE_COUNT" ||
+                error.code === "LIMIT_UNEXPECTED_FILE"
+            ) {
+                return res.status(400).json({
+                    message:
+                        "Hanya satu file PDF yang dapat diunggah pada field 'file'",
+                });
+            }
+
+            return res.status(400).json({
+                message: "File yang diunggah tidak valid",
+            });
+        }
+
+        if (error instanceof UploadValidationError) {
+            return res.status(400).json({
+                message: error.message,
+            });
+        }
+
+        console.error("Gagal memproses upload skripsi:", error);
+
+        return res.status(400).json({
+            message: "File PDF tidak dapat diproses",
+        });
+    });
+};

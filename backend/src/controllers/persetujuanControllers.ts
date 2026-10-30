@@ -5,6 +5,10 @@ import { skripsi } from "../db/skripsi.js";
 import { mahasiswa } from "../db/mahasiswa.js";
 import type { AuthRequest } from "../middlewares/authMiddleware";
 import { users } from "../db/users.js";
+import {
+    storedSkripsiFileExists,
+    toSkripsiDownloadUrl,
+} from "../utils/uploads.js";
 
 export async function getPengajuanSkripsi(
     req: AuthRequest,
@@ -23,7 +27,7 @@ export async function getPengajuanSkripsi(
             });
         }
 
-        const data = await db
+        const rows = await db
             .select({
                 id: skripsi.id,
                 judul: skripsi.judul,
@@ -50,6 +54,13 @@ export async function getPengajuanSkripsi(
             )
             .where(eq(skripsi.status, "diajukan"))
             .orderBy(desc(skripsi.createdAt));
+
+        const data = rows.map((item) => ({
+            ...item,
+            fileUrl: item.fileUrl
+                ? toSkripsiDownloadUrl(item.id)
+                : null,
+        }));
 
         return res.status(200).json({
             message: "Daftar pengajuan skripsi berhasil diambil",
@@ -100,6 +111,20 @@ export const approveSkripsi = async (
     if (data.status !== "diajukan") {
       return res.status(400).json({
         message: "Hanya skripsi yang diajukan yang dapat disetujui",
+      });
+    }
+
+    if (!data.fileUrl) {
+      return res.status(400).json({
+        message:
+          "Skripsi belum memiliki file PDF dan tidak dapat disetujui",
+      });
+    }
+
+    if (!(await storedSkripsiFileExists(data.fileUrl))) {
+      return res.status(400).json({
+        message:
+          "File PDF skripsi tidak ditemukan dan tidak dapat disetujui",
       });
     }
 

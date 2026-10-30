@@ -1,16 +1,20 @@
 
-import type { Response } from "express";
-import bcrypt from "bcrypt";
+import type { NextFunction, Response } from "express";
 import { db } from "../db/index.js";
 import { users } from "../db/users.js";
 import { mahasiswa } from "../db/mahasiswa.js";
 import type { AuthRequest } from "../middlewares/authMiddleware.js";
 import { desc, eq } from "drizzle-orm";
+import type {
+  CreateMahasiswaInput,
+  UpdateMahasiswaInput,
+} from "../validation/schemas.js";
 
 
 export const createMahasiswa = async (
   req: AuthRequest,
-  res: Response
+  res: Response,
+  next: NextFunction
 ) => {
   try {
     if (req.user?.role !== "tendik") {
@@ -19,16 +23,11 @@ export const createMahasiswa = async (
       });
     }
 
-    const { email, nim, programStudi } = req.body;
+    // Body sudah divalidasi dan dinormalisasi oleh createMahasiswaSchema.
+    const { email, nim, programStudi } = req.body as CreateMahasiswaInput;
 
-    if (!email || !nim || !programStudi) {
-      return res.status(400).json({
-        message: "Email, NIM, dan program studi wajib diisi",
-      });
-    }
-
-    const emailNormalized = String(email).trim().toLowerCase();
-    const nimNormalized = String(nim).trim();
+    const emailNormalized = email;
+    const nimNormalized = nim;
 
     const [existingUser] = await db
       .select()
@@ -75,7 +74,7 @@ export const createMahasiswa = async (
     await db.insert(mahasiswa).values({
       userId: existingUser.id,
       nim: nimNormalized,
-      programStudi: String(programStudi).trim(),
+      programStudi,
       peminatan: null,
     });
 
@@ -86,16 +85,12 @@ export const createMahasiswa = async (
         nama: existingUser.nama,
         email: existingUser.email,
         nim: nimNormalized,
-        programStudi: String(programStudi).trim(),
+        programStudi,
         peminatan: null,
       },
     });
   } catch (error) {
-    console.error("Create mahasiswa error:", error);
-
-    return res.status(500).json({
-      message: "Gagal menambahkan data mahasiswa",
-    });
+    next(error);
   }
 };
 
@@ -103,7 +98,8 @@ export const createMahasiswa = async (
 
 export const getMahasiswa = async (
   req: AuthRequest,
-  res: Response
+  res: Response,
+  next: NextFunction
 ) => {
   try {
     if (req.user?.role !== "tendik") {
@@ -132,18 +128,15 @@ export const getMahasiswa = async (
       data,
     });
   } catch (error) {
-    console.error("Get mahasiswa error:", error);
-
-    return res.status(500).json({
-      message: "Gagal mengambil daftar mahasiswa",
-    });
+    next(error);
   }
 };
 
 
 export const getMahasiswaById = async (
   req: AuthRequest,
-  res: Response
+  res: Response,
+  next: NextFunction
 ) => {
   try {
     if (req.user?.role !== "tendik") {
@@ -186,18 +179,15 @@ export const getMahasiswaById = async (
       data,
     });
   } catch (error) {
-    console.error("Get mahasiswa by ID error:", error);
-
-    return res.status(500).json({
-      message: "Gagal mengambil detail mahasiswa",
-    });
+    next(error);
   }
 };
 
 
 export const updateMahasiswa = async (
   req: AuthRequest,
-  res: Response
+  res: Response,
+  next: NextFunction
 ) => {
   try {
     if (req.user?.role !== "tendik") {
@@ -227,16 +217,12 @@ export const updateMahasiswa = async (
       });
     }
 
-    const { nama, email, nim, programStudi, peminatan } = req.body;
+    // Body sudah divalidasi oleh updateMahasiswaSchema.
+    const { nama, email, nim, programStudi, peminatan } =
+      req.body as UpdateMahasiswaInput;
 
-    if (!nama || !email || !nim || !programStudi) {
-      return res.status(400).json({
-        message: "Nama, email, NIM, dan program studi wajib diisi",
-      });
-    }
-
-    const emailNormalized = String(email).trim().toLowerCase();
-    const nimNormalized = String(nim).trim();
+    const emailNormalized = email;
+    const nimNormalized = nim;
 
     const [existingEmail] = await db
       .select()
@@ -265,7 +251,7 @@ export const updateMahasiswa = async (
     await db
       .update(users)
       .set({
-        nama: String(nama).trim(),
+        nama,
         email: emailNormalized,
       })
       .where(eq(users.id, data.users.id));
@@ -274,8 +260,8 @@ export const updateMahasiswa = async (
       .update(mahasiswa)
       .set({
         nim: nimNormalized,
-        programStudi: String(programStudi).trim(),
-        peminatan: peminatan ? String(peminatan).trim() : null,
+        programStudi,
+        peminatan: peminatan ? peminatan : null,
       })
       .where(eq(mahasiswa.id, id));
 
@@ -283,18 +269,15 @@ export const updateMahasiswa = async (
       message: "Data mahasiswa berhasil diperbarui",
     });
   } catch (error) {
-    console.error("Update mahasiswa error:", error);
-
-    return res.status(500).json({
-      message: "Gagal memperbarui data mahasiswa",
-    });
+    next(error);
   }
 };
 
 
 export const deleteMahasiswa = async (
   req: AuthRequest,
-  res: Response
+  res: Response,
+  next: NextFunction
 ) => {
   try {
     if (req.user?.role !== "tendik") {
@@ -335,11 +318,7 @@ export const deleteMahasiswa = async (
       message: "Data mahasiswa berhasil dihapus",
     });
   } catch (error) {
-    console.error("Delete mahasiswa error:", error);
-
-    return res.status(500).json({
-      message: "Gagal menghapus data mahasiswa",
-    });
+    next(error);
   }
 };
 

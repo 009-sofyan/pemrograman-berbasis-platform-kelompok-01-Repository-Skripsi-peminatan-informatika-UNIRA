@@ -67,6 +67,13 @@ export const skripsiService = {
     return data;
   },
 
+  async downloadFile(id: number): Promise<Blob> {
+    const { data } = await api.get<Blob>(`/skripsi/${id}/download`, {
+      responseType: "blob",
+    });
+    return data;
+  },
+
   async uploadFile(
     id: number,
     file: File,

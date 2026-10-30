@@ -1,12 +1,88 @@
 import type { Response } from "express";
-import { count, eq, desc, and, like, or} from "drizzle-orm";
+import { eq, desc, and, like, or, inArray } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { skripsi } from "../db/skripsi.js";
 import { mahasiswa } from "../db/mahasiswa.js";
 import { users } from "../db/users.js";
 import type { AuthRequest } from "../middlewares/authMiddleware";
+import type { SkripsiUploadContext } from "../middlewares/precheckSkripsiUpload.js";
 import fs from "node:fs";
-import path from "node:path";
+import {
+    deleteStoredSkripsiFile,
+    deleteUploadedTempFile,
+    resolveStoredSkripsiPath,
+    storedSkripsiFileExists,
+    toSkripsiDownloadUrl,
+    toStoredSkripsiFileUrl,
+} from "../utils/uploads.js";
+
+type UserRole = NonNullable<AuthRequest["user"]>["role"];
+type SkripsiStatus = "draft" | "diajukan" | "disetujui" | "ditolak";
+
+const PDF_SIGNATURE = Buffer.from("%PDF-", "ascii");
+
+async function hasPdfMagicBytes(filePath: string): Promise<boolean> {
+    const handle = await fs.promises.open(filePath, "r");
+
+    try {
+        const buffer = Buffer.alloc(PDF_SIGNATURE.length);
+        const { bytesRead } = await handle.read(
+            buffer,
+            0,
+            PDF_SIGNATURE.length,
+            0
+        );
+
+        return (
+            bytesRead === PDF_SIGNATURE.length &&
+            buffer.equals(PDF_SIGNATURE)
+        );
+    } finally {
+        await handle.close();
+    }
+}
+
+async function getMahasiswaIdByUserId(
+    userId: number
+): Promise<number | null> {
+    const [data] = await db
+        .select({ id: mahasiswa.id })
+        .from(mahasiswa)
+        .where(eq(mahasiswa.userId, userId))
+        .limit(1);
+
+    return data?.id ?? null;
+}
+
+/**
+ * Aturan akses baca skripsi:
+ * - Kaprodi dan Tendik boleh melihat semua status.
+ * - Mahasiswa boleh melihat skripsi miliknya sendiri (semua status)
+ *   dan skripsi milik mahasiswa lain yang sudah disetujui.
+ */
+function canAccessSkripsi(
+    role: UserRole,
+    viewerMahasiswaId: number | null,
+    skripsiMahasiswaId: number,
+    status: SkripsiStatus
+): boolean {
+    if (role === "kaprodi" || role === "tendik") {
+        return true;
+    }
+
+    if (role !== "mahasiswa") {
+        return false;
+    }
+
+    if (status === "disetujui") {
+        return true;
+    }
+
+    return (
+        viewerMahasiswaId !== null &&
+        viewerMahasiswaId === skripsiMahasiswaId
+    );
+}
 
 export async function createSkripsi(
     req: AuthRequest,
@@ -72,9 +148,41 @@ export async function getSkripsi(
   res: Response
 ) {
   try {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({
+        message: "Autentikasi diperlukan",
+      });
+    }
+
     const { search, tahun, programStudi, peminatan } = req.query;
 
     const conditions = [];
+    let viewerMahasiswaId: number | null = null;
+
+    if (user.role === "mahasiswa") {
+      viewerMahasiswaId = await getMahasiswaIdByUserId(user.id);
+
+      if (viewerMahasiswaId === null) {
+        // Akun mahasiswa yang belum memiliki data akademik tetap boleh
+        // menelusuri katalog skripsi yang sudah disetujui.
+        conditions.push(eq(skripsi.status, "disetujui"));
+      } else {
+        const accessCondition = or(
+          eq(skripsi.mahasiswaId, viewerMahasiswaId),
+          eq(skripsi.status, "disetujui")
+        );
+
+        if (accessCondition) {
+          conditions.push(accessCondition);
+        }
+      }
+    } else if (user.role !== "kaprodi" && user.role !== "tendik") {
+      return res.status(403).json({
+        message: "Kamu tidak memiliki izin untuk mengakses fitur ini",
+      });
+    }
 
     if (typeof search === "string" && search.trim()) {
       conditions.push(like(skripsi.judul, `%${search.trim()}%`));
@@ -124,11 +232,24 @@ export async function getSkripsi(
         eq(skripsi.mahasiswaId, mahasiswa.id)
       );
 
-    const data = await (
+    const rows = await (
       conditions.length > 0
         ? query.where(and(...conditions))
         : query
     ).orderBy(desc(skripsi.createdAt));
+
+    const data = rows.map((item) => ({
+      ...item,
+      fileUrl:
+        canAccessSkripsi(
+          user.role,
+          viewerMahasiswaId,
+          item.mahasiswaId,
+          item.status
+        ) && item.fileUrl
+          ? toSkripsiDownloadUrl(item.id)
+          : null,
+    }));
 
     return res.status(200).json({
       message: "Daftar skripsi berhasil diambil",
@@ -178,7 +299,7 @@ export async function getPublicSkripsi(
       conditions.push(like(mahasiswa.peminatan, `%${peminatan.trim()}%`));
     }
 
-    const data = await db
+    const rows = await db
       .select({
         id: skripsi.id,
         judul: skripsi.judul,
@@ -198,6 +319,13 @@ export async function getPublicSkripsi(
       .innerJoin(users, eq(mahasiswa.userId, users.id))
       .where(and(...conditions))
       .orderBy(desc(skripsi.tahun), desc(skripsi.createdAt));
+
+    const data = rows.map((item) => ({
+      ...item,
+      fileUrl: item.fileUrl
+        ? toSkripsiDownloadUrl(item.id)
+        : null,
+    }));
 
     return res.status(200).json({
       message: "Katalog skripsi publik berhasil diambil",
@@ -255,7 +383,12 @@ export async function getPublicSkripsiById(
 
     return res.status(200).json({
       message: "Detail skripsi publik berhasil diambil",
-      data,
+      data: {
+        ...data,
+        fileUrl: data.fileUrl
+          ? toSkripsiDownloadUrl(data.id)
+          : null,
+      },
     });
   } catch (error) {
     console.error("Gagal mengambil detail skripsi publik:", error);
@@ -271,6 +404,14 @@ export async function getSkripsiById(
     res: Response
 ) {
     try {
+        const user = req.user;
+
+        if (!user) {
+            return res.status(401).json({
+                message: "Autentikasi diperlukan",
+            });
+        }
+
         const id = Number(req.params.id);
 
         if (!Number.isInteger(id) || id <= 0) {
@@ -278,6 +419,11 @@ export async function getSkripsiById(
                 message: "ID skripsi tidak valid",
             });
         }
+
+        const viewerMahasiswaId =
+            user.role === "mahasiswa"
+                ? await getMahasiswaIdByUserId(user.id)
+                : null;
 
         const [data] = await db
             .select({
@@ -307,9 +453,35 @@ export async function getSkripsiById(
             });
         }
 
+        // Gunakan 404 untuk skripsi yang tidak boleh diakses agar keberadaan
+        // draft/ditolak milik mahasiswa lain tidak mudah ditebak.
+        if (
+            !canAccessSkripsi(
+                user.role,
+                viewerMahasiswaId,
+                data.mahasiswaId,
+                data.status
+            )
+        ) {
+            return res.status(404).json({
+                message: "Skripsi tidak ditemukan",
+            });
+        }
+
         return res.status(200).json({
             message: "Detail skripsi berhasil diambil",
-            data,
+            data: {
+                ...data,
+                fileUrl:
+                    canAccessSkripsi(
+                        user.role,
+                        viewerMahasiswaId,
+                        data.mahasiswaId,
+                        data.status
+                    ) && data.fileUrl
+                        ? toSkripsiDownloadUrl(data.id)
+                        : null,
+            },
         });
     } catch (error) {
         console.error("Gagal mengambil detail skripsi:", error);
@@ -505,6 +677,7 @@ export async function deleteSkripsi(
                 id: skripsi.id,
                 mahasiswaId: skripsi.mahasiswaId,
                 status: skripsi.status,
+                fileUrl: skripsi.fileUrl,
             })
             .from(skripsi)
             .where(eq(skripsi.id, id))
@@ -532,6 +705,11 @@ export async function deleteSkripsi(
         await db
             .delete(skripsi)
             .where(eq(skripsi.id, id));
+
+        // File fisik dihapus setelah data database berhasil dihapus. Jika
+        // penghapusan file gagal, data utama tetap konsisten dan hanya
+        // menyisakan file yatim yang dapat dibersihkan terpisah.
+        await deleteStoredSkripsiFile(dataSkripsi.fileUrl);
 
         return res.status(200).json({
             message: "Skripsi berhasil dihapus",
@@ -588,6 +766,7 @@ export async function submitSkripsi(
                 id: skripsi.id,
                 mahasiswaId: skripsi.mahasiswaId,
                 status: skripsi.status,
+                fileUrl: skripsi.fileUrl,
             })
             .from(skripsi)
             .where(eq(skripsi.id, id))
@@ -614,6 +793,20 @@ export async function submitSkripsi(
             });
         }
 
+        if (!dataSkripsi.fileUrl) {
+            return res.status(400).json({
+                message:
+                    "Unggah file PDF terlebih dahulu sebelum mengajukan skripsi",
+            });
+        }
+
+        if (!(await storedSkripsiFileExists(dataSkripsi.fileUrl))) {
+            return res.status(400).json({
+                message:
+                    "File PDF skripsi tidak ditemukan. Unggah ulang file sebelum mengajukan",
+            });
+        }
+
         await db
             .update(skripsi)
             .set({ status: "diajukan" })
@@ -636,6 +829,8 @@ export async function uploadFileSkripsi(
     req: AuthRequest,
     res: Response
 ) {
+    let databaseUpdated = false;
+
     try {
         if (!req.user) {
             return res.status(401).json({
@@ -643,9 +838,12 @@ export async function uploadFileSkripsi(
             });
         }
 
-        if (req.user.role !== "mahasiswa") {
-            return res.status(403).json({
-                message: "Hanya mahasiswa yang dapat mengunggah file skripsi",
+        const uploadContext = res.locals
+            .skripsiUpload as SkripsiUploadContext | undefined;
+
+        if (!uploadContext) {
+            return res.status(500).json({
+                message: "Konteks upload skripsi tidak tersedia",
             });
         }
 
@@ -663,62 +861,173 @@ export async function uploadFileSkripsi(
             });
         }
 
-        const [dataMahasiswa] = await db
-            .select({ id: mahasiswa.id })
-            .from(mahasiswa)
-            .where(eq(mahasiswa.userId, req.user.id))
-            .limit(1);
+        if (!(await hasPdfMagicBytes(req.file.path))) {
+            await deleteUploadedTempFile(req.file.path);
 
-        if (!dataMahasiswa) {
-            fs.unlinkSync(req.file.path);
-
-            return res.status(404).json({
-                message: "Data mahasiswa belum terdaftar",
+            return res.status(400).json({
+                message:
+                    "File bukan PDF valid. Signature file harus diawali %PDF-",
             });
         }
 
-        const [dataSkripsi] = await db
+        const storedFileUrl = toStoredSkripsiFileUrl(
+            req.file.filename
+        );
+
+        const [result] = await db
+            .update(skripsi)
+            .set({ fileUrl: storedFileUrl })
+            .where(
+                and(
+                    eq(skripsi.id, id),
+                    inArray(skripsi.status, ["draft", "ditolak"])
+                )
+            );
+
+        if (result.affectedRows === 0) {
+            await deleteUploadedTempFile(req.file.path);
+
+            return res.status(409).json({
+                message:
+                    "File skripsi hanya dapat diunggah saat berstatus draft atau ditolak",
+            });
+        }
+
+        databaseUpdated = true;
+
+        // File lama baru dihapus setelah database berhasil menunjuk ke file
+        // baru. Jika proses sebelumnya gagal, file lama tetap dipertahankan.
+        await deleteStoredSkripsiFile(uploadContext.fileUrl);
+
+        return res.status(200).json({
+            message: "File skripsi berhasil diunggah",
+            fileUrl: toSkripsiDownloadUrl(id),
+        });
+    } catch (error) {
+        if (!databaseUpdated && req.file) {
+            await deleteUploadedTempFile(req.file.path);
+        }
+
+        console.error("Gagal mengunggah file skripsi:", error);
+
+        return res.status(500).json({
+            message: "Terjadi kesalahan pada server",
+        });
+    }
+}
+
+export async function downloadSkripsi(
+    req: AuthRequest,
+    res: Response
+) {
+    try {
+        const user = req.user;
+
+        if (!user) {
+            return res.status(401).json({
+                message: "Autentikasi diperlukan",
+            });
+        }
+
+        const id = Number(req.params.id);
+
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(400).json({
+                message: "ID skripsi tidak valid",
+            });
+        }
+
+        const viewerMahasiswaId =
+            user.role === "mahasiswa"
+                ? await getMahasiswaIdByUserId(user.id)
+                : null;
+
+        const [data] = await db
             .select({
                 id: skripsi.id,
                 mahasiswaId: skripsi.mahasiswaId,
+                status: skripsi.status,
+                fileUrl: skripsi.fileUrl,
             })
             .from(skripsi)
             .where(eq(skripsi.id, id))
             .limit(1);
 
-        if (!dataSkripsi) {
-            fs.unlinkSync(req.file.path);
-
+        if (!data) {
             return res.status(404).json({
                 message: "Skripsi tidak ditemukan",
             });
         }
 
-        if (dataSkripsi.mahasiswaId !== dataMahasiswa.id) {
-            fs.unlinkSync(req.file.path);
-
-            return res.status(403).json({
-                message: "Kamu hanya dapat mengunggah file skripsi milik sendiri",
+        if (
+            !canAccessSkripsi(
+                user.role,
+                viewerMahasiswaId,
+                data.mahasiswaId,
+                data.status
+            )
+        ) {
+            return res.status(404).json({
+                message: "Skripsi tidak ditemukan",
             });
         }
 
-        const fileUrl = `/uploads/skripsi/${path.basename(req.file.path)}`;
-
-        await db
-            .update(skripsi)
-            .set({ fileUrl })
-            .where(eq(skripsi.id, id));
-
-        return res.status(200).json({
-            message: "File skripsi berhasil diunggah",
-            fileUrl,
-        });
-    } catch (error) {
-        if (req.file && fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
+        if (!data.fileUrl) {
+            return res.status(404).json({
+                message: "File PDF skripsi belum tersedia",
+            });
         }
 
-        console.error("Gagal mengunggah file skripsi:", error);
+        const filePath = resolveStoredSkripsiPath(data.fileUrl);
+
+        if (!filePath) {
+            return res.status(404).json({
+                message: "File PDF skripsi tidak ditemukan",
+            });
+        }
+
+        let fileStat: fs.Stats;
+
+        try {
+            fileStat = await fs.promises.stat(filePath);
+        } catch (error) {
+            if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+                return res.status(404).json({
+                    message: "File PDF skripsi tidak ditemukan",
+                });
+            }
+
+            throw error;
+        }
+
+        if (!fileStat.isFile()) {
+            return res.status(404).json({
+                message: "File PDF skripsi tidak ditemukan",
+            });
+        }
+
+        res.setHeader("Cache-Control", "private, no-store");
+        res.setHeader("X-Content-Type-Options", "nosniff");
+
+        return res.download(
+            filePath,
+            `skripsi-${data.id}.pdf`,
+            { dotfiles: "allow" },
+            (error) => {
+                if (!error) return;
+
+                console.error("Gagal mengirim file skripsi:", error);
+
+                if (!res.headersSent) {
+                    res.status(500).json({
+                        message: "Gagal mengunduh file skripsi",
+                    });
+                    return;
+                }
+            }
+        );
+    } catch (error) {
+        console.error("Gagal mengunduh file skripsi:", error);
 
         return res.status(500).json({
             message: "Terjadi kesalahan pada server",

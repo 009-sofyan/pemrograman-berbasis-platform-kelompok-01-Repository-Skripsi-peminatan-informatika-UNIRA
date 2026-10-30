@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   CalendarDays,
-  Download,
   Eye,
   FilePlus2,
   Filter,
@@ -27,7 +26,6 @@ import {
 } from "../constants";
 import type { Skripsi, SkripsiStatus } from "../types";
 import { formatDate, formatNumber, truncate } from "../lib/format";
-import { resolveFileUrl } from "../lib/files";
 import { cn } from "../lib/cn";
 import { PageHeader } from "../components/ui/PageHeader";
 import { Card } from "../components/ui/Card";
@@ -38,6 +36,7 @@ import { TableSkeleton } from "../components/ui/Skeleton";
 import { Pagination } from "../components/ui/Pagination";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import { PeminatanBadge } from "../components/ui/PeminatanBadge";
+import { SkripsiPdfButton } from "../components/skripsi/SkripsiPdfButton";
 
 const PAGE_SIZE = 8;
 
@@ -363,16 +362,14 @@ export default function RepositoryPage() {
                     </td>
                     <td className="px-3 py-4">
                       {item.fileUrl ? (
-                        <a
-                          href={resolveFileUrl(item.fileUrl) ?? "#"}
-                          target="_blank"
-                          rel="noreferrer"
-                          download
-                          className="inline-flex items-center gap-1 text-[11px] font-bold text-primary-600 transition hover:text-primary-700"
-                        >
-                          <Download className="size-3.5" />
-                          PDF
-                        </a>
+                        <SkripsiPdfButton
+                          id={item.id}
+                          title={item.judul}
+                          variant="ghost"
+                          size="sm"
+                          label="PDF"
+                          className="h-auto px-0 text-[11px] font-bold text-primary-600 hover:bg-transparent hover:text-primary-700"
+                        />
                       ) : (
                         <span className="text-[11px] text-slate-400">—</span>
                       )}

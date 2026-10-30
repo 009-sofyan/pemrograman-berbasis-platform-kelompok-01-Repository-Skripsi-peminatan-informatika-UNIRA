@@ -32,3 +32,15 @@ export function resolveBackendAsset(path: string): string {
   const normalized = path.startsWith("/") ? path : `/${path}`;
   return `${API_ORIGIN}${normalized}`;
 }
+
+export function downloadBlob(blob: Blob, fileName: string): void {
+  const objectUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = objectUrl;
+  anchor.download = fileName;
+  anchor.rel = "noopener";
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 30_000);
+}

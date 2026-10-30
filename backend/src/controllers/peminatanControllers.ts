@@ -1,18 +1,15 @@
 
-import type { Response } from "express";
+import type { NextFunction, Response } from "express";
 import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { mahasiswa } from "../db/mahasiswa.js";
 import type { AuthRequest } from "../middlewares/authMiddleware.js";
-
-const pilihanPeminatan = [
-  "Business Intelligence",
-  "Smart Agriculture",
-];
+import type { PilihPeminatanInput } from "../validation/schemas.js";
 
 export async function getPeminatanSaya(
   req: AuthRequest,
-  res: Response
+  res: Response,
+  next: NextFunction
 ) {
   try {
     if (!req.user) {
@@ -50,17 +47,14 @@ export async function getPeminatanSaya(
       data: dataMahasiswa,
     });
   } catch (error) {
-    console.error("Gagal mengambil peminatan mahasiswa:", error);
-
-    return res.status(500).json({
-      message: "Terjadi kesalahan pada server",
-    });
+    next(error);
   }
 }
 
 export async function pilihPeminatan(
   req: AuthRequest,
-  res: Response
+  res: Response,
+  next: NextFunction
 ) {
   try {
     if (!req.user) {
@@ -75,16 +69,8 @@ export async function pilihPeminatan(
       });
     }
 
-    const { peminatan } = req.body;
-
-    if (
-      typeof peminatan !== "string" ||
-      !pilihanPeminatan.includes(peminatan)
-    ) {
-      return res.status(400).json({
-        message: "Pilih Business Intelligence atau Smart Agriculture",
-      });
-    }
+    // Body sudah divalidasi dengan enumerasi peminatan resmi.
+    const { peminatan } = req.body as PilihPeminatanInput;
 
     const [dataMahasiswa] = await db
       .select({
@@ -117,10 +103,6 @@ export async function pilihPeminatan(
       peminatan,
     });
   } catch (error) {
-    console.error("Gagal memilih peminatan:", error);
-
-    return res.status(500).json({
-      message: "Terjadi kesalahan pada server",
-    });
+    next(error);
   }
 }
