@@ -76,6 +76,13 @@ export const loginSchema = z
     .object({
         email: emailSchema,
         password: passwordLoginSchema,
+        // Role hanya dipakai untuk mencocokkan tab login yang dipilih.
+        // Otorisasi tetap memakai role dari database setelah autentikasi.
+        role: z
+            .enum(ROLE_VALUES, {
+                error: "Role harus mahasiswa, kaprodi, atau tendik",
+            })
+            .optional(),
     })
     .strict();
 

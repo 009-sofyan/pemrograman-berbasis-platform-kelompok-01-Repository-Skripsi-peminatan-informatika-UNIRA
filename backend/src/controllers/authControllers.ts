@@ -59,7 +59,7 @@ export async function login(
   next: NextFunction
 ) {
   try {
-    const { email, password } = req.body as LoginInput;
+    const { email, password, role } = req.body as LoginInput;
 
     const [dataUser] = await db
       .select()
@@ -78,6 +78,15 @@ export async function login(
     if (!isMatch) {
       return res.status(401).json({
         message: "Email atau password salah",
+      });
+    }
+
+    // Role dari request hanya untuk mencocokkan pilihan tab login. Pengecekan
+    // dilakukan setelah password benar agar role akun tidak bisa ditebak tanpa
+    // kredensial yang sah. Token tetap memakai role dari database.
+    if (role && role !== dataUser.role) {
+      return res.status(401).json({
+        message: "Role tidak sesuai dengan akun yang terdaftar",
       });
     }
 

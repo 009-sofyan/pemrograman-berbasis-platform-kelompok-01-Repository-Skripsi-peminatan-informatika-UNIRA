@@ -66,6 +66,27 @@ export function applyLocalProfile(user: User): User {
   return { ...user, ...profile };
 }
 
+/**
+ * Avatar lokal hanya dimiliki oleh user yang sedang login. Cocokkan identitas
+ * penulis (nama/email) agar foto yang sama tampil di kartu karyanya sendiri,
+ * sementara karya mahasiswa lain tetap memakai avatar inisial.
+ */
+export function getAvatarForUser(
+  currentUser: User | null,
+  author: { nama?: string | null; email?: string | null },
+): string | null {
+  if (!currentUser?.avatarUrl) return null;
+
+  const emailMatches =
+    typeof author.email === "string" &&
+    author.email.trim().toLowerCase() === currentUser.email.trim().toLowerCase();
+  const nameMatches =
+    typeof author.nama === "string" &&
+    author.nama.trim().toLowerCase() === currentUser.nama.trim().toLowerCase();
+
+  return emailMatches || nameMatches ? currentUser.avatarUrl : null;
+}
+
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

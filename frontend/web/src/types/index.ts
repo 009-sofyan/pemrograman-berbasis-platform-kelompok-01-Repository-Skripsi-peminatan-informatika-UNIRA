@@ -18,6 +18,7 @@ export interface User {
 export interface LoginPayload {
   email: string;
   password: string;
+  role: Role;
 }
 
 export interface RegisterPayload {
@@ -155,13 +156,24 @@ export interface DashboardResponse {
   peminatanMahasiswa: PeminatanCount[];
 }
 
+export interface PemetaanAngkatan {
+  angkatan: string;
+  totalMahasiswa: number;
+  bi: number;
+  sa: number;
+  belumMemilih: number;
+  lainnya: number;
+}
+
 export interface PemetaanResponse {
   message: string;
+  totalMahasiswa: number;
   totalMemilih: number;
   data: {
     peminatan: PeminatanValue;
     totalMahasiswa: number;
   }[];
+  byAngkatan: PemetaanAngkatan[];
 }
 
 export interface PilihPeminatanPayload {

@@ -95,13 +95,11 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const user = await login(
-        {
-          email: email.trim().toLowerCase(),
-          password,
-        },
+      const user = await login({
+        email: email.trim().toLowerCase(),
+        password,
         role,
-      );
+      });
       const firstName = user.nama.split(" ")[0] ?? user.nama;
       toast.success(
         `Selamat datang, ${firstName}!`,
@@ -109,10 +107,13 @@ export default function LoginPage() {
       );
       navigate(ROLE_LANDING[user.role], { replace: true });
     } catch (err) {
-      const mismatch = err instanceof RoleMismatchError;
-      const message = mismatch
-        ? err.message
-        : getApiErrorMessage(err, "Email atau password salah.");
+      const message = getApiErrorMessage(err, "Email atau password salah.");
+      const mismatch =
+        err instanceof RoleMismatchError || /role\s+tidak\s+sesuai/i.test(message);
+
+      // Jangan biarkan password lama tetap terisi setelah login gagal.
+      setPassword("");
+      setShowPassword(false);
       setError(message);
       toast.error(mismatch ? "Role tidak sesuai" : "Gagal masuk", message);
     } finally {

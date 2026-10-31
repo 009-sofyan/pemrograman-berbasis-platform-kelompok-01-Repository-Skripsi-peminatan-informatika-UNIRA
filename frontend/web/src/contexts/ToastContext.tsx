@@ -41,6 +41,25 @@ interface ToastContextValue {
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
+// Semua notifikasi tampil singkat agar tidak menutupi konten terlalu lama.
+// Durasi kustom tetap dihormati, tetapi dibatasi pada rentang 2,5–3 detik.
+const TOAST_MIN_DURATION = 2500;
+const TOAST_MAX_DURATION = 3000;
+const TOAST_DEFAULT_DURATION = 2600;
+
+function resolveToastDuration(requested?: number): number {
+  if (typeof requested !== "number" || !Number.isFinite(requested)) {
+    return TOAST_DEFAULT_DURATION;
+  }
+
+  // Tidak ada toast yang boleh bertahan selamanya; semua dipaksa berada
+  // dalam rentang 2,5–3 detik agar layar cepat kembali bersih.
+  return Math.min(
+    TOAST_MAX_DURATION,
+    Math.max(TOAST_MIN_DURATION, requested),
+  );
+}
+
 const VARIANT_CONFIG: Record<
   ToastVariant,
   { icon: LucideIcon; iconClass: string; barClass: string; ringClass: string }
@@ -95,13 +114,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         id,
         title: options.title,
         variant: options.variant ?? "info",
-        duration: options.duration ?? 2800,
+        duration: resolveToastDuration(options.duration),
         ...(options.description ? { description: options.description } : {}),
       };
       setToasts((current) => [item, ...current].slice(0, 4));
-      if (item.duration > 0) {
-        window.setTimeout(() => dismiss(id), item.duration);
-      }
+      window.setTimeout(() => dismiss(id), item.duration);
     },
     [dismiss],
   );

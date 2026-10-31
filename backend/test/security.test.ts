@@ -129,6 +129,24 @@ test("schema menolak input tidak valid dan properti tambahan", () => {
             password: "secret",
             role: "kaprodi",
         }).success,
+        true
+    );
+
+    assert.equal(
+        loginSchema.safeParse({
+            email: "user@example.com",
+            password: "secret",
+            role: "admin",
+        }).success,
+        false
+    );
+
+    assert.equal(
+        loginSchema.safeParse({
+            email: "user@example.com",
+            password: "secret",
+            fieldTambahan: true,
+        }).success,
         false
     );
 
@@ -231,7 +249,7 @@ test("login menerima kredensial benar dan menolak password salah", async () => {
     try {
         const success = await request(miniApp)
             .post("/login")
-            .send({ email: fakeUser.email, password });
+            .send({ email: fakeUser.email, password, role: "mahasiswa" });
 
         assert.equal(success.status, 200);
         assert.ok(success.body.token);
@@ -253,6 +271,14 @@ test("login menerima kredensial benar dan menolak password salah", async () => {
 
         assert.equal(failure.status, 401);
         assert.equal(failure.body.token, undefined);
+
+        const roleMismatch = await request(miniApp)
+            .post("/login")
+            .send({ email: fakeUser.email, password, role: "kaprodi" });
+
+        assert.equal(roleMismatch.status, 401);
+        assert.match(roleMismatch.body.message, /role tidak sesuai/i);
+        assert.equal(roleMismatch.body.token, undefined);
     } finally {
         mutableDb.select = originalSelect;
     }
@@ -535,6 +561,32 @@ test("ID tidak valid, body tambahan, dan query tambahan ditolak 400", async () =
         .get("/api/dashboard?takDikenal=1")
         .set("Authorization", authHeader(mahasiswaUser));
     assert.equal(invalidDashboard.status, 400);
+});
+
+test("pemetaan publik mengembalikan agregat per angkatan", async () => {
+    const res = await request(app).get("/api/pemetaan");
+
+    assert.equal(res.status, 200);
+    assert.equal(typeof res.body.totalMahasiswa, "number");
+    assert.equal(typeof res.body.totalMemilih, "number");
+    assert.ok(Array.isArray(res.body.data));
+    assert.ok(Array.isArray(res.body.byAngkatan));
+
+    for (const item of res.body.byAngkatan as {
+        angkatan: string;
+        totalMahasiswa: number;
+        bi: number;
+        sa: number;
+        belumMemilih: number;
+        lainnya: number;
+    }[]) {
+        assert.match(item.angkatan, /^\d{4}$/);
+        assert.equal(typeof item.totalMahasiswa, "number");
+        assert.equal(typeof item.bi, "number");
+        assert.equal(typeof item.sa, "number");
+        assert.equal(typeof item.belumMemilih, "number");
+        assert.equal(typeof item.lainnya, "number");
+    }
 });
 
 test("route tidak dikenal menghasilkan 404 dan JSON rusak menghasilkan 400", async () => {

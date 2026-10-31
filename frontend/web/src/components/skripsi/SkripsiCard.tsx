@@ -4,6 +4,8 @@ import {
   Eye,
   FileText,
 } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
+import { getAvatarForUser } from "../../lib/profile";
 import type { Skripsi } from "../../types";
 import { Badge } from "../ui/Badge";
 import { Avatar } from "../ui/Avatar";
@@ -19,7 +21,12 @@ export function SkripsiCard({
   item: Skripsi;
   onOpen: () => void;
 }) {
+  const { user } = useAuth();
   const authorName = item.namaMahasiswa ?? "Mahasiswa Informatika";
+  const avatarSrc = getAvatarForUser(user, {
+    nama: item.namaMahasiswa,
+    email: item.emailMahasiswa,
+  });
 
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-white shadow-soft transition duration-300 hover:-translate-y-1 hover:border-primary-200/80 hover:shadow-card">
@@ -57,7 +64,7 @@ export function SkripsiCard({
         </h3>
 
         <div className="mt-4 flex items-center gap-2.5 rounded-2xl border border-slate-100 bg-slate-50/75 p-3">
-          <Avatar name={authorName} size="sm" />
+          <Avatar name={authorName} src={avatarSrc} size="sm" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-[11px] font-extrabold text-ink">
               {authorName}

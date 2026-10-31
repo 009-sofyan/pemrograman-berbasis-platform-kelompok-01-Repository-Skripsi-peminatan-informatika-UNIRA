@@ -131,7 +131,7 @@ src/
 | Verifikasi (Kaprodi) | `GET /api/persetujuan`, `PATCH /api/persetujuan/:id/approve`, `PATCH /api/persetujuan/:id/reject` |
 | Pemilihan peminatan (Mahasiswa) | `GET /api/peminatan/saya`, `PATCH /api/peminatan/peminatan` |
 | Dashboard | `GET /api/dashboard` |
-| Pemetaan (Kaprodi & Mahasiswa) | `GET /api/pemetaan` |
+| Pemetaan (publik, agregat) | `GET /api/pemetaan` — total, per peminatan, dan `byAngkatan` untuk widget landing page |
 
 ## Batasan yang Diketahui
 
@@ -140,6 +140,7 @@ src/
 3. **Peminatan final.** Backend menolak perubahan peminatan yang sudah pernah dipilih. Perbaikan hanya dapat dilakukan melalui Tendik di halaman Data Mahasiswa.
 4. **Path file statis backend.** `backend/src/index.ts` sebelumnya menyajikan folder `upload`, sedangkan multer menulis ke `uploads/skripsi`. Path sudah diperbaiki menjadi `uploads` agar tautan PDF berfungsi.
 5. **Data lama.** Seed lama dapat memuat peminatan `Artificial Intelligence` atau `Software Engineering`; UI menampilkannya sebagai "Lainnya" dan tetap dihitung pada pemetaan.
+6. **Foto profil bersifat lokal per perangkat.** Backend belum memiliki kolom atau endpoint avatar, sehingga foto disimpan di `localStorage` per akun lalu disinkronkan melalui `AuthContext` ke topbar, sidebar, dan kartu skripsi milik pengguna.
 
 ## Verifikasi
 

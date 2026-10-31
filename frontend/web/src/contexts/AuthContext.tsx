@@ -52,7 +52,7 @@ interface AuthContextValue {
   token: string | null;
   initializing: boolean;
   isAuthenticated: boolean;
-  login: (payload: LoginPayload, expectedRole?: Role) => Promise<User>;
+  login: (payload: LoginPayload) => Promise<User>;
   register: (payload: RegisterPayload) => Promise<string>;
   logout: () => void;
   refreshProfile: () => Promise<void>;
@@ -130,23 +130,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, handler);
   }, [navigate, location.pathname, toast]);
 
-  const login = useCallback(
-    async (payload: LoginPayload, expectedRole?: Role) => {
-      const response = await authService.login(payload);
+  const login = useCallback(async (payload: LoginPayload) => {
+    const response = await authService.login(payload);
 
-      if (expectedRole && response.user.role !== expectedRole) {
-        throw new RoleMismatchError(expectedRole, response.user.role);
-      }
+    // Backend sudah menolak role yang tidak cocok. Pengecekan ini menjadi
+    // lapisan kedua agar sesi tidak pernah tersimpan untuk role yang salah.
+    if (response.user.role !== payload.role) {
+      throw new RoleMismatchError(payload.role, response.user.role);
+    }
 
-      const nextUser = applyLocalProfile(response.user);
-      setToken(response.token);
-      setTokenState(response.token);
-      setStoredUser(nextUser);
-      setUser(nextUser);
-      return nextUser;
-    },
-    [],
-  );
+    const nextUser = applyLocalProfile(response.user);
+    setToken(response.token);
+    setTokenState(response.token);
+    setStoredUser(nextUser);
+    setUser(nextUser);
+    return nextUser;
+  }, []);
 
   const register = useCallback(async (payload: RegisterPayload) => {
     const response = await authService.register(payload);
