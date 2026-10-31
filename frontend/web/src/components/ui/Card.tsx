@@ -10,10 +10,10 @@ export function Card({ className, hover = false, padded = true, ...props }: Card
   return (
     <div
       className={cn(
-        "rounded-2xl border border-slate-200/80 bg-white shadow-soft",
+        "rounded-panel border border-white/80 bg-white shadow-soft",
         padded && "p-5 sm:p-6",
         hover &&
-          "transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300/80 hover:shadow-card",
+          "transition-all duration-200 ease-out hover:-translate-y-1 hover:border-navy-100 hover:shadow-card",
         className,
       )}
       {...props}
@@ -38,7 +38,7 @@ export function CardHeader({
     <div className={cn("flex items-start justify-between gap-4", className)}>
       <div className="flex min-w-0 items-start gap-3">
         {icon ? (
-          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary-50 text-primary-600">
+          <span className="grid size-10 shrink-0 place-items-center rounded-input bg-navy-50 text-navy-700 ring-1 ring-navy-100">
             {icon}
           </span>
         ) : null}

@@ -25,7 +25,7 @@ export function PageHeader({
     >
       <div className="min-w-0">
         {eyebrow ? (
-          <p className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-primary-600">
+          <p className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-primary-600">
             {icon ? (
               <span className="grid size-5 place-items-center rounded-md bg-primary-50">
                 {icon}
@@ -34,11 +34,11 @@ export function PageHeader({
             {eyebrow}
           </p>
         ) : null}
-        <h1 className="text-2xl font-extrabold tracking-tight text-ink sm:text-[28px]">
+        <h1 className="font-display text-[28px] font-extrabold leading-tight tracking-tight text-ink sm:text-[40px]">
           {title}
         </h1>
         {description ? (
-          <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-ink-soft">
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-soft">
             {description}
           </p>
         ) : null}

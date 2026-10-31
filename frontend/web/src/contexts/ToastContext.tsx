@@ -41,23 +41,16 @@ interface ToastContextValue {
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
-// Semua notifikasi tampil singkat agar tidak menutupi konten terlalu lama.
-// Durasi kustom tetap dihormati, tetapi dibatasi pada rentang 2,5–3 detik.
 const TOAST_MIN_DURATION = 2500;
 const TOAST_MAX_DURATION = 3000;
-const TOAST_DEFAULT_DURATION = 2600;
+const TOAST_DEFAULT_DURATION = 2700;
+const MAX_VISIBLE_TOASTS = 2;
 
 function resolveToastDuration(requested?: number): number {
   if (typeof requested !== "number" || !Number.isFinite(requested)) {
     return TOAST_DEFAULT_DURATION;
   }
-
-  // Tidak ada toast yang boleh bertahan selamanya; semua dipaksa berada
-  // dalam rentang 2,5–3 detik agar layar cepat kembali bersih.
-  return Math.min(
-    TOAST_MAX_DURATION,
-    Math.max(TOAST_MIN_DURATION, requested),
-  );
+  return Math.min(TOAST_MAX_DURATION, Math.max(TOAST_MIN_DURATION, requested));
 }
 
 const VARIANT_CONFIG: Record<
@@ -66,9 +59,9 @@ const VARIANT_CONFIG: Record<
 > = {
   success: {
     icon: CheckCircle2,
-    iconClass: "bg-mint-50 text-mint-600",
-    barClass: "bg-mint-500",
-    ringClass: "ring-mint-100",
+    iconClass: "bg-sa-50 text-sa-600",
+    barClass: "bg-sa-500",
+    ringClass: "ring-sa-100",
   },
   error: {
     icon: XCircle,
@@ -117,7 +110,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         duration: resolveToastDuration(options.duration),
         ...(options.description ? { description: options.description } : {}),
       };
-      setToasts((current) => [item, ...current].slice(0, 4));
+      // Maksimal dua notifikasi agar tidak menutupi konten utama.
+      setToasts((current) => [item, ...current].slice(0, MAX_VISIBLE_TOASTS));
       window.setTimeout(() => dismiss(id), item.duration);
     },
     [dismiss],
@@ -153,16 +147,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           return (
             <div
               key={item.id}
-              role="status"
+              role={item.variant === "error" ? "alert" : "status"}
               className={cn(
-                "pointer-events-auto w-full animate-toast-in overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-card ring-1 backdrop-blur-xl",
+                "glass pointer-events-auto w-full animate-toast-in overflow-hidden rounded-card border p-4 shadow-card ring-1",
                 config.ringClass,
               )}
             >
               <div className="flex items-start gap-3">
                 <span
                   className={cn(
-                    "grid size-10 shrink-0 place-items-center rounded-xl",
+                    "grid size-10 shrink-0 place-items-center rounded-input",
                     config.iconClass,
                   )}
                 >
@@ -179,13 +173,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 <button
                   type="button"
                   onClick={() => dismiss(item.id)}
-                  className="grid size-7 shrink-0 place-items-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+                  className="grid size-11 shrink-0 place-items-center rounded-input text-ink-faint transition hover:bg-white/80 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
                   aria-label="Tutup notifikasi"
                 >
                   <X className="size-4" />
                 </button>
               </div>
-              <div className="mt-3 h-1 overflow-hidden rounded-full bg-slate-100">
+              <div className="mt-3 h-1 overflow-hidden rounded-full bg-navy-50">
                 <div
                   className={cn("h-full rounded-full", config.barClass)}
                   style={{

@@ -5,13 +5,47 @@ export default {
     extend: {
       colors: {
         canvas: {
-          DEFAULT: "#F8FAFC",
-          soft: "#F1F5F9",
+          DEFAULT: "#F8F7F2",
+          soft: "#F1EFE7",
+          elevated: "#FFFFFF",
+        },
+        navy: {
+          50: "#EEF2FB",
+          100: "#DCE4F5",
+          200: "#B9C7E8",
+          300: "#8DA2D3",
+          400: "#5E77B4",
+          500: "#3D5593",
+          600: "#2A4078",
+          700: "#1C2F66",
+          800: "#14234F",
+          900: "#0E1B3D",
+          950: "#08122A",
+        },
+        gold: {
+          50: "#FFFAE8",
+          100: "#FEF3C4",
+          200: "#FDE68A",
+          300: "#FAD34F",
+          400: "#F5C518",
+          500: "#DDAA08",
+          600: "#B88606",
+          700: "#8C6505",
+        },
+        violet: {
+          50: "#F5F3FF",
+          100: "#EDE9FE",
+          200: "#DDD6FE",
+          300: "#C4B5FD",
+          400: "#A78BFA",
+          500: "#8B5CF6",
+          600: "#7C3AED",
+          700: "#6D28D9",
         },
         ink: {
-          DEFAULT: "#0F172A",
-          soft: "#475569",
-          faint: "#94A3B8",
+          DEFAULT: "#14234F",
+          soft: "#5B6785",
+          faint: "#8992A9",
         },
         primary: {
           50: "#EEF2FF",
@@ -25,6 +59,28 @@ export default {
           800: "#3730A3",
           900: "#312E81",
           950: "#1E1B4B",
+        },
+        bi: {
+          50: "#EEF2FF",
+          100: "#E0E7FF",
+          200: "#C7D2FE",
+          300: "#A5B4FC",
+          400: "#818CF8",
+          500: "#6366F1",
+          600: "#4F46E5",
+          700: "#4338CA",
+          800: "#3730A3",
+        },
+        sa: {
+          50: "#ECFDF5",
+          100: "#D1FAE5",
+          200: "#A7F3D0",
+          300: "#6EE7B7",
+          400: "#34D399",
+          500: "#10B981",
+          600: "#059669",
+          700: "#047857",
+          800: "#065F46",
         },
         mint: {
           50: "#ECFDF5",
@@ -66,10 +122,19 @@ export default {
           600: "#E11D48",
           700: "#BE123C",
         },
+        rose: {
+          50: "#FFF1F2",
+          100: "#FFE4E6",
+          200: "#FECDD3",
+          300: "#FDA4AF",
+          400: "#FB7185",
+          500: "#F43F5E",
+          600: "#E11D48",
+          700: "#BE123C",
+        },
       },
       fontFamily: {
         sans: [
-          '"Plus Jakarta Sans"',
           "Inter",
           "ui-sans-serif",
           "system-ui",
@@ -77,23 +142,58 @@ export default {
           "Segoe UI",
           "sans-serif",
         ],
+        display: [
+          '"Plus Jakarta Sans"',
+          "Inter",
+          "ui-sans-serif",
+          "system-ui",
+          "sans-serif",
+        ],
+      },
+      fontSize: {
+        "2xs": ["0.75rem", { lineHeight: "1.15rem" }],
+        xs: ["0.75rem", { lineHeight: "1.125rem" }],
+        sm: ["0.875rem", { lineHeight: "1.35rem" }],
+        base: ["1rem", { lineHeight: "1.6rem" }],
+        lg: ["1.25rem", { lineHeight: "1.75rem" }],
+        xl: ["1.75rem", { lineHeight: "2.15rem" }],
+        "2xl": ["2.5rem", { lineHeight: "2.9rem" }],
+        "3xl": ["3.5rem", { lineHeight: "1.05" }],
       },
       spacing: {
         4.5: "1.125rem",
         5.5: "1.375rem",
+        7.5: "1.875rem",
+        18: "4.5rem",
+      },
+      borderRadius: {
+        input: "0.75rem",
+        card: "1.25rem",
+        panel: "1.75rem",
       },
       boxShadow: {
-        soft: "0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 30px -18px rgba(15, 23, 42, 0.18)",
-        card: "0 1px 2px rgba(15, 23, 42, 0.04), 0 18px 40px -26px rgba(15, 23, 42, 0.25)",
-        glow: "0 0 0 1px rgba(99, 102, 241, 0.08), 0 18px 45px -18px rgba(99, 102, 241, 0.45)",
+        soft: "0 1px 2px rgba(20,35,79,0.05), 0 10px 28px -20px rgba(20,35,79,0.22)",
+        card: "0 2px 4px rgba(20,35,79,0.05), 0 22px 48px -28px rgba(20,35,79,0.30)",
+        elevated:
+          "0 6px 14px rgba(20,35,79,0.06), 0 34px 70px -34px rgba(20,35,79,0.38)",
+        glow: "0 0 0 1px rgba(99,102,241,0.08), 0 20px 45px -20px rgba(20,35,79,0.48)",
+        "gold-glow": "0 0 0 1px rgba(245,197,24,0.25), 0 18px 45px -18px rgba(245,197,24,0.55)",
         "glow-mint":
-          "0 0 0 1px rgba(16, 185, 129, 0.08), 0 18px 45px -18px rgba(16, 185, 129, 0.45)",
+          "0 0 0 1px rgba(16,185,129,0.08), 0 18px 45px -18px rgba(16,185,129,0.45)",
       },
       backgroundImage: {
-        mesh:
-          "radial-gradient(at 15% 20%, rgba(99,102,241,0.28) 0px, transparent 50%), radial-gradient(at 85% 10%, rgba(168,85,247,0.22) 0px, transparent 45%), radial-gradient(at 75% 85%, rgba(16,185,129,0.18) 0px, transparent 45%), radial-gradient(at 10% 90%, rgba(14,165,233,0.16) 0px, transparent 45%)",
+        "hero-glow":
+          "radial-gradient(1100px 600px at 82% 8%, rgba(99,102,241,0.38), transparent 60%), radial-gradient(900px 520px at 12% 96%, rgba(20,184,166,0.26), transparent 62%), radial-gradient(500px 380px at 96% 92%, rgba(245,197,24,0.18), transparent 60%)",
+        "hero-navy":
+          "linear-gradient(135deg, #08122A 0%, #14234F 42%, #1F3A73 72%, #0F5A66 100%)",
+        "mesh":
+          "radial-gradient(at 15% 20%, rgba(99,102,241,0.28) 0px, transparent 50%), radial-gradient(at 85% 10%, rgba(168,85,247,0.18) 0px, transparent 45%), radial-gradient(at 75% 85%, rgba(16,185,129,0.16) 0px, transparent 45%), radial-gradient(at 10% 90%, rgba(14,165,233,0.14) 0px, transparent 45%)",
         "grid-slate":
           "linear-gradient(to right, rgba(148,163,184,0.12) 1px, transparent 1px), linear-gradient(to bottom, rgba(148,163,184,0.12) 1px, transparent 1px)",
+        "dot-grid":
+          "radial-gradient(rgba(255,255,255,0.22) 1px, transparent 1px)",
+        "gold-line":
+          "linear-gradient(90deg, transparent, rgba(245,197,24,0.8), transparent)",
       },
       keyframes: {
         "fade-in": {
@@ -101,7 +201,11 @@ export default {
           to: { opacity: "1" },
         },
         "slide-up": {
-          from: { opacity: "0", transform: "translateY(12px)" },
+          from: { opacity: "0", transform: "translateY(16px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "slide-down": {
+          from: { opacity: "0", transform: "translateY(-10px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
         "scale-in": {
@@ -109,12 +213,20 @@ export default {
           to: { opacity: "1", transform: "scale(1)" },
         },
         "toast-in": {
-          from: { opacity: "0", transform: "translateY(-8px) scale(0.98)" },
-          to: { opacity: "1", transform: "translateY(0) scale(1)" },
+          from: { opacity: "0", transform: "translateX(24px) scale(0.98)" },
+          to: { opacity: "1", transform: "translateX(0) scale(1)" },
         },
         float: {
           "0%, 100%": { transform: "translateY(0px)" },
-          "50%": { transform: "translateY(-14px)" },
+          "50%": { transform: "translateY(-12px)" },
+        },
+        drift: {
+          "0%, 100%": { transform: "translate3d(0,0,0) scale(1)" },
+          "50%": { transform: "translate3d(18px,-20px,0) scale(1.04)" },
+        },
+        orbit: {
+          from: { transform: "rotate(0deg)" },
+          to: { transform: "rotate(360deg)" },
         },
         "pulse-glow": {
           "0%, 100%": { opacity: "0.55" },
@@ -123,15 +235,26 @@ export default {
         shimmer: {
           "100%": { transform: "translateX(100%)" },
         },
+        shake: {
+          "0%, 100%": { transform: "translateX(0)" },
+          "20%": { transform: "translateX(-6px)" },
+          "40%": { transform: "translateX(6px)" },
+          "60%": { transform: "translateX(-4px)" },
+          "80%": { transform: "translateX(4px)" },
+        },
       },
       animation: {
-        "fade-in": "fade-in 0.35s ease-out both",
-        "slide-up": "slide-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both",
-        "scale-in": "scale-in 0.25s cubic-bezier(0.22, 1, 0.36, 1) both",
-        "toast-in": "toast-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both",
+        "fade-in": "fade-in 0.35s cubic-bezier(0.22,1,0.36,1) both",
+        "slide-up": "slide-up 0.55s cubic-bezier(0.22,1,0.36,1) both",
+        "slide-down": "slide-down 0.25s cubic-bezier(0.22,1,0.36,1) both",
+        "scale-in": "scale-in 0.25s cubic-bezier(0.22,1,0.36,1) both",
+        "toast-in": "toast-in 0.3s cubic-bezier(0.22,1,0.36,1) both",
         float: "float 7s ease-in-out infinite",
+        drift: "drift 18s ease-in-out infinite",
+        orbit: "orbit 26s linear infinite",
         "pulse-glow": "pulse-glow 4s ease-in-out infinite",
         shimmer: "shimmer 1.6s infinite",
+        shake: "shake 0.35s cubic-bezier(0.36,0.07,0.19,0.97) both",
       },
     },
   },

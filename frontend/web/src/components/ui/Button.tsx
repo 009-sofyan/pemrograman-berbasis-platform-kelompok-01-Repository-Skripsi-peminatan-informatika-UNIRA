@@ -8,7 +8,8 @@ type ButtonVariant =
   | "ghost"
   | "danger"
   | "outline"
-  | "mint";
+  | "mint"
+  | "gold";
 
 type ButtonSize = "sm" | "md" | "lg" | "icon";
 
@@ -22,22 +23,23 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary:
-    "bg-gradient-to-r from-primary-600 to-violet-600 text-white shadow-glow hover:from-primary-500 hover:to-violet-500 active:from-primary-700 active:to-violet-700",
+    "bg-navy-800 text-white shadow-soft hover:bg-navy-700 active:bg-navy-900 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-white/20",
   secondary:
-    "border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50 hover:text-ink",
-  ghost: "text-slate-600 hover:bg-slate-100/80 hover:text-ink",
+    "border border-navy-100 bg-white text-navy-800 shadow-soft hover:border-navy-200 hover:bg-navy-50/60",
+  ghost: "text-ink-soft hover:bg-navy-50 hover:text-ink",
   danger:
-    "bg-gradient-to-r from-coral-600 to-rose-500 text-white shadow-[0_16px_35px_-18px_rgba(225,29,72,0.7)] hover:from-coral-500 hover:to-rose-400",
+    "bg-coral-600 text-white shadow-[0_14px_30px_-18px_rgba(211,47,47,0.65)] hover:bg-coral-700 active:bg-coral-700",
   outline:
-    "border border-primary-200 bg-primary-50/60 text-primary-700 hover:border-primary-300 hover:bg-primary-100/70",
-  mint: "bg-gradient-to-r from-mint-600 to-emerald-500 text-white shadow-glow-mint hover:from-mint-500 hover:to-emerald-400",
+    "border border-primary-200 bg-primary-50/70 text-primary-700 hover:border-primary-300 hover:bg-primary-100/80",
+  mint: "bg-sa-600 text-white shadow-[0_14px_30px_-18px_rgba(5,150,105,0.6)] hover:bg-sa-700",
+  gold: "bg-gold-400 text-navy-900 shadow-gold-glow hover:bg-gold-300 active:bg-gold-500",
 };
 
 const SIZES: Record<ButtonSize, string> = {
-  sm: "h-9 gap-1.5 rounded-xl px-3 text-xs",
-  md: "h-11 gap-2 rounded-xl px-4 text-sm",
-  lg: "h-12 gap-2.5 rounded-2xl px-6 text-sm",
-  icon: "size-10 rounded-xl",
+  sm: "h-11 gap-1.5 rounded-input px-3 text-xs",
+  md: "h-11 gap-2 rounded-input px-4 text-sm",
+  lg: "h-12 gap-2.5 rounded-input px-6 text-sm",
+  icon: "size-11 rounded-input",
 };
 
 export function Button({
@@ -57,7 +59,7 @@ export function Button({
       type={type}
       disabled={disabled || loading}
       className={cn(
-        "inline-flex items-center justify-center font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60",
+        "relative inline-flex shrink-0 items-center justify-center overflow-hidden font-semibold transition-all duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-55",
         VARIANTS[variant],
         SIZES[size],
         className,
@@ -65,13 +67,17 @@ export function Button({
       {...props}
     >
       {loading ? (
-        <LoaderCircle className="size-4 animate-spin" />
+        <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
       ) : icon ? (
-        <span className="grid place-items-center [&>svg]:size-4">{icon}</span>
+        <span className="grid place-items-center [&>svg]:size-4" aria-hidden="true">
+          {icon}
+        </span>
       ) : null}
       {children}
       {!loading && iconRight ? (
-        <span className="grid place-items-center [&>svg]:size-4">{iconRight}</span>
+        <span className="grid place-items-center [&>svg]:size-4" aria-hidden="true">
+          {iconRight}
+        </span>
       ) : null}
     </button>
   );

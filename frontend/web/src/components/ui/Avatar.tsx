@@ -4,10 +4,11 @@ import { initials } from "../../lib/format";
 
 const GRADIENTS = [
   "from-primary-500 to-violet-500",
-  "from-sky-500 to-cyan-400",
-  "from-mint-500 to-emerald-400",
-  "from-amber-500 to-orange-400",
+  "from-bi-500 to-sky-400",
+  "from-sa-500 to-emerald-400",
+  "from-gold-400 to-amber-500",
   "from-coral-500 to-rose-400",
+  "from-navy-700 to-navy-500",
 ];
 
 export function Avatar({
@@ -33,9 +34,9 @@ export function Avatar({
 
   const sizeClass = {
     sm: "size-8 rounded-lg text-[10px]",
-    md: "size-10 rounded-xl text-xs",
-    lg: "size-14 rounded-2xl text-base",
-    xl: "size-24 rounded-[1.75rem] text-2xl",
+    md: "size-10 rounded-input text-xs",
+    lg: "size-14 rounded-card text-base",
+    xl: "size-24 rounded-panel text-2xl",
   }[size];
 
   const showImage = Boolean(src) && !imageFailed;
@@ -54,6 +55,8 @@ export function Avatar({
         <img
           src={src ?? undefined}
           alt=""
+          width={96}
+          height={96}
           className="absolute inset-0 size-full object-cover"
           onError={() => setImageFailed(true)}
         />

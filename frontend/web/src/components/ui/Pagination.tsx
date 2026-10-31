@@ -33,7 +33,7 @@ export function Pagination({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-between gap-3 border-t border-slate-100 pt-4 sm:flex-row",
+        "flex flex-col items-center justify-between gap-3 border-t border-navy-50 pt-4 sm:flex-row",
         className,
       )}
     >
@@ -45,12 +45,12 @@ export function Pagination({
         dari <span className="font-semibold text-ink">{formatNumber(total)}</span>{" "}
         {itemLabel}
       </p>
-      <div className="flex items-center gap-1">
+      <nav className="flex items-center gap-1" aria-label="Navigasi halaman">
         <button
           type="button"
           onClick={() => onPageChange(current - 1)}
           disabled={current <= 1}
-          className="grid size-8 place-items-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+          className="grid size-11 place-items-center rounded-input text-ink-soft transition hover:bg-navy-50 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
           aria-label="Halaman sebelumnya"
         >
           <ChevronLeft className="size-4" />
@@ -61,18 +61,21 @@ export function Pagination({
           return (
             <span key={value} className="flex items-center gap-1">
               {showEllipsis ? (
-                <span className="px-1 text-xs text-slate-400">…</span>
+                <span className="px-1 text-xs text-ink-faint" aria-hidden="true">
+                  …
+                </span>
               ) : null}
               <button
                 type="button"
                 onClick={() => onPageChange(value)}
                 className={cn(
-                  "grid size-8 place-items-center rounded-lg text-xs font-semibold transition",
+                  "grid size-11 place-items-center rounded-input text-xs font-semibold transition",
                   value === current
-                    ? "bg-primary-600 text-white shadow-sm"
-                    : "text-slate-500 hover:bg-slate-100 hover:text-ink",
+                    ? "bg-navy-800 text-white shadow-soft"
+                    : "text-ink-soft hover:bg-navy-50 hover:text-ink",
                 )}
                 aria-current={value === current ? "page" : undefined}
+                aria-label={`Halaman ${value}`}
               >
                 {value}
               </button>
@@ -83,12 +86,12 @@ export function Pagination({
           type="button"
           onClick={() => onPageChange(current + 1)}
           disabled={current >= pageCount}
-          className="grid size-8 place-items-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+          className="grid size-11 place-items-center rounded-input text-ink-soft transition hover:bg-navy-50 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
           aria-label="Halaman berikutnya"
         >
           <ChevronRight className="size-4" />
         </button>
-      </div>
+      </nav>
     </div>
   );
 }

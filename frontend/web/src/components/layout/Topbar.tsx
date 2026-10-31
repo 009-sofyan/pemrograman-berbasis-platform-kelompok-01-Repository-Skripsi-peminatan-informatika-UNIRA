@@ -42,19 +42,21 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const roleMeta = ROLE_META[user.role];
 
   return (
-    <header className="sticky top-3 z-40 flex h-16 items-center gap-3 rounded-2xl border border-white/70 bg-white/75 px-3 shadow-soft backdrop-blur-xl sm:px-4">
+    <header className="glass sticky top-3 z-40 flex h-16 items-center gap-3 rounded-panel border px-2.5 shadow-soft sm:px-4">
       <button
         type="button"
         onClick={onOpenMenu}
-        className="grid size-10 shrink-0 place-items-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:text-ink lg:hidden"
+        className="grid size-11 shrink-0 place-items-center rounded-input border border-navy-100 bg-white text-navy-700 transition hover:border-navy-200 hover:bg-navy-50 lg:hidden"
         aria-label="Buka navigasi"
       >
         <Menu className="size-4.5" />
       </button>
 
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-          <span>Workspace</span>
+        <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.15em] text-ink-faint">
+          <Link to="/dashboard" className="transition hover:text-primary-600">
+            UNIRA
+          </Link>
           <ChevronRight className="size-3" />
           <span className="truncate text-primary-600">{title}</span>
           {isDetail ? (
@@ -64,15 +66,15 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
             </>
           ) : null}
         </div>
-        <p className="mt-0.5 truncate text-sm font-bold text-ink">
+        <p className="mt-0.5 truncate font-display text-sm font-bold text-ink">
           {isDetail ? "Detail Skripsi" : title}
         </p>
       </div>
 
-      <div className="hidden items-center gap-2 rounded-xl border border-slate-200/80 bg-white/80 px-3 py-2 text-[11px] font-semibold text-slate-500 xl:flex">
+      <div className="hidden items-center gap-2 rounded-input border border-navy-100/80 bg-white/80 px-3 py-2 text-[11px] font-semibold text-ink-soft xl:flex">
         <CalendarDays className="size-3.5 text-primary-500" />
         {formatDate(new Date().toISOString(), {
-          weekday: "short",
+          weekday: "long",
           day: "numeric",
           month: "short",
           year: "numeric",
@@ -89,11 +91,14 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
           type="button"
           onClick={() => setMenuOpen((value) => !value)}
           className={cn(
-            "flex items-center gap-2 rounded-xl border border-transparent p-1 pr-2 transition hover:border-slate-200 hover:bg-white",
-            menuOpen && "border-slate-200 bg-white shadow-sm",
+            "flex min-h-11 items-center gap-2 rounded-input border p-1 pr-2 transition",
+            menuOpen
+              ? "border-navy-200 bg-white shadow-sm"
+              : "border-transparent hover:border-navy-100 hover:bg-white",
           )}
           aria-haspopup="menu"
           aria-expanded={menuOpen}
+          aria-label="Menu akun"
         >
           <Avatar name={user.nama} src={user.avatarUrl} size="sm" />
           <span className="hidden max-w-[120px] truncate text-xs font-bold text-ink md:block">
@@ -101,18 +106,19 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
           </span>
           <ChevronDown
             className={cn(
-              "size-3.5 text-slate-400 transition-transform",
+              "size-3.5 text-ink-faint transition-transform",
               menuOpen && "rotate-180",
             )}
+            aria-hidden="true"
           />
         </button>
 
         {menuOpen ? (
           <div
             role="menu"
-            className="absolute right-0 top-full mt-2 w-64 origin-top-right animate-scale-in overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card"
+            className="absolute right-0 top-full mt-2 w-64 origin-top-right animate-scale-in overflow-hidden rounded-card border border-white/80 bg-white shadow-elevated"
           >
-            <div className="border-b border-slate-100 bg-gradient-to-br from-primary-50/70 to-white p-4">
+            <div className="border-b border-navy-50 bg-gradient-to-br from-navy-50/80 to-white p-4">
               <div className="flex items-center gap-3">
                 <Avatar name={user.nama} src={user.avatarUrl} size="md" />
                 <div className="min-w-0">
@@ -130,9 +136,9 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
                 to="/profil"
                 onClick={() => setMenuOpen(false)}
                 role="menuitem"
-                className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-ink"
+                className="flex min-h-11 items-center gap-2.5 rounded-input px-3 py-2.5 text-xs font-semibold text-ink-soft transition hover:bg-navy-50 hover:text-ink"
               >
-                <UserRound className="size-4 text-slate-400" />
+                <UserRound className="size-4 text-ink-faint" />
                 Profil saya
               </Link>
               <button
@@ -142,7 +148,7 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
                   logout();
                 }}
                 role="menuitem"
-                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs font-semibold text-coral-600 transition hover:bg-coral-50"
+                className="flex min-h-11 w-full items-center gap-2.5 rounded-input px-3 py-2.5 text-xs font-semibold text-coral-600 transition hover:bg-coral-50"
               >
                 <LogOut className="size-4" />
                 Keluar

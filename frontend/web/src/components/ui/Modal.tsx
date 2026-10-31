@@ -49,9 +49,24 @@ export function Modal({
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
+      if (event.key !== "Tab") return;
+      const focusable = panelRef.current?.querySelectorAll<HTMLElement>(
+        "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])",
+      );
+      if (!focusable || focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     document.addEventListener("keydown", onKeyDown);
     const previousOverflow = document.body.style.overflow;
+    const previousActive = document.activeElement as HTMLElement | null;
     document.body.style.overflow = "hidden";
     const timer = window.setTimeout(() => {
       const focusable = panelRef.current?.querySelector<HTMLElement>(
@@ -63,6 +78,7 @@ export function Modal({
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = previousOverflow;
       window.clearTimeout(timer);
+      previousActive?.focus();
     };
   }, [open, onClose]);
 
@@ -70,7 +86,7 @@ export function Modal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[90] flex items-end justify-center overflow-y-auto bg-slate-950/40 p-0 backdrop-blur-sm animate-fade-in sm:items-center sm:p-6"
+      className="fixed inset-0 z-[90] flex items-end justify-center overflow-y-auto bg-navy-950/45 p-0 backdrop-blur-sm animate-fade-in sm:items-center sm:p-6"
       onMouseDown={(event) => {
         if (!closeOnBackdrop) return;
         if (event.target === event.currentTarget) onClose();
@@ -83,21 +99,24 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
         className={cn(
-          "relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl border border-slate-200/80 bg-white shadow-2xl animate-scale-in sm:rounded-3xl",
+          "glass relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-panel border shadow-elevated animate-scale-in sm:rounded-panel",
           SIZES[size],
           className,
         )}
       >
-        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-primary-50/70 to-transparent" />
-        <div className="relative flex items-start gap-4 border-b border-slate-100 px-5 py-5 sm:px-6">
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/70 to-transparent"
+          aria-hidden="true"
+        />
+        <div className="relative flex items-start gap-4 border-b border-white/60 px-5 py-5 sm:px-6">
           {icon ? (
-            <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary-50 text-primary-600 ring-1 ring-primary-100">
+            <span className="grid size-11 shrink-0 place-items-center rounded-input bg-white/80 text-navy-700 ring-1 ring-navy-100">
               {icon}
             </span>
           ) : null}
           <div className="min-w-0 flex-1 pt-0.5">
             {title ? (
-              <h2 id={titleId} className="text-base font-bold text-ink">
+              <h2 id={titleId} className="font-display text-base font-bold text-ink">
                 {title}
               </h2>
             ) : null}
@@ -108,7 +127,7 @@ export function Modal({
           <button
             type="button"
             onClick={onClose}
-            className="grid size-9 shrink-0 place-items-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+            className="grid size-11 shrink-0 place-items-center rounded-input text-ink-soft transition hover:bg-white/80 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
             aria-label="Tutup dialog"
           >
             <X className="size-4.5" />
@@ -116,7 +135,7 @@ export function Modal({
         </div>
         <div className="relative flex-1 overflow-y-auto px-5 py-5 sm:px-6">{children}</div>
         {footer ? (
-          <div className="relative flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 bg-slate-50/50 px-5 py-4 sm:px-6">
+          <div className="relative flex flex-wrap items-center justify-end gap-2 border-t border-white/60 bg-white/50 px-5 py-4 sm:px-6">
             {footer}
           </div>
         ) : null}

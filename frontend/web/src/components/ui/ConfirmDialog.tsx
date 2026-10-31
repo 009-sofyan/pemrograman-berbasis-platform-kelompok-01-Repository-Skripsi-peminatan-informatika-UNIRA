@@ -18,7 +18,7 @@ const TONE = {
   },
   mint: {
     icon: CheckCircle2,
-    iconClass: "bg-mint-50 text-mint-600 ring-mint-100",
+    iconClass: "bg-sa-50 text-sa-600 ring-sa-100",
     button: "mint" as const,
   },
   amber: {
@@ -62,7 +62,9 @@ export function ConfirmDialog({
       size="sm"
       closeOnBackdrop={!loading}
       icon={
-        <span className={`grid size-11 place-items-center rounded-2xl ring-1 ${config.iconClass}`}>
+        <span
+          className={`grid size-11 place-items-center rounded-input ring-1 ${config.iconClass}`}
+        >
           <Icon className="size-5" />
         </span>
       }

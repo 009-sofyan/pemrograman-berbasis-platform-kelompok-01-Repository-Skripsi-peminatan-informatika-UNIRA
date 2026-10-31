@@ -3,10 +3,9 @@ import {
   useMemo,
   useRef,
   useState,
-  type FormEvent,
-  type ReactNode,
 } from "react";
 import { Link } from "react-router-dom";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
   ArrowDown,
   ArrowRight,
@@ -16,11 +15,10 @@ import {
   BrainCircuit,
   CalendarDays,
   ChartPie,
-  CheckCircle2,
-  ChevronDown,
-  FileText,
+  ChevronRight,
+  Download,
   GraduationCap,
-  LayoutDashboard,
+  Layers3,
   LibraryBig,
   LogIn,
   Menu,
@@ -29,9 +27,7 @@ import {
   ShieldCheck,
   Sparkles,
   Sprout,
-  Target,
   X,
-  type LucideIcon,
 } from "lucide-react";
 import {
   Bar,
@@ -48,113 +44,148 @@ import { useApiQuery } from "../hooks/useApiQuery";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { pemetaanService } from "../services/dashboardService";
 import { skripsiService } from "../services/skripsiService";
-import { BI, SA } from "../constants";
+import { BI, CURRENT_YEAR, SA } from "../constants";
 import type { PemetaanAngkatan, Skripsi } from "../types";
-import { clampPercent, formatDate, formatNumber, percent } from "../lib/format";
-import { getAvatarForUser } from "../lib/profile";
+import { formatDate, formatNumber, percent } from "../lib/format";
 import { cn } from "../lib/cn";
+import { IMAGE_CREDITS } from "../lib/imagery";
 import { Logo } from "../components/layout/Logo";
 import { Avatar } from "../components/ui/Avatar";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
+import { CardSkeleton, Skeleton } from "../components/ui/Skeleton";
 import { EmptyState } from "../components/ui/EmptyState";
 import { Modal } from "../components/ui/Modal";
-import { Pagination } from "../components/ui/Pagination";
 import { PeminatanBadge } from "../components/ui/PeminatanBadge";
-import { Skeleton } from "../components/ui/Skeleton";
+import { SelectMenu } from "../components/ui/SelectMenu";
 import { SkripsiCard } from "../components/skripsi/SkripsiCard";
 import { SkripsiCover } from "../components/skripsi/SkripsiCover";
 import { SkripsiPdfButton } from "../components/skripsi/SkripsiPdfButton";
 
 type CatalogTab = "all" | typeof BI | typeof SA;
+type CatalogOrder = "newest" | "oldest" | "year";
 
 const PAGE_SIZE = 8;
+const NAV_LINKS = [
+  { label: "Beranda", href: "#beranda" },
+  { label: "Katalog", href: "#katalog" },
+  { label: "Pemetaan", href: "#pemetaan" },
+  { label: "Peminatan", href: "#peminatan" },
+];
 
 const TABS: { value: CatalogTab; label: string; short: string }[] = [
-  { value: "all", label: "Semua", short: "Semua" },
+  { value: "all", label: "Semua karya", short: "Semua" },
   { value: BI, label: "Business Intelligence", short: "BI" },
   { value: SA, label: "Smart Agriculture", short: "SA" },
 ];
 
-const PEMINATAN_CONTENT: {
-  value: typeof BI | typeof SA;
-  code: string;
-  label: string;
-  icon: LucideIcon;
-  description: string;
-  topics: string[];
-  tone: "bi" | "sa";
-}[] = [
+const PEMINATAN_CONTENT = [
   {
-    value: BI,
+    value: BI as typeof BI,
     code: "01",
     label: "Business Intelligence",
     icon: BrainCircuit,
     description:
       "Mengolah data menjadi wawasan yang membantu organisasi mengambil keputusan lebih cepat, terukur, dan berbasis bukti.",
-    topics: [
-      "Data Warehouse",
-      "Dashboard & Visualisasi",
-      "Prediksi & Klasifikasi",
-      "Analisis Bisnis",
-    ],
-    tone: "bi",
+    topics: ["Data Warehouse", "Dashboard", "Prediksi & Klasifikasi", "Analisis Bisnis"],
+    tone: "bi" as const,
   },
   {
-    value: SA,
+    value: SA as typeof SA,
     code: "02",
     label: "Smart Agriculture",
     icon: Sprout,
     description:
       "Menghubungkan teknologi dengan sektor pertanian untuk mendukung budidaya yang lebih presisi, efisien, dan berkelanjutan.",
-    topics: [
-      "IoT & Sensor",
-      "Smart Farming",
-      "Pengolahan Citra",
-      "Sistem Monitoring",
-    ],
-    tone: "sa",
+    topics: ["IoT & Sensor", "Smart Farming", "Pengolahan Citra", "Sistem Monitoring"],
+    tone: "sa" as const,
   },
 ];
 
-const PEMINATAN_TONE = {
-  bi: {
-    bar: "from-sky-500 via-primary-500 to-violet-500",
-    icon: "bg-sky-50 text-sky-600 ring-sky-100",
-    blob: "bg-sky-200/45",
-    chip: "bg-sky-50 text-sky-700 ring-sky-100",
-    action:
-      "bg-sky-50 text-sky-700 ring-1 ring-inset ring-sky-100 hover:bg-sky-100 hover:text-sky-800",
-  },
-  sa: {
-    bar: "from-mint-500 via-emerald-500 to-teal-500",
-    icon: "bg-mint-50 text-mint-600 ring-mint-100",
-    blob: "bg-mint-200/45",
-    chip: "bg-mint-50 text-mint-700 ring-mint-100",
-    action:
-      "bg-mint-50 text-mint-700 ring-1 ring-inset ring-mint-100 hover:bg-mint-100 hover:text-mint-800",
-  },
-};
+function sortSkripsi(data: Skripsi[], order: CatalogOrder): Skripsi[] {
+  const copy = [...data];
+  if (order === "year") return copy.sort((a, b) => b.tahun - a.tahun);
+  if (order === "oldest") {
+    return copy.sort(
+      (a, b) =>
+        new Date(a.createdAt ?? 0).getTime() - new Date(b.createdAt ?? 0).getTime(),
+    );
+  }
+  return copy.sort(
+    (a, b) =>
+      new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime(),
+  );
+}
 
 export default function LandingPage() {
   useDocumentTitle("Beranda");
   const { user } = useAuth();
+  const reduceMotion = useReducedMotion();
 
+  const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearch = useDebouncedValue(searchInput, 250);
   const [tab, setTab] = useState<CatalogTab>("all");
-  const [page, setPage] = useState(1);
+  const [tahun, setTahun] = useState("");
+  const [order, setOrder] = useState<CatalogOrder>("newest");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [selected, setSelected] = useState<Skripsi | null>(null);
+  const [selectedYear, setSelectedYear] = useState("");
+  const [showBi, setShowBi] = useState(true);
+  const [showSa, setShowSa] = useState(true);
   const catalogRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const query = useApiQuery(() => skripsiService.listPublic(), []);
   const pemetaanQuery = useApiQuery(() => pemetaanService.get(), []);
+
   const all = useMemo(
-    () =>
-      (query.data?.data ?? []).filter((item) => item.status === "disetujui"),
+    () => (query.data?.data ?? []).filter((item) => item.status === "disetujui"),
     [query.data],
   );
+
+  const biCount = all.filter((item) => item.peminatan === BI).length;
+  const saCount = all.filter((item) => item.peminatan === SA).length;
+  const latestYear = all.length > 0 ? Math.max(...all.map((item) => item.tahun)) : null;
+  const statsUnavailable = query.loading || Boolean(query.error);
+
+  const yearOptions = useMemo(() => {
+    const values = new Set<string>();
+    for (let year = CURRENT_YEAR; year >= 2018; year -= 1) values.add(String(year));
+    all.forEach((item) => values.add(String(item.tahun)));
+    return Array.from(values)
+      .sort((a, b) => Number(b) - Number(a))
+      .map((value) => ({ value, label: `Tahun ${value}` }));
+  }, [all]);
+
+  const filtered = useMemo(() => {
+    const keyword = debouncedSearch.trim().toLowerCase();
+    const result = all.filter((item) => {
+      if (tab !== "all" && item.peminatan !== tab) return false;
+      if (tahun && String(item.tahun) !== tahun) return false;
+      if (!keyword) return true;
+      return (
+        item.judul.toLowerCase().includes(keyword) ||
+        (item.namaMahasiswa ?? "").toLowerCase().includes(keyword) ||
+        item.nim.toLowerCase().includes(keyword)
+      );
+    });
+    return sortSkripsi(result, order);
+  }, [all, tab, tahun, order, debouncedSearch]);
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [debouncedSearch, tab, tahun, order]);
+
+  const visibleItems = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < filtered.length;
 
   const angkatanStats = useMemo(
     () =>
@@ -164,278 +195,671 @@ export default function LandingPage() {
     [pemetaanQuery.data],
   );
 
-  const biCount = all.filter((item) => item.peminatan === BI).length;
-  const saCount = all.filter((item) => item.peminatan === SA).length;
-  const statsUnavailable = query.loading || Boolean(query.error);
-
-  const filtered = useMemo(() => {
-    const keyword = debouncedSearch.trim().toLowerCase();
-
-    return all.filter((item) => {
-      if (tab !== "all" && item.peminatan !== tab) return false;
-      if (!keyword) return true;
-
-      return (
-        item.judul.toLowerCase().includes(keyword) ||
-        (item.namaMahasiswa ?? "").toLowerCase().includes(keyword) ||
-        item.nim.toLowerCase().includes(keyword)
-      );
-    });
-  }, [all, tab, debouncedSearch]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch, tab]);
-
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const currentPage = Math.min(page, pageCount);
-  const visibleItems = filtered.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE,
+  const selectedAngkatan = useMemo(
+    () => angkatanStats.find((item) => item.angkatan === selectedYear) ?? null,
+    [angkatanStats, selectedYear],
   );
-  const rangeStart =
-    filtered.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
-  const rangeEnd = Math.min(currentPage * PAGE_SIZE, filtered.length);
-  const activeKeyword = searchInput.trim();
 
-  const tabCounts: Record<CatalogTab, number> = {
-    all: all.length,
-    [BI]: biCount,
-    [SA]: saCount,
+  const chartData = selectedAngkatan ? [selectedAngkatan] : angkatanStats;
+  const chartYearOptions = useMemo(
+    () => [
+      { value: "", label: "Semua tahun", hint: "Kelompokkan per angkatan" },
+      ...angkatanStats
+        .slice()
+        .reverse()
+        .map((item) => ({
+          value: item.angkatan,
+          label: `Angkatan ${item.angkatan}`,
+          hint: `${formatNumber(item.totalMahasiswa)} mahasiswa`,
+        })),
+    ],
+    [angkatanStats],
+  );
+
+  const chartTotal = useMemo(
+    () => chartData.reduce((sum, item) => sum + item.bi + item.sa, 0),
+    [chartData],
+  );
+
+  const chartSummary = useMemo(() => {
+    if (chartData.length === 0) return "Belum ada data pemetaan untuk ditampilkan.";
+    const row = selectedAngkatan ?? null;
+    if (row) {
+      const winner = row.bi >= row.sa ? "BI" : "SA";
+      const value = Math.max(row.bi, row.sa);
+      return `${winner} mendominasi angkatan ${row.angkatan} sebesar ${percent(
+        value,
+        Math.max(1, row.bi + row.sa),
+      )}%.`;
+    }
+    const totalBi = angkatanStats.reduce((sum, item) => sum + item.bi, 0);
+    const totalSa = angkatanStats.reduce((sum, item) => sum + item.sa, 0);
+    if (totalBi + totalSa === 0) return "Mahasiswa belum memilih peminatan.";
+    const winner = totalBi >= totalSa ? "Business Intelligence" : "Smart Agriculture";
+    return `${winner} mendominasi dengan ${formatNumber(Math.max(totalBi, totalSa))} mahasiswa dari ${formatNumber(totalBi + totalSa)} yang sudah memilih.`;
+  }, [angkatanStats, chartData.length, selectedAngkatan]);
+
+  const toggleSeries = (series: "bi" | "sa") => {
+    if (series === "bi") setShowBi((value) => !value);
+    else setShowSa((value) => !value);
   };
 
-  const selectedHasFile = Boolean(selected?.fileUrl);
-
-  const scrollToCatalog = () => {
-    catalogRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  const explorePeminatan = (value: typeof BI | typeof SA) => {
-    setTab(value);
-    setSearchInput("");
-    scrollToCatalog();
-  };
-
-  const resetFilters = () => {
-    setSearchInput("");
-    setTab("all");
-  };
-
-  const onSearchSubmit = (event: FormEvent) => {
-    event.preventDefault();
-    scrollToCatalog();
-  };
-
-  const handlePageChange = (nextPage: number) => {
-    setPage(nextPage);
-    window.requestAnimationFrame(() => {
-      catalogRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    });
-  };
+  const stats = [
+    {
+      label: "Total Skripsi",
+      value: all.length,
+      display: formatNumber(all.length),
+      caption: "Karya terverifikasi di repository",
+      icon: LibraryBig,
+      format: "number" as const,
+    },
+    {
+      label: "Pemetaan Peminatan",
+      value: biCount + saCount,
+      display: `${formatNumber(biCount)} BI · ${formatNumber(saCount)} SA`,
+      caption: "Mahasiswa dengan peminatan riset",
+      icon: ChartPie,
+      format: "text" as const,
+    },
+    {
+      label: "Tahun Terbaru",
+      value: latestYear ?? 0,
+      display: latestYear ? String(latestYear) : "—",
+      caption: "Publikasi terakhir masuk",
+      icon: CalendarDays,
+      format: "text" as const,
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-canvas">
-      <header className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/85 backdrop-blur-xl">
-        <div className="mx-auto flex h-[76px] w-full max-w-7xl items-center gap-3 px-4 sm:px-6 lg:px-8">
-          <Link
-            to="/"
-            className="flex shrink-0 items-center gap-2.5"
-            aria-label="Beranda Repository Skripsi Informatika UNIRA"
-          >
-            <span className="relative grid size-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-primary-500 via-primary-600 to-violet-600 text-white shadow-glow">
-              <span className="absolute inset-0 bg-[radial-gradient(circle_at_25%_15%,rgba(255,255,255,0.45),transparent_50%)]" />
-              <GraduationCap className="relative size-5" strokeWidth={2.1} />
-            </span>
-            <span className="hidden min-w-0 sm:block">
-              <span className="block truncate text-[11.5px] font-extrabold uppercase tracking-[0.14em] text-ink">
-                Repository Skripsi
-              </span>
-              <span className="mt-0.5 block truncate text-[10px] font-semibold tracking-wide text-ink-soft">
-                Informatika UNIRA
-              </span>
-            </span>
-          </Link>
+    <div className="min-h-screen overflow-x-hidden bg-canvas">
+      <a href="#konten" className="skip-link">
+        Lewati ke konten utama
+      </a>
 
-          <nav
-            aria-label="Navigasi halaman publik"
-            className="ml-7 hidden items-center gap-1 md:flex"
+      <header
+        className={cn(
+          "fixed inset-x-0 top-0 z-50 transition-all duration-300",
+          scrolled ? "py-2" : "py-3",
+        )}
+      >
+        <div className="mx-auto w-full max-w-[1280px] px-3 sm:px-6">
+          <div
+            className={cn(
+              "flex h-16 items-center gap-3 rounded-panel px-3 transition-all duration-300 sm:px-4",
+              scrolled
+                ? "glass border shadow-card"
+                : "border border-transparent bg-transparent",
+            )}
           >
-            {[
-              { label: "Beranda", href: "#beranda" },
-              { label: "Katalog", href: "#katalog" },
-              { label: "Peminatan", href: "#peminatan" },
-            ].map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className="rounded-xl px-3 py-2 text-xs font-bold text-slate-500 transition hover:bg-slate-100/80 hover:text-ink"
-              >
-                {item.label}
-              </a>
-            ))}
-          </nav>
-
-          <div className="ml-auto flex items-center gap-2">
-            <Link
-              to={user ? "/dashboard" : "/login"}
-              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-primary-600 to-violet-600 px-3.5 text-[11px] font-semibold text-white shadow-glow transition hover:from-primary-500 hover:to-violet-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2"
-            >
-              {user ? (
-                <LayoutDashboard className="size-3.5" />
-              ) : (
-                <LogIn className="size-3.5" />
-              )}
-              <span>{user ? "Buka Dashboard" : "Masuk ke Portal"}</span>
+            <Link to="/" className="min-w-0 shrink-0" aria-label="Beranda Repository Skripsi UNIRA">
+              <Logo tone={scrolled ? "dark" : "light"} compact />
             </Link>
 
-            <button
-              type="button"
-              onClick={() => setMobileOpen((value) => !value)}
-              className="grid size-9 place-items-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:text-ink md:hidden"
-              aria-label={mobileOpen ? "Tutup menu navigasi" : "Buka menu navigasi"}
-              aria-expanded={mobileOpen}
-              aria-controls="mobile-navigation"
-            >
-              {mobileOpen ? (
-                <X className="size-4" />
-              ) : (
-                <Menu className="size-4" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        {mobileOpen ? (
-          <nav
-            id="mobile-navigation"
-            aria-label="Navigasi halaman publik (mobile)"
-            className="border-t border-slate-100 bg-white px-4 py-3 md:hidden"
-          >
-            <div className="mx-auto grid max-w-7xl gap-1">
-              {[
-                { label: "Beranda", href: "#beranda" },
-                { label: "Katalog Skripsi", href: "#katalog" },
-                { label: "Peminatan Riset", href: "#peminatan" },
-              ].map((item) => (
+            <nav className="ml-auto hidden items-center gap-1 lg:flex" aria-label="Navigasi beranda">
+              {NAV_LINKS.map((link) => (
                 <a
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-bold text-slate-600 transition hover:bg-slate-50 hover:text-ink"
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    "inline-flex min-h-11 items-center rounded-input px-3.5 text-xs font-bold transition",
+                    scrolled
+                      ? "text-ink-soft hover:bg-navy-50 hover:text-ink"
+                      : "text-white/75 hover:bg-white/10 hover:text-white",
+                  )}
                 >
-                  {item.label}
-                  <ArrowRight className="size-3.5 text-slate-300" />
+                  {link.label}
                 </a>
               ))}
+              <Link
+                to="/credits"
+                className={cn(
+                  "inline-flex min-h-11 items-center rounded-input px-3.5 text-xs font-bold transition",
+                  scrolled
+                    ? "text-ink-soft hover:bg-navy-50 hover:text-ink"
+                    : "text-white/70 hover:bg-white/10 hover:text-white",
+                )}
+              >
+                Kredit Gambar
+              </Link>
+            </nav>
+
+            <div className="ml-auto flex items-center gap-2 lg:ml-2">
+              {user ? (
+                <Link
+                  to="/dashboard"
+                  className={cn(
+                    "inline-flex min-h-11 items-center gap-2 rounded-input px-3.5 text-xs font-bold transition sm:px-4",
+                    scrolled
+                      ? "bg-navy-800 text-white hover:bg-navy-700"
+                      : "bg-gold-400 text-navy-900 shadow-gold-glow hover:bg-gold-300",
+                  )}
+                >
+                  <Layers3 className="size-4" />
+                  <span className="hidden sm:inline">Buka Dashboard</span>
+                  <span className="sm:hidden">Dashboard</span>
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    to="/register"
+                    className={cn(
+                      "hidden min-h-11 items-center rounded-input px-3.5 text-xs font-bold transition sm:inline-flex",
+                      scrolled
+                        ? "text-ink-soft hover:bg-navy-50 hover:text-ink"
+                        : "text-white/80 hover:bg-white/10 hover:text-white",
+                    )}
+                  >
+                    Daftar
+                  </Link>
+                  <Link
+                    to="/login"
+                    className={cn(
+                      "inline-flex min-h-11 items-center gap-2 rounded-input px-3.5 text-xs font-bold transition sm:px-4",
+                      scrolled
+                        ? "bg-navy-800 text-white hover:bg-navy-700"
+                        : "bg-gold-400 text-navy-900 shadow-gold-glow hover:bg-gold-300",
+                    )}
+                  >
+                    <LogIn className="size-4" />
+                    Masuk
+                  </Link>
+                </>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setMobileOpen(true)}
+                className={cn(
+                  "grid size-11 place-items-center rounded-input border transition lg:hidden",
+                  scrolled
+                    ? "border-navy-100 bg-white text-navy-800"
+                    : "border-white/20 bg-white/10 text-white backdrop-blur",
+                )}
+                aria-label="Buka menu navigasi"
+                aria-expanded={mobileOpen}
+              >
+                <Menu className="size-5" />
+              </button>
             </div>
-          </nav>
-        ) : null}
+          </div>
+        </div>
       </header>
 
-      <main>
+      <AnimatePresence>
+        {mobileOpen ? (
+          <motion.div
+            className="fixed inset-0 z-[70] lg:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <button
+              type="button"
+              className="absolute inset-0 bg-navy-950/60 backdrop-blur-sm"
+              onClick={() => setMobileOpen(false)}
+              aria-label="Tutup menu"
+            />
+            <motion.div
+              initial={reduceMotion ? false : { x: "100%" }}
+              animate={{ x: 0 }}
+              exit={reduceMotion ? undefined : { x: "100%" }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute inset-y-0 right-0 flex w-[86%] max-w-sm flex-col bg-navy-950 p-5 text-white shadow-elevated"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Menu navigasi"
+            >
+              <div className="flex items-center justify-between">
+                <Logo tone="light" />
+                <button
+                  type="button"
+                  onClick={() => setMobileOpen(false)}
+                  className="grid size-11 place-items-center rounded-input border border-white/15 text-white/80 hover:bg-white/10"
+                  aria-label="Tutup menu"
+                >
+                  <X className="size-5" />
+                </button>
+              </div>
+              <nav className="mt-8 space-y-1" aria-label="Navigasi seluler">
+                {NAV_LINKS.map((link) => (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileOpen(false)}
+                    className="flex min-h-12 items-center justify-between rounded-input px-4 text-sm font-bold text-white/80 transition hover:bg-white/10 hover:text-white"
+                  >
+                    {link.label}
+                    <ChevronRight className="size-4 text-white/40" />
+                  </a>
+                ))}
+                <Link
+                  to="/credits"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex min-h-12 items-center justify-between rounded-input px-4 text-sm font-bold text-white/80 transition hover:bg-white/10 hover:text-white"
+                >
+                  Kredit Gambar
+                  <ChevronRight className="size-4 text-white/40" />
+                </Link>
+              </nav>
+              <div className="mt-auto space-y-2 border-t border-white/10 pt-5">
+                {user ? (
+                  <Link
+                    to="/dashboard"
+                    className="flex min-h-12 items-center justify-center gap-2 rounded-input bg-gold-400 text-sm font-bold text-navy-900"
+                  >
+                    Buka Dashboard
+                    <ArrowRight className="size-4" />
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      className="flex min-h-12 items-center justify-center gap-2 rounded-input bg-gold-400 text-sm font-bold text-navy-900"
+                    >
+                      Masuk
+                      <ArrowRight className="size-4" />
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="flex min-h-12 items-center justify-center rounded-input border border-white/15 text-sm font-bold text-white/85"
+                    >
+                      Daftar akun mahasiswa
+                    </Link>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
+      <main id="konten">
         <section
           id="beranda"
-          className="relative isolate scroll-mt-24 overflow-hidden border-b border-slate-200/60"
+          className="relative isolate overflow-hidden bg-hero-navy pb-14 pt-28 text-white sm:pt-32 lg:pb-20 lg:pt-36"
         >
-          <div className="pointer-events-none absolute inset-0 bg-grid-slate bg-[size:48px_48px] opacity-50 [mask-image:linear-gradient(to_bottom,black,transparent_85%)]" />
-          <div className="pointer-events-none absolute -left-40 -top-32 size-[520px] rounded-full bg-primary-300/30 blur-3xl" />
-          <div className="pointer-events-none absolute -right-24 top-8 size-[460px] rounded-full bg-violet-300/25 blur-3xl" />
-          <div className="pointer-events-none absolute bottom-0 left-1/4 size-[380px] rounded-full bg-mint-200/30 blur-3xl" />
+          <div className="absolute inset-0 bg-hero-glow" aria-hidden="true" />
+          <div
+            className="absolute inset-0 bg-dot-grid bg-[size:26px_26px] opacity-30 [mask-image:radial-gradient(circle_at_50%_40%,black,transparent_75%)]"
+            aria-hidden="true"
+          />
+          <div
+            className="absolute -right-24 -top-32 size-[28rem] rounded-full bg-gold-400/20 blur-[110px]"
+            aria-hidden="true"
+          />
+          <div
+            className="absolute -left-24 top-1/3 size-80 animate-drift rounded-full bg-sa-400/15 blur-[90px]"
+            style={{ animationDuration: "18s" }}
+            aria-hidden="true"
+          />
+          <div
+            className="absolute bottom-0 right-1/4 size-72 animate-drift rounded-full bg-primary-400/20 blur-[80px]"
+            style={{ animationDuration: "14s", animationDirection: "reverse" }}
+            aria-hidden="true"
+          />
+          <div
+            className="absolute right-[8%] top-[18%] hidden size-[26rem] rounded-full border border-white/10 lg:block"
+            aria-hidden="true"
+          >
+            <div className="absolute inset-0 animate-orbit rounded-full border border-dashed border-white/15 [animation-duration:26s]">
+              <span className="absolute -top-1 left-1/2 size-2 rounded-full bg-gold-300 shadow-gold-glow" />
+              <span className="absolute bottom-8 left-4 size-1.5 rounded-full bg-sa-300" />
+            </div>
+            <div className="absolute inset-16 rounded-full border border-white/10" />
+          </div>
 
-          <div className="relative mx-auto grid w-full max-w-7xl items-center gap-12 px-4 pb-16 pt-12 sm:px-6 sm:pb-20 sm:pt-16 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-8 lg:px-8 lg:pb-24 lg:pt-20">
-            <div className="animate-slide-up">
-              <span className="inline-flex items-center gap-2 rounded-full border border-primary-200/70 bg-white/80 px-3.5 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.17em] text-primary-700 shadow-sm backdrop-blur">
-                <Sparkles className="size-3.5" />
-                Fakultas Teknik · Informatika UNIRA
-              </span>
-
-              <h1 className="mt-6 max-w-2xl text-[38px] font-extrabold leading-[1.06] tracking-tight text-ink sm:text-5xl xl:text-[58px]">
-                Eksplorasi{" "}
-                <span className="text-gradient">Riset &amp; Skripsi</span>{" "}
-                Informatika UNIRA
-              </h1>
-
-              <p className="mt-5 max-w-xl text-sm leading-7 text-ink-soft sm:text-[15px]">
-                Telusuri referensi skripsi terverifikasi dan temukan inspirasi
-                riset dari dua fokus unggulan Program Studi Informatika,
-                Universitas Madura.
-              </p>
-
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Button
-                  size="lg"
-                  onClick={scrollToCatalog}
-                  iconRight={<ArrowDown />}
-                >
-                  Eksplorasi Katalog
-                </Button>
+          <div className="relative mx-auto grid w-full max-w-[1280px] gap-10 px-5 sm:px-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/80 backdrop-blur">
+                <Sparkles className="size-3.5 text-gold-300" />
+                Repository Skripsi · Fakultas Teknik UNIRA
               </div>
 
-              <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] font-semibold text-slate-500">
-                <span className="inline-flex items-center gap-1.5">
-                  <BadgeCheck className="size-3.5 text-mint-500" />
-                  Hanya skripsi disetujui
+              <h1 className="mt-6 max-w-3xl font-display text-[40px] font-extrabold leading-[1.04] tracking-tight sm:text-[56px] lg:text-[64px]">
+                <StaggerWords
+                  words={["Jejaki", "karya,", "temukan"]}
+                  reduceMotion={Boolean(reduceMotion)}
+                />{" "}
+                <span className="text-gradient-gold">
+                  <StaggerWords
+                    words={["arah", "riset."]}
+                    reduceMotion={Boolean(reduceMotion)}
+                    offset={3}
+                  />
                 </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <ShieldCheck className="size-3.5 text-primary-500" />
-                  Akses publik tanpa login
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <LibraryBig className="size-3.5 text-violet-500" />
-                  2 peminatan riset
-                </span>
+              </h1>
+
+              <motion.p
+                initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.45, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                className="mt-5 max-w-xl text-sm leading-relaxed text-white/70 sm:text-base"
+              >
+                Telusuri repository skripsi Informatika UNIRA, pahami sebaran
+                peminatan Business Intelligence dan Smart Agriculture, lalu mulai
+                langkah risetmu dengan referensi yang tepat.
+              </motion.p>
+
+              <motion.div
+                initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                className="mt-8 flex flex-wrap items-center gap-3"
+              >
+                <a
+                  href="#katalog"
+                  className="group inline-flex min-h-12 items-center gap-2 rounded-input bg-gold-400 px-5 text-sm font-bold text-navy-900 shadow-gold-glow transition hover:-translate-y-0.5 hover:bg-gold-300 focus-visible:ring-offset-navy-950"
+                >
+                  <LibraryBig className="size-4" />
+                  Jelajahi Katalog
+                  <ArrowDown className="size-4 transition-transform group-hover:translate-y-0.5" />
+                </a>
+                <Link
+                  to={user ? "/dashboard" : "/login"}
+                  className="inline-flex min-h-12 items-center gap-2 rounded-input border border-white/20 bg-white/10 px-5 text-sm font-bold text-white backdrop-blur transition hover:bg-white/15 focus-visible:ring-offset-navy-950"
+                >
+                  <LogIn className="size-4" />
+                  {user ? "Buka Dashboard" : "Masuk"}
+                </Link>
+              </motion.div>
+
+              <div className="mt-10 grid max-w-xl grid-cols-1 gap-2.5 sm:grid-cols-3">
+                {stats.map((stat, index) => {
+                  const Icon = stat.icon;
+                  return (
+                    <motion.div
+                      key={stat.label}
+                      initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        delay: 0.8 + index * 0.08,
+                        duration: 0.55,
+                        ease: [0.22, 1, 0.36, 1],
+                      }}
+                      className="rounded-card border border-white/15 bg-white/[0.07] p-3.5 backdrop-blur"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/55">
+                          {stat.label}
+                        </p>
+                        <Icon className="size-3.5 text-gold-300" />
+                      </div>
+                      {statsUnavailable ? (
+                        <Skeleton className="mt-2 h-7 w-24 bg-white/10" />
+                      ) : stat.format === "number" ? (
+                        <p className="mt-1 font-display text-xl font-extrabold text-white">
+                          <LandingCountUp value={Number(stat.value)} reduceMotion={Boolean(reduceMotion)} />
+                        </p>
+                      ) : (
+                        <p className="mt-1 truncate font-display text-lg font-extrabold text-white">
+                          {stat.display}
+                        </p>
+                      )}
+                      <p className="mt-0.5 truncate text-[9px] text-white/45">{stat.caption}</p>
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
 
-            <HeroStatsVisual
-              angkatanStats={angkatanStats}
-              totalMahasiswa={pemetaanQuery.data?.totalMahasiswa ?? 0}
-              loading={pemetaanQuery.loading}
-              error={pemetaanQuery.error}
-              onRetry={pemetaanQuery.refetch}
-              onExplore={explorePeminatan}
-            />
+            <div className="relative hidden lg:block">
+              <div className="relative mx-auto max-w-md">
+                <div className="absolute -inset-6 rounded-[2.4rem] border border-white/10" aria-hidden="true" />
+                <div className="relative overflow-hidden rounded-panel border border-white/15 bg-white/[0.07] p-5 shadow-elevated backdrop-blur-xl">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">
+                      Sorotan repository
+                    </span>
+                    <Badge tone="gold" variant="solid" size="xs">
+                      <BadgeCheck className="size-3" />
+                      Terverifikasi
+                    </Badge>
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-2.5">
+                    <div className="col-span-2 overflow-hidden rounded-card">
+                      <SkripsiCover
+                        id={all[0]?.id ?? 1}
+                        judul={all[0]?.judul ?? "Kumpulan referensi skripsi Informatika UNIRA"}
+                        peminatan={all[0]?.peminatan ?? BI}
+                        tahun={all[0]?.tahun ?? CURRENT_YEAR}
+                        coverUrl={all[0]?.coverUrl}
+                        fileUrl={all[0]?.fileUrl}
+                        priority
+                      />
+                    </div>
+                    <div className="rounded-input border border-white/10 bg-white/[0.06] p-3">
+                      <p className="text-[9px] uppercase tracking-[0.14em] text-white/45">Peminatan</p>
+                      <p className="mt-1 text-sm font-extrabold text-white">BI &amp; SA</p>
+                      <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/10">
+                        <div className="h-full w-[64%] rounded-full bg-gradient-to-r from-primary-300 to-sa-300" />
+                      </div>
+                    </div>
+                    <div className="rounded-input border border-white/10 bg-white/[0.06] p-3">
+                      <p className="text-[9px] uppercase tracking-[0.14em] text-white/45">Akses</p>
+                      <p className="mt-1 text-sm font-extrabold text-white">Terbuka</p>
+                      <p className="mt-1 text-[9px] text-white/45">PDF &amp; abstrak</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between rounded-input border border-white/10 bg-navy-950/30 px-3 py-2.5">
+                    <span className="text-[10px] text-white/55">Karya terbaru</span>
+                    <span className="text-[10px] font-bold text-gold-300">{latestYear ?? "—"}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
-        <section id="peminatan" className="scroll-mt-24 py-16 sm:py-20">
-          <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-end">
+        <section id="pemetaan" className="relative scroll-mt-24 py-14 sm:py-20">
+          <div className="mx-auto w-full max-w-[1280px] px-4 sm:px-6">
+            <div className="grid gap-6 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
               <div>
-                <span className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-slate-500 shadow-sm">
-                  <Target className="size-3.5 text-primary-500" />
-                  Fokus riset Informatika
-                </span>
-                <h2 className="mt-4 max-w-xl text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
-                  Dua peminatan, dua arah kontribusi.
+                <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-primary-600">
+                  <ChartPie className="size-3.5" />
+                  Pemetaan peminatan
+                </p>
+                <h2 className="mt-3 font-display text-[28px] font-extrabold leading-tight tracking-tight text-ink sm:text-[40px]">
+                  Lihat arah riset <span className="text-gradient-navy">tiap angkatan.</span>
                 </h2>
+                <p className="mt-3 max-w-md text-sm leading-relaxed text-ink-soft">
+                  Bandingkan jumlah mahasiswa Business Intelligence dan Smart
+                  Agriculture. Pilih angkatan untuk melihat komposisi yang lebih
+                  spesifik.
+                </p>
+                <div className="mt-5 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-bi-100 bg-bi-50 px-3 py-1.5 text-[11px] font-bold text-bi-700">
+                    <span className="size-2 rounded-full bg-bi-500" />
+                    Business Intelligence
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-sa-100 bg-sa-50 px-3 py-1.5 text-[11px] font-bold text-sa-700">
+                    <span className="size-2 rounded-full bg-sa-500" />
+                    Smart Agriculture
+                  </span>
+                </div>
+                <div className="mt-5 rounded-card border border-navy-50 bg-white p-4 shadow-soft">
+                  <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-ink-faint">
+                    <Sparkles className="size-3.5 text-gold-500" />
+                    Ringkasan otomatis
+                  </div>
+                  <p className="mt-2 text-sm font-semibold leading-relaxed text-navy-800">
+                    {chartSummary}
+                  </p>
+                </div>
               </div>
-              <p className="max-w-2xl text-sm leading-7 text-ink-soft lg:justify-self-end">
-                Setiap mahasiswa memilih satu jalur riset yang membentuk topik
-                skripsi, mata kuliah pendukung, dan proyek akhirnya. Kenali
-                karakter masing-masing peminatan sebelum menentukan arah.
-              </p>
-            </div>
 
-            <div className="mt-9 grid gap-5 md:grid-cols-2">
-              {PEMINATAN_CONTENT.map((item) => (
-                <PeminatanCard
-                  key={item.value}
-                  value={item.value}
-                  code={item.code}
-                  label={item.label}
-                  description={item.description}
-                  topics={item.topics}
-                  icon={item.icon}
-                  tone={item.tone}
-                  count={item.value === BI ? biCount : saCount}
-                  loading={statsUnavailable}
-                  onExplore={explorePeminatan}
-                />
-              ))}
+              <div className="rounded-panel border border-white/80 bg-white p-4 shadow-card sm:p-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <h3 className="font-display text-base font-bold text-ink">Distribusi per angkatan</h3>
+                    <p className="mt-1 text-xs text-ink-soft">
+                      {selectedYear ? `Angkatan ${selectedYear}` : "Seluruh angkatan"} ·{" "}
+                      {formatNumber(chartTotal)} mahasiswa sudah memilih
+                    </p>
+                  </div>
+                  <SelectMenu
+                    label="Filter angkatan"
+                    value={selectedYear}
+                    options={chartYearOptions}
+                    onChange={setSelectedYear}
+                    className="sm:w-52"
+                  />
+                </div>
+
+                {pemetaanQuery.loading ? (
+                  <Skeleton className="mt-6 h-[300px] w-full rounded-card" />
+                ) : pemetaanQuery.error ? (
+                  <EmptyState
+                    compact
+                    className="mt-5"
+                    icon={<RefreshCw className="size-5" />}
+                    title="Gagal memuat pemetaan"
+                    description={pemetaanQuery.error}
+                    action={
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        icon={<RefreshCw />}
+                        onClick={pemetaanQuery.refetch}
+                      >
+                        Coba lagi
+                      </Button>
+                    }
+                  />
+                ) : chartData.length === 0 ? (
+                  <EmptyState
+                    compact
+                    className="mt-5"
+                    icon={<ChartPie className="size-5" />}
+                    title="Belum ada data pemetaan"
+                    description="Distribusi akan tampil setelah mahasiswa memilih peminatan."
+                  />
+                ) : (
+                  <>
+                    <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => toggleSeries("bi")}
+                        aria-pressed={showBi}
+                        className={cn(
+                          "inline-flex min-h-8 items-center gap-1.5 rounded-full border px-2.5 text-[10px] font-bold transition",
+                          showBi
+                            ? "border-bi-200 bg-bi-50 text-bi-700"
+                            : "border-navy-100 bg-white text-ink-faint",
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "size-2 rounded-full",
+                            showBi ? "bg-bi-500" : "bg-navy-200",
+                          )}
+                        />
+                        Business Intelligence
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleSeries("sa")}
+                        aria-pressed={showSa}
+                        className={cn(
+                          "inline-flex min-h-8 items-center gap-1.5 rounded-full border px-2.5 text-[10px] font-bold transition",
+                          showSa
+                            ? "border-sa-200 bg-sa-50 text-sa-700"
+                            : "border-navy-100 bg-white text-ink-faint",
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "size-2 rounded-full",
+                            showSa ? "bg-sa-500" : "bg-navy-200",
+                          )}
+                        />
+                        Smart Agriculture
+                      </button>
+                    </div>
+                    <div className="mt-3 h-[280px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={chartData}
+                          margin={{ top: 12, right: 4, left: -20, bottom: 0 }}
+                          barGap={6}
+                        >
+                          <CartesianGrid vertical={false} stroke="#E9ECF5" strokeDasharray="3 3" />
+                          <XAxis
+                            dataKey="angkatan"
+                            tickLine={false}
+                            axisLine={false}
+                            tick={{ fontSize: 10, fill: "#5B6785", fontWeight: 600 }}
+                            dy={8}
+                          />
+                          <YAxis
+                            allowDecimals={false}
+                            tickLine={false}
+                            axisLine={false}
+                            tick={{ fontSize: 10, fill: "#8992A9" }}
+                            width={42}
+                          />
+                          <Tooltip
+                            cursor={{ fill: "rgba(20,35,79,0.04)" }}
+                            contentStyle={{
+                              borderRadius: 12,
+                              border: "1px solid rgba(255,255,255,0.16)",
+                              background: "rgba(8,18,42,0.9)",
+                              boxShadow: "0 22px 48px -28px rgba(20,35,79,0.55)",
+                              fontSize: 12,
+                              color: "#fff",
+                              backdropFilter: "blur(14px)",
+                            }}
+                            labelStyle={{ color: "#fff", fontWeight: 700, marginBottom: 4 }}
+                            itemStyle={{ color: "#fff" }}
+                            formatter={(value, name) => {
+                              const numeric = Number(Array.isArray(value) ? value[0] : value) || 0;
+                              return [
+                                `${formatNumber(numeric)} mahasiswa (${percent(numeric, Math.max(1, chartTotal))}%)`,
+                                name === "bi" ? "Business Intelligence" : "Smart Agriculture",
+                              ];
+                            }}
+                          />
+                          {showBi ? (
+                            <Bar
+                              dataKey="bi"
+                              name="bi"
+                              fill="#6366F1"
+                              radius={[6, 6, 0, 0]}
+                              maxBarSize={34}
+                              animationDuration={600}
+                              animationEasing="ease-out"
+                            />
+                          ) : null}
+                          {showSa ? (
+                            <Bar
+                              dataKey="sa"
+                              name="sa"
+                              fill="#10B981"
+                              radius={[6, 6, 0, 0]}
+                              maxBarSize={34}
+                              animationDuration={600}
+                              animationEasing="ease-out"
+                            />
+                          ) : null}
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      {chartData.map((row: PemetaanAngkatan) => (
+                        <div
+                          key={row.angkatan}
+                          className="flex items-center justify-between rounded-input border border-navy-50 bg-canvas-soft/50 px-3 py-2 text-[10px]"
+                        >
+                          <span className="font-semibold text-ink-soft">Angkatan {row.angkatan}</span>
+                          <span className="font-bold text-ink">
+                            {formatNumber(row.totalMahasiswa)} mhs
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </section>
@@ -443,436 +867,465 @@ export default function LandingPage() {
         <section
           id="katalog"
           ref={catalogRef}
-          className="scroll-mt-24 border-y border-slate-200/70 bg-slate-50/75 py-16 sm:py-20"
+          className="relative scroll-mt-20 border-y border-navy-100/60 bg-white/60 py-14 sm:py-20"
         >
-          <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-2xl">
-                <span className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-slate-500 shadow-sm">
-                  <LibraryBig className="size-3.5 text-primary-500" />
-                  Katalog skripsi publik
-                </span>
-                <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
-                  Telusuri karya mahasiswa Informatika.
+          <div className="mx-auto w-full max-w-[1280px] px-4 sm:px-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-primary-600">
+                  <LibraryBig className="size-3.5" />
+                  Katalog skripsi
+                </p>
+                <h2 className="mt-3 font-display text-[28px] font-extrabold leading-tight tracking-tight text-ink sm:text-[40px]">
+                  Referensi yang siap <span className="text-gradient-navy">menginspirasi.</span>
                 </h2>
-                <p className="mt-3 text-sm leading-7 text-ink-soft">
-                  Gunakan kolom pencarian atau filter peminatan di bawah untuk
-                  menemukan referensi yang relevan. Semua karya telah melalui
-                  verifikasi Kaprodi.
+                <p className="mt-2 max-w-xl text-sm leading-relaxed text-ink-soft">
+                  Satu pencarian untuk menjangkau judul, penulis, dan peminatan.
+                  Semua karya telah melewati verifikasi Kaprodi.
                 </p>
               </div>
-
-              <div className="inline-flex w-fit items-center gap-3 rounded-2xl border border-slate-200/80 bg-white px-4 py-3 shadow-soft">
-                <span className="grid size-9 place-items-center rounded-xl bg-primary-50 text-primary-600 ring-1 ring-primary-100">
-                  <BadgeCheck className="size-4" />
-                </span>
-                <div>
-                  <p className="text-lg font-extrabold leading-none tracking-tight text-ink">
-                    {statsUnavailable ? "—" : formatNumber(all.length)}
-                  </p>
-                  <p className="mt-1 text-[9.5px] font-bold uppercase tracking-[0.12em] text-slate-400">
-                    karya terverifikasi
-                  </p>
-                </div>
-              </div>
+              <span className="inline-flex w-fit items-center gap-2 rounded-full border border-navy-100 bg-white px-3.5 py-2 text-[11px] font-bold text-ink-soft shadow-soft">
+                <BookOpen className="size-3.5 text-primary-500" />
+                {formatNumber(all.length)} karya terverifikasi
+              </span>
             </div>
 
-            <div className="mt-8 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-              <form
-                onSubmit={onSearchSubmit}
-                className="flex w-full items-center gap-2 xl:max-w-md"
-              >
+            <div className="sticky top-[80px] z-30 mt-6 rounded-panel border border-white/80 bg-white/85 p-3 shadow-card backdrop-blur-xl sm:p-4">
+              <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
                 <div className="relative min-w-0 flex-1">
-                  <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                  <label htmlFor="catalog-search" className="sr-only">
-                    Cari judul skripsi atau nama penulis
-                  </label>
+                  <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-ink-faint" />
                   <input
-                    id="catalog-search"
                     type="search"
                     value={searchInput}
                     onChange={(event) => setSearchInput(event.target.value)}
-                    placeholder="Cari judul skripsi atau nama penulis…"
-                    autoComplete="off"
-                    enterKeyHint="search"
-                    className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-10 text-sm text-ink shadow-sm placeholder:text-slate-400 transition focus:border-primary-300 focus:outline-none focus:ring-4 focus:ring-primary-100/70"
+                    placeholder="Cari judul skripsi, nama mahasiswa, atau NIM…"
+                    aria-label="Cari katalog skripsi"
+                    className="h-12 w-full rounded-input border border-navy-100 bg-white pl-12 pr-11 text-sm text-ink shadow-sm transition placeholder:text-ink-faint/80 focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100"
                   />
                   {searchInput ? (
                     <button
                       type="button"
                       onClick={() => setSearchInput("")}
-                      className="absolute right-2 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-                      aria-label="Hapus kata kunci pencarian"
+                      className="absolute right-1 top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-lg text-ink-faint transition hover:bg-navy-50 hover:text-ink"
+                      aria-label="Hapus pencarian"
                     >
-                      <X className="size-3.5" />
+                      <X className="size-4" />
                     </button>
                   ) : null}
                 </div>
-                <Button
-                  type="submit"
-                  size="md"
-                  className="h-11 shrink-0 rounded-xl px-3.5 sm:px-4"
-                  icon={<Search />}
-                  aria-label="Cari skripsi"
-                >
-                  <span className="hidden sm:inline">Cari</span>
-                </Button>
-              </form>
 
-              <div
-                role="tablist"
-                aria-label="Filter peminatan skripsi"
-                className="inline-flex w-fit max-w-full flex-wrap items-center gap-1 rounded-2xl border border-slate-200/80 bg-white p-1.5 shadow-soft"
-              >
-                {TABS.map((item) => {
-                  const active = tab === item.value;
-                  return (
-                    <button
-                      key={item.value}
-                      type="button"
-                      role="tab"
-                      aria-selected={active}
-                      onClick={() => setTab(item.value)}
-                      className={cn(
-                        "inline-flex items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-[10px] font-extrabold transition sm:gap-2 sm:px-4 sm:text-[11px]",
-                        active
-                          ? "bg-gradient-to-r from-primary-600 to-violet-600 text-white shadow-glow"
-                          : "text-slate-500 hover:bg-slate-50 hover:text-ink",
-                      )}
-                    >
-                      <span className="sm:hidden">{item.short}</span>
-                      <span className="hidden sm:inline">{item.label}</span>
-                      <span
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter peminatan">
+                    {TABS.map((item) => (
+                      <button
+                        key={item.value}
+                        type="button"
+                        onClick={() => setTab(item.value)}
+                        aria-pressed={tab === item.value}
                         className={cn(
-                          "rounded-full px-1.5 py-0.5 text-[9px] font-extrabold",
-                          active
-                            ? "bg-white/20 text-white"
-                            : "bg-slate-100 text-slate-500",
+                          "inline-flex min-h-10 items-center rounded-full border px-3 text-[11px] font-bold transition",
+                          tab === item.value
+                            ? item.value === BI
+                              ? "border-bi-200 bg-bi-50 text-bi-700"
+                              : item.value === SA
+                                ? "border-sa-200 bg-sa-50 text-sa-700"
+                                : "border-navy-800 bg-navy-800 text-white"
+                            : "border-navy-100 bg-white text-ink-soft hover:border-navy-200 hover:text-ink",
                         )}
                       >
-                        {formatNumber(tabCounts[item.value])}
-                      </span>
-                    </button>
-                  );
-                })}
+                        {item.short}
+                      </button>
+                    ))}
+                  </div>
+                  <SelectMenu
+                    label=""
+                    value={tahun}
+                    options={[{ value: "", label: "Semua tahun" }, ...yearOptions]}
+                    onChange={setTahun}
+                    className="sm:w-40"
+                  />
+                  <SelectMenu
+                    label=""
+                    value={order}
+                    options={[
+                      { value: "newest", label: "Terbaru" },
+                      { value: "oldest", label: "Terlama" },
+                      { value: "year", label: "Tahun terbaru" },
+                    ]}
+                    onChange={(value) => setOrder(value as CatalogOrder)}
+                    className="sm:w-40"
+                  />
+                </div>
+              </div>
+              <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[10px] font-semibold text-ink-faint">
+                <span>
+                  Menampilkan{" "}
+                  <span className="font-bold text-ink">{formatNumber(visibleItems.length)}</span>{" "}
+                  dari <span className="font-bold text-ink">{formatNumber(filtered.length)}</span> karya
+                </span>
+                {(searchInput || tab !== "all" || tahun) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchInput("");
+                      setTab("all");
+                      setTahun("");
+                    }}
+                    className="font-bold text-primary-600 hover:underline"
+                  >
+                    Reset filter
+                  </button>
+                )}
               </div>
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-[11px] font-semibold text-slate-500">
-                Menampilkan{" "}
-                <span className="font-extrabold text-ink">
-                  {formatNumber(rangeStart)}–{formatNumber(rangeEnd)}
-                </span>{" "}
-                dari{" "}
-                <span className="font-extrabold text-ink">
-                  {formatNumber(filtered.length)}
-                </span>{" "}
-                skripsi
-              </p>
-
-              {activeKeyword ? (
-                <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-primary-100 bg-primary-50/80 py-1 pl-3 pr-1 text-[10px] font-semibold text-primary-700">
-                  <Search className="size-3 shrink-0" />
-                  <span className="truncate">Hasil untuk “{activeKeyword}”</span>
-                  <button
-                    type="button"
-                    onClick={() => setSearchInput("")}
-                    className="grid size-6 shrink-0 place-items-center rounded-full text-primary-500 transition hover:bg-primary-100 hover:text-primary-700"
-                    aria-label="Hapus pencarian"
-                  >
-                    <X className="size-3" />
-                  </button>
+            <div className="mt-6">
+              {query.loading ? (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <CardSkeleton key={index} />
+                  ))}
                 </div>
-              ) : null}
-            </div>
-
-            {query.error ? (
-              <div className="mt-8 rounded-3xl border border-slate-200/80 bg-white p-4 shadow-soft sm:p-6">
+              ) : query.error ? (
                 <EmptyState
                   icon={<RefreshCw className="size-5" />}
-                  title="Katalog belum dapat dimuat"
+                  title="Gagal memuat katalog"
                   description={query.error}
                   action={
-                    <Button
-                      variant="secondary"
-                      icon={<RefreshCw />}
-                      onClick={query.refetch}
-                    >
+                    <Button variant="secondary" icon={<RefreshCw />} onClick={query.refetch}>
                       Coba lagi
                     </Button>
                   }
                 />
-              </div>
-            ) : query.loading ? (
-              <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {Array.from({ length: PAGE_SIZE }).map((_, index) => (
-                  <CatalogCardSkeleton key={index} />
-                ))}
-              </div>
-            ) : filtered.length === 0 ? (
-              <div className="mt-8 rounded-3xl border border-slate-200/80 bg-white p-4 shadow-soft sm:p-6">
+              ) : filtered.length === 0 ? (
                 <EmptyState
-                  icon={<LibraryBig className="size-5" />}
-                  title={
-                    all.length === 0
-                      ? "Belum ada skripsi yang disetujui"
-                      : "Tidak ada skripsi yang cocok"
-                  }
-                  description={
-                    all.length === 0
-                      ? "Katalog publik akan terisi otomatis setelah Kaprodi menyetujui pengajuan mahasiswa."
-                      : "Coba kata kunci lain di kolom pencarian, atau bersihkan filter untuk melihat seluruh katalog."
-                  }
+                  icon={<Search className="size-5" />}
+                  title="Tidak ada karya yang cocok"
+                  description="Coba kata kunci lain atau reset filter peminatan dan tahun."
                   action={
-                    all.length > 0 ? (
-                      <Button
-                        variant="secondary"
-                        icon={<RefreshCw />}
-                        onClick={resetFilters}
-                      >
-                        Reset pencarian &amp; filter
-                      </Button>
-                    ) : null
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        setSearchInput("");
+                        setTab("all");
+                        setTahun("");
+                      }}
+                    >
+                      Reset filter
+                    </Button>
                   }
                 />
-              </div>
-            ) : (
-              <>
-                <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {visibleItems.map((item) => (
-                    <SkripsiCard
-                      key={item.id}
-                      item={item}
-                      onOpen={() => setSelected(item)}
-                    />
-                  ))}
-                </div>
+              ) : (
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={`${tab}-${tahun}-${order}-${debouncedSearch}-${visibleCount}`}
+                    initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={reduceMotion ? undefined : { opacity: 0 }}
+                    transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                    className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                  >
+                    {visibleItems.map((item, index) => (
+                      <motion.div
+                        key={item.id}
+                        initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                          delay: Math.min(index, 7) * 0.06,
+                          duration: 0.5,
+                          ease: [0.22, 1, 0.36, 1],
+                        }}
+                      >
+                        <SkripsiCard
+                          item={item}
+                          onOpen={() => setSelected(item)}
+                          priority={index < 2}
+                        />
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                </AnimatePresence>
+              )}
+            </div>
 
-                <Pagination
-                  total={filtered.length}
-                  page={currentPage}
-                  pageSize={PAGE_SIZE}
-                  onPageChange={handlePageChange}
-                  itemLabel="skripsi"
-                  className="mt-10 border-slate-200/80"
-                />
-              </>
-            )}
+            {hasMore ? (
+              <div className="mt-7 flex justify-center">
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  icon={<ArrowDown />}
+                  onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
+                >
+                  Muat lebih banyak ({formatNumber(filtered.length - visibleCount)} lagi)
+                </Button>
+              </div>
+            ) : null}
+          </div>
+        </section>
+
+        <section id="peminatan" className="scroll-mt-24 py-14 sm:py-20">
+          <div className="mx-auto w-full max-w-[1280px] px-4 sm:px-6">
+            <div className="text-center">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary-600">
+                Dua jalur riset
+              </p>
+              <h2 className="mt-3 font-display text-[28px] font-extrabold leading-tight tracking-tight text-ink sm:text-[40px]">
+                Pilih peminatan yang <span className="text-gradient-navy">selaras.</span>
+              </h2>
+              <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-ink-soft">
+                Business Intelligence dan Smart Agriculture membuka perspektif
+                berbeda untuk menyelesaikan masalah nyata.
+              </p>
+            </div>
+
+            <div className="mt-8 grid gap-4 lg:grid-cols-2">
+              {PEMINATAN_CONTENT.map((item) => {
+                const Icon = item.icon;
+                const isBi = item.value === BI;
+                return (
+                  <article
+                    key={item.label}
+                    className={cn(
+                      "group relative overflow-hidden rounded-panel border bg-white p-5 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-card sm:p-7",
+                      isBi ? "border-bi-100" : "border-sa-100",
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "pointer-events-none absolute -right-12 -top-12 size-48 rounded-full blur-3xl",
+                        isBi ? "bg-bi-200/40" : "bg-sa-200/40",
+                      )}
+                      aria-hidden="true"
+                    />
+                    <div className="relative flex items-start justify-between gap-3">
+                      <span
+                        className={cn(
+                          "grid size-12 place-items-center rounded-card ring-1",
+                          isBi
+                            ? "bg-bi-50 text-bi-600 ring-bi-100"
+                            : "bg-sa-50 text-sa-600 ring-sa-100",
+                        )}
+                      >
+                        <Icon className="size-6" />
+                      </span>
+                      <span className="font-display text-[28px] font-extrabold text-navy-100">
+                        {item.code}
+                      </span>
+                    </div>
+                    <h3 className="mt-5 font-display text-lg font-extrabold text-ink">
+                      {item.label}
+                    </h3>
+                    <p className="mt-2 max-w-lg text-sm leading-relaxed text-ink-soft">
+                      {item.description}
+                    </p>
+                    <div className="mt-4 flex flex-wrap gap-1.5">
+                      {item.topics.map((topic) => (
+                        <span
+                          key={topic}
+                          className={cn(
+                            "rounded-full border px-2.5 py-1 text-[10px] font-semibold",
+                            isBi
+                              ? "border-bi-100 bg-bi-50/70 text-bi-700"
+                              : "border-sa-100 bg-sa-50/70 text-sa-700",
+                          )}
+                        >
+                          {topic}
+                        </span>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTab(item.value);
+                        catalogRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }}
+                      className={cn(
+                        "mt-5 inline-flex min-h-11 items-center gap-1.5 rounded-input px-3 text-xs font-bold transition",
+                        isBi
+                          ? "bg-bi-50 text-bi-700 hover:bg-bi-100"
+                          : "bg-sa-50 text-sa-700 hover:bg-sa-100",
+                      )}
+                    >
+                      Lihat karya {isBi ? "BI" : "SA"}
+                      <ArrowUpRight className="size-3.5" />
+                    </button>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section className="pb-14 sm:pb-20">
+          <div className="mx-auto w-full max-w-[1280px] px-4 sm:px-6">
+            <div className="relative overflow-hidden rounded-panel bg-navy-900 px-6 py-10 text-white shadow-elevated sm:px-10">
+              <div className="absolute inset-0 bg-hero-glow opacity-80" aria-hidden="true" />
+              <div className="absolute inset-0 bg-dot-grid bg-[size:24px_24px] opacity-20" aria-hidden="true" />
+              <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                <div className="max-w-2xl">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-gold-200">
+                    <ShieldCheck className="size-3.5" />
+                    Siap mulai?
+                  </span>
+                  <h2 className="mt-4 font-display text-[28px] font-extrabold leading-tight sm:text-[40px]">
+                    Punya karya? Jadikan bagian dari <span className="text-gradient-gold">repository.</span>
+                  </h2>
+                  <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/65">
+                    Masuk untuk mengajukan skripsi, memilih peminatan, dan memantau
+                    status verifikasi dalam satu ruang kerja.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2.5">
+                  <Link
+                    to={user ? "/pengajuan" : "/login"}
+                    className="inline-flex min-h-12 items-center gap-2 rounded-input bg-gold-400 px-5 text-sm font-bold text-navy-900 shadow-gold-glow transition hover:bg-gold-300"
+                  >
+                    {user ? "Ajukan Skripsi" : "Masuk ke Akun"}
+                    <ArrowRight className="size-4" />
+                  </Link>
+                  <a
+                    href="#katalog"
+                    className="inline-flex min-h-12 items-center gap-2 rounded-input border border-white/20 bg-white/10 px-5 text-sm font-bold text-white backdrop-blur transition hover:bg-white/15"
+                  >
+                    Jelajahi Katalog
+                    <Download className="size-4" />
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-slate-200/70 bg-white/75">
-        <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr]">
-            <div className="max-w-sm">
-              <Logo />
-              <p className="mt-4 text-xs leading-6 text-slate-500">
-                Repository skripsi dan pemetaan peminatan Program Studi
-                Informatika, Fakultas Teknik, Universitas Madura.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Badge tone="sky" size="xs">
-                  <BrainCircuit className="size-2.5" />
-                  Business Intelligence
-                </Badge>
-                <Badge tone="mint" size="xs">
-                  <Sprout className="size-2.5" />
-                  Smart Agriculture
-                </Badge>
-              </div>
-            </div>
-
-            <div>
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-slate-400">
-                Jelajahi
-              </p>
-              <ul className="mt-4 space-y-2.5">
-                <li>
-                  <a
-                    href="#beranda"
-                    className="text-xs font-semibold text-slate-600 transition hover:text-primary-600"
-                  >
-                    Beranda
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#katalog"
-                    className="text-xs font-semibold text-slate-600 transition hover:text-primary-600"
-                  >
-                    Katalog skripsi
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#peminatan"
-                    className="text-xs font-semibold text-slate-600 transition hover:text-primary-600"
-                  >
-                    Peminatan riset
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-slate-400">
-                Institusi
-              </p>
-              <ul className="mt-4 space-y-2.5">
-                <li className="flex items-center gap-2 text-xs font-semibold text-slate-600">
-                  <GraduationCap className="size-3.5 text-primary-500" />
-                  Universitas Madura
-                </li>
-                <li className="flex items-center gap-2 text-xs font-semibold text-slate-600">
-                  <LibraryBig className="size-3.5 text-primary-500" />
-                  Fakultas Teknik
-                </li>
-                <li className="flex items-center gap-2 text-xs font-semibold text-slate-600">
-                  <BadgeCheck className="size-3.5 text-primary-500" />
-                  Program Studi Informatika
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-slate-200/70 pt-6 text-[10px] text-slate-400 sm:flex-row">
-            <p>
-              © {new Date().getFullYear()} Repository Skripsi · Fakultas Teknik
-              UNIRA
-            </p>
-            <p className="flex items-center gap-1.5">
-              <span className="size-1.5 rounded-full bg-mint-500" />
-              Hanya skripsi disetujui yang dipublikasikan
+      <footer className="border-t border-navy-100/70 bg-white/70 py-10">
+        <div className="mx-auto grid w-full max-w-[1280px] gap-8 px-4 sm:px-6 lg:grid-cols-[1.4fr_0.6fr_0.8fr]">
+          <div>
+            <Logo />
+            <p className="mt-4 max-w-md text-xs leading-relaxed text-ink-soft">
+              Repository Skripsi dan Pemetaan Peminatan Program Studi Informatika,
+              Fakultas Teknik, Universitas Madura. Dibangun untuk memudahkan
+              penelusuran referensi dan pengelolaan karya akademik.
             </p>
           </div>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-ink-faint">
+              Navigasi
+            </p>
+            <ul className="mt-3 space-y-1.5">
+              {NAV_LINKS.map((link) => (
+                <li key={link.href}>
+                  <a
+                    href={link.href}
+                    className="inline-flex min-h-8 items-center text-xs font-semibold text-ink-soft transition hover:text-primary-600"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+              <li>
+                <Link
+                  to="/credits"
+                  className="inline-flex min-h-8 items-center text-xs font-semibold text-ink-soft transition hover:text-primary-600"
+                >
+                  Kredit Gambar
+                </Link>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-ink-faint">
+              Fakultas Teknik
+            </p>
+            <p className="mt-3 text-xs leading-relaxed text-ink-soft">
+              Universitas Madura
+              <br />
+              Program Studi Informatika
+              <br />
+              Pamekasan, Jawa Timur
+            </p>
+            <p className="mt-3 flex items-center gap-1.5 text-[10px] text-ink-faint">
+              <GraduationCap className="size-3.5" />
+              {IMAGE_CREDITS.length} foto Pexels terverifikasi
+            </p>
+          </div>
+        </div>
+        <div className="mx-auto mt-8 flex w-full max-w-[1280px] flex-col items-center justify-between gap-2 border-t border-navy-100/60 px-4 pt-5 text-[10px] text-ink-faint sm:flex-row sm:px-6">
+          <p>© {new Date().getFullYear()} Repository Skripsi UNIRA. Hak cipta karya milik penulis.</p>
+          <p className="flex items-center gap-1.5">
+            <span className="size-1.5 rounded-full bg-sa-500" />
+            BI &amp; SA · Fakultas Teknik
+          </p>
         </div>
       </footer>
 
       <Modal
         open={Boolean(selected)}
         onClose={() => setSelected(null)}
-        title="Detail Skripsi"
-        description="Ringkasan publik karya ilmiah mahasiswa Informatika UNIRA."
-        icon={<BookOpen className="size-5" />}
-        size="xl"
-        footer={
-          selected ? (
-            <>
-              <Button variant="secondary" onClick={() => setSelected(null)}>
-                Tutup
-              </Button>
-              {selected.fileUrl ? (
-                user ? (
+        title={selected?.judul}
+        description={
+          selected
+            ? `${selected.namaMahasiswa ?? "Mahasiswa Informatika"} · NIM ${selected.nim} · ${selected.tahun}`
+            : undefined
+        }
+        size="lg"
+      >
+        {selected ? (
+          <div className="grid gap-5 sm:grid-cols-[0.8fr_1.2fr]">
+            <SkripsiCover
+              id={selected.id}
+              judul={selected.judul}
+              peminatan={selected.peminatan}
+              tahun={selected.tahun}
+              coverUrl={selected.coverUrl}
+              fileUrl={selected.fileUrl}
+            />
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <PeminatanBadge value={selected.peminatan} />
+                <Badge tone="sa" dot>
+                  Disetujui
+                </Badge>
+                <Badge tone="slate">{selected.programStudi}</Badge>
+              </div>
+              <div className="mt-4 flex items-center gap-2.5 rounded-input border border-navy-50 bg-canvas-soft/60 p-3">
+                <Avatar name={selected.namaMahasiswa ?? "Mahasiswa"} size="sm" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-bold text-ink">
+                    {selected.namaMahasiswa ?? "Mahasiswa Informatika"}
+                  </p>
+                  <p className="text-[10px] text-ink-faint">
+                    NIM {selected.nim} · {formatDate(selected.createdAt)}
+                  </p>
+                </div>
+              </div>
+              <h4 className="mt-4 font-display text-sm font-bold text-ink">Abstrak</h4>
+              <p className="mt-1.5 whitespace-pre-line text-sm leading-relaxed text-ink-soft">
+                {selected.abstrak || "Abstrak belum tersedia untuk karya ini."}
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {selected.fileUrl ? (
                   <SkripsiPdfButton
                     id={selected.id}
                     title={selected.judul}
+                    mode="open"
+                    label="Akses PDF"
                   />
                 ) : (
-                  <Link to="/login">
-                    <Button icon={<LogIn />}>Masuk untuk mengunduh</Button>
-                  </Link>
-                )
-              ) : (
-                <Button variant="secondary" icon={<FileText />} disabled>
-                  PDF belum tersedia
-                </Button>
-              )}
-            </>
-          ) : null
-        }
-      >
-        {selected ? (
-          <div className="grid gap-5 sm:grid-cols-[170px_minmax(0,1fr)]">
-            <div className="hidden sm:block">
-              <SkripsiCover
-                judul={selected.judul}
-                peminatan={selected.peminatan}
-                tahun={selected.tahun}
-                coverUrl={selected.coverUrl}
-                fileUrl={selected.fileUrl}
-                className="rounded-2xl shadow-card"
-                priority
-              />
-            </div>
-
-            <div className="space-y-5">
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge tone="mint" size="sm" dot>
-                    <BadgeCheck className="size-3" />
-                    Disetujui Kaprodi
-                  </Badge>
-                  <PeminatanBadge value={selected.peminatan} size="sm" />
-                  <Badge tone="slate" size="sm">
-                    <CalendarDays className="size-3" />
-                    {selected.tahun}
-                  </Badge>
-                </div>
-                <h3 className="mt-3 text-lg font-extrabold leading-snug tracking-tight text-ink sm:text-xl">
-                  {selected.judul}
-                </h3>
-              </div>
-
-              <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-4">
-                <Avatar
-                  name={selected.namaMahasiswa ?? selected.nim}
-                  src={getAvatarForUser(user, {
-                    nama: selected.namaMahasiswa,
-                    email: selected.emailMahasiswa,
-                  })}
-                  size="lg"
-                  className="rounded-2xl"
-                />
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-extrabold text-ink">
-                    {selected.namaMahasiswa ?? "Mahasiswa Informatika"}
-                  </p>
-                  <p className="mt-0.5 text-[11px] font-semibold text-slate-500">
-                    NIM {selected.nim} · {selected.programStudi}
-                  </p>
-                  <p className="mt-1 text-[10px] text-slate-400">
-                    Diunggah {formatDate(selected.createdAt)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid gap-2.5 sm:grid-cols-2">
-                <ModalInfo label="Tahun" value={String(selected.tahun)} />
-                <ModalInfo
-                  label="Peminatan"
-                  value={<PeminatanBadge value={selected.peminatan} size="xs" />}
-                />
-                <ModalInfo label="Program studi" value={selected.programStudi} />
-                <ModalInfo label="NIM" value={selected.nim} />
-              </div>
-
-              <div>
-                <h4 className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.12em] text-slate-400">
-                  <BookOpen className="size-3.5 text-primary-500" />
-                  Abstrak
-                </h4>
-                {selected.abstrak?.trim() ? (
-                  <p className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-600">
-                    {selected.abstrak}
-                  </p>
-                ) : (
-                  <div className="mt-3 rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-7 text-center">
-                    <FileText className="mx-auto size-5 text-slate-300" />
-                    <p className="mt-2 text-xs font-semibold text-slate-500">
-                      Abstrak belum dilampirkan oleh penulis.
-                    </p>
-                  </div>
+                  <Badge tone="amber">PDF belum tersedia</Badge>
                 )}
+                {user ? (
+                  <Button
+                    variant="secondary"
+                    icon={<ArrowUpRight />}
+                    onClick={() => {
+                      setSelected(null);
+                      window.location.href = `/repository/${selected.id}`;
+                    }}
+                  >
+                    Buka di dashboard
+                  </Button>
+                ) : null}
               </div>
-
-              {!selectedHasFile ? (
-                <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-3.5 py-3 text-[11px] font-semibold text-amber-700 ring-1 ring-inset ring-amber-100">
-                  <FileText className="size-4 shrink-0" />
-                  Berkas PDF belum tersedia untuk skripsi ini.
-                </div>
-              ) : null}
             </div>
           </div>
         ) : null}
@@ -881,555 +1334,62 @@ export default function LandingPage() {
   );
 }
 
-function HeroStatsVisual({
-  angkatanStats,
-  totalMahasiswa,
-  loading,
-  error,
-  onRetry,
-  onExplore,
+function StaggerWords({
+  words,
+  reduceMotion,
+  offset = 0,
 }: {
-  angkatanStats: PemetaanAngkatan[];
-  totalMahasiswa: number;
-  loading: boolean;
-  error: string | null;
-  onRetry: () => void;
-  onExplore: (value: typeof BI | typeof SA) => void;
+  words: string[];
+  reduceMotion: boolean;
+  offset?: number;
 }) {
-  const [selectedAngkatan, setSelectedAngkatan] = useState("all");
-
-  const availableYears = useMemo(
-    () =>
-      [...angkatanStats].sort(
-        (a, b) => Number(b.angkatan) - Number(a.angkatan),
-      ),
-    [angkatanStats],
-  );
-
-  const activeSelection =
-    selectedAngkatan !== "all" &&
-    availableYears.some((item) => item.angkatan === selectedAngkatan)
-      ? selectedAngkatan
-      : "all";
-
-  const chartData = useMemo(() => {
-    const rows =
-      activeSelection === "all"
-        ? angkatanStats
-        : angkatanStats.filter((item) => item.angkatan === activeSelection);
-
-    return rows.map((item) => ({
-      angkatan: item.angkatan,
-      bi: item.bi,
-      sa: item.sa,
-      total: item.totalMahasiswa,
-    }));
-  }, [angkatanStats, activeSelection]);
-
-  const chartBi = chartData.reduce((total, item) => total + item.bi, 0);
-  const chartSa = chartData.reduce((total, item) => total + item.sa, 0);
-  const chartCompared = chartBi + chartSa;
-  const chartTotal = chartData.reduce(
-    (total, item) => total + item.total,
-    0,
-  );
-  const scopeTotal =
-    activeSelection === "all"
-      ? Math.max(totalMahasiswa, chartTotal)
-      : chartTotal;
-  const biPercent = percent(chartBi, chartCompared);
-  const saPercent = chartCompared > 0 ? 100 - biPercent : 0;
-  const hasPeminatanData = chartData.some((item) => item.bi + item.sa > 0);
-  const scopeLabel =
-    activeSelection === "all"
-      ? "Seluruh angkatan"
-      : `Angkatan ${activeSelection}`;
-
   return (
-    <div className="relative mx-auto w-full max-w-[540px] animate-slide-up [animation-delay:120ms] motion-reduce:animate-none lg:max-w-none">
-      <div className="pointer-events-none absolute -right-10 top-4 size-64 rounded-full bg-primary-400/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-10 -left-10 size-60 rounded-full bg-mint-300/25 blur-3xl" />
-      <div className="pointer-events-none absolute -right-5 -top-5 size-44 rounded-full border border-primary-200/50" />
-      <div className="pointer-events-none absolute -right-14 top-4 size-56 rounded-full border border-mint-200/40" />
-      <div className="pointer-events-none absolute -left-6 bottom-16 size-32 rounded-full border border-primary-100/60" />
-
-      <div className="relative z-10 rounded-[2rem] border border-white/70 bg-white/55 p-2 shadow-[0_36px_90px_-38px_rgba(15,23,42,0.45)] backdrop-blur-2xl">
-        <div className="relative overflow-hidden rounded-[1.6rem] border border-white/70 bg-gradient-to-br from-white/90 via-white/70 to-white/55 p-4 sm:p-5">
-          <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent" />
-          <div className="pointer-events-none absolute -right-20 -top-20 size-48 rounded-full bg-primary-200/30 blur-2xl" />
-          <div className="pointer-events-none absolute -bottom-24 -left-16 size-48 rounded-full bg-mint-200/30 blur-2xl" />
-
-          <div className="relative">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-2.5">
-                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary-500 via-primary-600 to-violet-600 text-white shadow-glow">
-                  <ChartPie className="size-4" />
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate text-[9px] font-extrabold uppercase tracking-[0.16em] text-slate-400">
-                    Statistik peminatan
-                  </p>
-                  <p className="truncate text-sm font-extrabold tracking-tight text-ink">
-                    BI vs SA per angkatan
-                  </p>
-                </div>
-              </div>
-              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-mint-100/90 bg-mint-50/80 px-2.5 py-1 text-[8px] font-extrabold uppercase tracking-[0.12em] text-mint-700">
-                <span
-                  className={cn(
-                    "size-1.5 rounded-full",
-                    loading ? "animate-pulse bg-slate-400" : "bg-mint-500",
-                  )}
-                />
-                {loading ? "Memuat data" : "Per angkatan"}
-              </span>
-            </div>
-
-            <div className="mt-4 flex items-center justify-between gap-2">
-              <p className="text-[8px] font-extrabold uppercase tracking-[0.14em] text-slate-400">
-                Tahun / angkatan
-              </p>
-              <div className="relative">
-                <select
-                  value={activeSelection}
-                  onChange={(event) => setSelectedAngkatan(event.target.value)}
-                  disabled={
-                    loading || Boolean(error) || availableYears.length === 0
-                  }
-                  className="h-8 appearance-none rounded-xl border border-white/80 bg-white/75 pl-3 pr-7 text-[10px] font-bold text-slate-600 shadow-sm outline-none transition focus:border-primary-300 focus:ring-2 focus:ring-primary-100 disabled:cursor-not-allowed disabled:opacity-50"
-                  aria-label="Filter angkatan grafik peminatan"
-                >
-                  <option value="all">Semua angkatan</option>
-                  {availableYears.map((item) => (
-                    <option key={item.angkatan} value={item.angkatan}>
-                      Angkatan {item.angkatan}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-2 top-1/2 size-3 -translate-y-1/2 text-slate-400" />
-              </div>
-            </div>
-
-            {loading ? (
-              <div className="mt-3 space-y-3">
-                <div className="flex h-[190px] items-end justify-center gap-6 rounded-2xl border border-white/70 bg-white/45 px-4 pb-5 pt-8">
-                  {[0, 1, 2].map((group) => (
-                    <div key={group} className="flex items-end gap-1.5">
-                      <Skeleton className="h-16 w-5 rounded-t-lg" />
-                      <Skeleton className="h-24 w-5 rounded-t-lg" />
-                    </div>
-                  ))}
-                </div>
-                <div className="grid gap-2.5 sm:grid-cols-2">
-                  <Skeleton className="h-[82px] w-full rounded-2xl" />
-                  <Skeleton className="h-[82px] w-full rounded-2xl" />
-                </div>
-              </div>
-            ) : error || !hasPeminatanData ? (
-              <div className="mt-3">
-                <EmptyState
-                  compact
-                  icon={<ChartPie className="size-5" />}
-                  title={
-                    error
-                      ? "Statistik belum bisa dimuat"
-                      : "Belum ada data peminatan"
-                  }
-                  description={
-                    error ??
-                    (chartData.length === 0
-                      ? "Data angkatan akan tampil setelah mahasiswa terdaftar di sistem."
-                      : "Belum ada mahasiswa yang memilih BI atau SA pada angkatan ini.")
-                  }
-                  action={
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      icon={<RefreshCw />}
-                      onClick={onRetry}
-                    >
-                      Muat ulang
-                    </Button>
-                  }
-                />
-              </div>
-            ) : (
-              <>
-                <div className="mt-3 rounded-2xl border border-white/70 bg-white/45 p-2.5">
-                  <div className="h-[190px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={chartData}
-                        margin={{ top: 18, right: 4, left: -28, bottom: 0 }}
-                        barGap={4}
-                        barCategoryGap="24%"
-                      >
-                        <defs>
-                          <linearGradient
-                            id="hero-bi-bar"
-                            x1="0%"
-                            y1="0%"
-                            x2="0%"
-                            y2="100%"
-                          >
-                            <stop offset="0%" stopColor="#38BDF8" />
-                            <stop offset="55%" stopColor="#6366F1" />
-                            <stop offset="100%" stopColor="#8B5CF6" />
-                          </linearGradient>
-                          <linearGradient
-                            id="hero-sa-bar"
-                            x1="0%"
-                            y1="0%"
-                            x2="0%"
-                            y2="100%"
-                          >
-                            <stop offset="0%" stopColor="#34D399" />
-                            <stop offset="55%" stopColor="#10B981" />
-                            <stop offset="100%" stopColor="#047857" />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid
-                          vertical={false}
-                          stroke="#e2e8f0"
-                          strokeDasharray="3 3"
-                        />
-                        <XAxis
-                          dataKey="angkatan"
-                          tickLine={false}
-                          axisLine={false}
-                          interval={0}
-                          tick={{
-                            fontSize: 9.5,
-                            fill: "#64748b",
-                            fontWeight: 700,
-                          }}
-                          dy={6}
-                        />
-                        <YAxis
-                          allowDecimals={false}
-                          tickLine={false}
-                          axisLine={false}
-                          tick={{ fontSize: 9, fill: "#94a3b8" }}
-                          width={30}
-                        />
-                        <Tooltip
-                          cursor={{ fill: "rgba(99,102,241,0.06)" }}
-                          contentStyle={{
-                            borderRadius: 12,
-                            border: "1px solid #e2e8f0",
-                            boxShadow:
-                              "0 12px 30px -16px rgba(15,23,42,0.35)",
-                            fontSize: 11,
-                          }}
-                          labelFormatter={(label) =>
-                            `Angkatan ${String(label)}`
-                          }
-                          formatter={(value, name) => [
-                            `${formatNumber(
-                              Number(
-                                Array.isArray(value)
-                                  ? value[0] ?? 0
-                                  : value ?? 0,
-                              ),
-                            )} mahasiswa`,
-                            name === "bi"
-                              ? "Business Intelligence"
-                              : name === "sa"
-                                ? "Smart Agriculture"
-                                : String(name ?? ""),
-                          ]}
-                        />
-                        <Bar
-                          dataKey="bi"
-                          fill="url(#hero-bi-bar)"
-                          radius={[6, 6, 0, 0]}
-                          maxBarSize={26}
-                        />
-                        <Bar
-                          dataKey="sa"
-                          fill="url(#hero-sa-bar)"
-                          radius={[6, 6, 0, 0]}
-                          maxBarSize={26}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
-                  <HeroPeminatanSummary
-                    tone="bi"
-                    label="Business Intelligence"
-                    short="BI"
-                    count={chartBi}
-                    percent={biPercent}
-                    onExplore={() => onExplore(BI)}
-                  />
-                  <HeroPeminatanSummary
-                    tone="sa"
-                    label="Smart Agriculture"
-                    short="SA"
-                    count={chartSa}
-                    percent={saPercent}
-                    onExplore={() => onExplore(SA)}
-                  />
-                </div>
-
-                <div className="mt-3 rounded-2xl border border-white/80 bg-white/55 p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-[8px] font-extrabold uppercase tracking-[0.14em] text-slate-400">
-                      Rasio peminatan
-                    </p>
-                    <p className="text-[9px] font-bold text-slate-500">
-                      BI {biPercent}% · SA {saPercent}%
-                    </p>
-                  </div>
-                  <div className="mt-2 flex h-2.5 overflow-hidden rounded-full bg-slate-100">
-                    <div
-                      className="h-full bg-gradient-to-r from-sky-400 via-primary-500 to-violet-500 transition-all duration-700"
-                      style={{ width: `${clampPercent(biPercent)}%` }}
-                    />
-                    <div
-                      className="h-full bg-gradient-to-r from-mint-400 to-mint-600 transition-all duration-700"
-                      style={{ width: `${clampPercent(saPercent)}%` }}
-                    />
-                  </div>
-                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[8.5px] font-semibold text-slate-400">
-                    <span>
-                      {scopeLabel} · {formatNumber(scopeTotal)} mahasiswa
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-mint-600">
-                      <BadgeCheck className="size-3" />
-                      {formatNumber(chartCompared)} sudah memilih
-                    </span>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function HeroPeminatanSummary({
-  tone,
-  label,
-  short,
-  count,
-  percent,
-  onExplore,
-}: {
-  tone: "bi" | "sa";
-  label: string;
-  short: string;
-  count: number;
-  percent: number;
-  onExplore: () => void;
-}) {
-  const styles =
-    tone === "bi"
-      ? {
-          dot: "bg-gradient-to-br from-sky-400 to-primary-500",
-          badge: "bg-sky-50 text-sky-700 ring-sky-100",
-          bar: "from-sky-400 via-primary-500 to-violet-500",
-          focus: "focus-visible:ring-primary-400",
-        }
-      : {
-          dot: "bg-gradient-to-br from-mint-400 to-mint-600",
-          badge: "bg-mint-50 text-mint-700 ring-mint-100",
-          bar: "from-mint-400 via-mint-500 to-emerald-500",
-          focus: "focus-visible:ring-mint-400",
-        };
-
-  return (
-    <button
-      type="button"
-      onClick={onExplore}
-      className={cn(
-        "group w-full rounded-2xl border border-white/70 bg-white/50 p-3 text-left transition duration-300 hover:border-white hover:bg-white/85 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
-        styles.focus,
-      )}
-      aria-label={`Jelajahi ${label}: ${formatNumber(count)} mahasiswa (${percent}%)`}
-    >
-      <div className="flex items-center gap-2">
-        <span className={cn("size-2 shrink-0 rounded-full", styles.dot)} />
-        <span className="min-w-0 flex-1 truncate text-[9.5px] font-extrabold uppercase tracking-[0.12em] text-slate-500">
-          {label}
-        </span>
-        <span
-          className={cn(
-            "shrink-0 rounded-full px-2 py-0.5 text-[8.5px] font-extrabold ring-1 ring-inset",
-            styles.badge,
-          )}
+    <>
+      {words.map((word, index) => (
+        <motion.span
+          key={word + index}
+          className="inline-block"
+          initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            delay: (offset + index) * 0.055,
+            duration: 0.5,
+            ease: [0.22, 1, 0.36, 1],
+          }}
         >
-          {percent}%
-        </span>
-      </div>
-
-      <div className="mt-1.5 flex items-end justify-between gap-2">
-        <span className="text-lg font-extrabold leading-none tracking-tight text-ink">
-          {formatNumber(count)}
-        </span>
-        <span className="inline-flex items-center gap-1 text-[8.5px] font-bold uppercase tracking-[0.08em] text-slate-400 transition group-hover:text-slate-600">
-          {short} · mahasiswa
-          <ArrowUpRight className="size-3 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-        </span>
-      </div>
-
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
-        <div
-          className={cn(
-            "h-full rounded-full bg-gradient-to-r transition-all duration-700",
-            styles.bar,
-          )}
-          style={{ width: `${clampPercent(percent)}%` }}
-        />
-      </div>
-    </button>
+          {word}
+          {index < words.length - 1 ? "\u00A0" : ""}
+        </motion.span>
+      ))}
+    </>
   );
 }
 
-function PeminatanCard({
+function LandingCountUp({
   value,
-  code,
-  label,
-  description,
-  topics,
-  icon: Icon,
-  tone,
-  count,
-  loading,
-  onExplore,
+  reduceMotion,
 }: {
-  value: typeof BI | typeof SA;
-  code: string;
-  label: string;
-  description: string;
-  topics: string[];
-  icon: LucideIcon;
-  tone: "bi" | "sa";
-  count: number;
-  loading: boolean;
-  onExplore: (value: typeof BI | typeof SA) => void;
+  value: number;
+  reduceMotion: boolean;
 }) {
-  const styles = PEMINATAN_TONE[tone];
+  const [display, setDisplay] = useState(reduceMotion ? value : 0);
 
-  return (
-    <article className="group relative flex flex-col overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-white p-6 shadow-soft transition duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-card sm:p-7">
-      <div
-        className={cn(
-          "absolute inset-x-0 top-0 h-1 bg-gradient-to-r",
-          styles.bar,
-        )}
-      />
-      <div
-        className={cn(
-          "pointer-events-none absolute -right-12 -top-12 size-44 rounded-full blur-2xl",
-          styles.blob,
-        )}
-      />
+  useEffect(() => {
+    if (reduceMotion) {
+      setDisplay(value);
+      return;
+    }
+    let frame = 0;
+    let start = 0;
+    const animate = (timestamp: number) => {
+      if (!start) start = timestamp;
+      const progress = Math.min(1, (timestamp - start) / 900);
+      setDisplay(Math.round(value * (1 - Math.pow(1 - progress, 3))));
+      if (progress < 1) frame = requestAnimationFrame(animate);
+    };
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [value, reduceMotion]);
 
-      <div className="relative flex items-start justify-between gap-4">
-        <span
-          className={cn(
-            "grid size-12 place-items-center rounded-2xl ring-1",
-            styles.icon,
-          )}
-        >
-          <Icon className="size-5.5" />
-        </span>
-        <span className="text-4xl font-extrabold tracking-tight text-slate-100">
-          {code}
-        </span>
-      </div>
-
-      <p className="relative mt-5 text-[9.5px] font-extrabold uppercase tracking-[0.18em] text-slate-400">
-        Peminatan riset {code}
-      </p>
-      <h3 className="relative mt-1 text-xl font-extrabold tracking-tight text-ink sm:text-[22px]">
-        {label}
-      </h3>
-      <p className="relative mt-2.5 text-xs leading-6 text-ink-soft">
-        {description}
-      </p>
-
-      <div className="relative mt-4 flex flex-wrap gap-1.5">
-        {topics.map((topic) => (
-          <span
-            key={topic}
-            className={cn(
-              "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[9.5px] font-bold ring-1 ring-inset",
-              styles.chip,
-            )}
-          >
-            <CheckCircle2 className="size-2.5" />
-            {topic}
-          </span>
-        ))}
-      </div>
-
-      <div className="relative mt-auto flex items-center justify-between gap-3 border-t border-slate-100 pt-5">
-        <div>
-          <p className="text-lg font-extrabold tracking-tight text-ink">
-            {loading ? "—" : formatNumber(count)}
-          </p>
-          <p className="text-[9.5px] font-semibold text-slate-400">
-            skripsi terverifikasi
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => onExplore(value)}
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[10.5px] font-extrabold transition",
-            styles.action,
-          )}
-        >
-          Jelajahi
-          <ArrowUpRight className="size-3.5" />
-        </button>
-      </div>
-    </article>
-  );
-}
-
-function CatalogCardSkeleton() {
-  return (
-    <div className="overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-white shadow-soft">
-      <Skeleton className="aspect-[3/4] w-full rounded-none" />
-      <div className="p-5">
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-5 w-14 rounded-full" />
-          <Skeleton className="h-5 w-20 rounded-full" />
-          <Skeleton className="ml-auto h-3 w-10" />
-        </div>
-        <Skeleton className="mt-3 h-4 w-full" />
-        <Skeleton className="mt-2 h-4 w-5/6" />
-        <div className="mt-4 flex items-center gap-2.5 rounded-2xl border border-slate-100 bg-slate-50/70 p-3">
-          <Skeleton className="size-8 shrink-0 rounded-lg" />
-          <div className="flex-1 space-y-1.5">
-            <Skeleton className="h-3 w-1/2" />
-            <Skeleton className="h-2.5 w-1/3" />
-          </div>
-        </div>
-        <div className="mt-4 flex items-center gap-2 border-t border-slate-100 pt-4">
-          <Skeleton className="h-9 flex-1 rounded-xl" />
-          <Skeleton className="h-9 w-20 rounded-xl" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ModalInfo({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3">
-      <p className="text-[9px] font-extrabold uppercase tracking-[0.13em] text-slate-400">
-        {label}
-      </p>
-      <div className="mt-1.5 text-xs font-bold text-ink">{value}</div>
-    </div>
-  );
+  return <>{formatNumber(display)}</>;
 }
