@@ -4,7 +4,7 @@
 
 ### Judul Project
 
-**Sistem Repository Skripsi dan Pemetaan Peminatan Mahasiswa (Studi Kasus: Fakultas Teknik UNIRA)**
+**Repository Skripsi Peminatan Informatika UNIRA**
 
 ### Cerita yang Dipilih
 
@@ -12,11 +12,11 @@
 
 ### Deskripsi Singkat
 
-Project ini merupakan sistem repository skripsi dan pemetaan peminatan mahasiswa Fakultas Teknik UNIRA. Sistem dirancang untuk menyediakan tempat penyimpanan dan pencarian skripsi secara terpusat serta menampilkan informasi pemetaan jumlah mahasiswa berdasarkan bidang peminatan **Business Intelligence (BI)** dan **Software Architecture (SA)**.
+Project ini merupakan sistem repository skripsi dan pemetaan peminatan mahasiswa Informatika UNIRA. Sistem dirancang untuk menyediakan tempat penyimpanan dan pencarian skripsi secara terpusat serta menampilkan informasi pemetaan jumlah mahasiswa berdasarkan bidang peminatan **Business Intelligence (BI)** dan **Software Architecture (SA)**.
 Sistem memiliki tiga peran pengguna, yaitu **Mahasiswa, Kaprodi, dan Tendik**. Mahasiswa dapat mencari dan mengunggah skripsi, Kaprodi dapat melihat informasi skripsi dan pemetaan peminatan, sedangkan Tendik dapat mengelola data mahasiswa, skripsi, dan peminatan serta melakukan verifikasi berkas skripsi.
 ## 2. Masalah
 
-Pengarsipan skripsi di Fakultas Teknik UNIRA masih belum terpusat sehingga mahasiswa kesulitan mencari referensi skripsi yang sesuai dengan bidang peminatan riset mereka. Selain itu, informasi mengenai jumlah mahasiswa pada setiap peminatan belum dapat dipantau secara terpusat.
+Pengarsipan skripsi di Informatika UNIRA masih belum terpusat sehingga mahasiswa kesulitan mencari referensi skripsi yang sesuai dengan bidang peminatan riset mereka. Selain itu, informasi mengenai jumlah mahasiswa pada setiap peminatan belum dapat dipantau secara terpusat.
 Permasalahan tersebut menyebabkan data skripsi dan informasi peminatan belum dapat dimanfaatkan secara optimal sebagai sumber referensi bagi mahasiswa maupun sebagai informasi pemetaan bagi Kaprodi.
 
 ### Pengguna yang Mengalami Masalah
@@ -198,4 +198,4 @@ q
 
 Diskusi kebutuhan sistem dilakukan melalui GitHub Issue:
 
-[Issue #1 — Diskusi Kebutuhan Sistem Tugas Kelompok 3](https://github.com/009-sofyan/pemrograman-berbasis-platform-kelompok-01-Repository-Skripsi-FT-UNIRA/issues/1)
+[Issue #1 — Diskusi Kebutuhan Sistem Tugas Kelompok 3](https://github.com/009-sofyan/pemrograman-berbasis-platform-kelompok-01-Repository-Skripsi-peminatan-informatika-UNIRA/issues/1)

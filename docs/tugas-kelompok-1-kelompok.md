@@ -39,7 +39,7 @@ Jadwal kerja kelompok bersifat fleksibel dan disesuaikan dengan ketersediaan sel
 
 Repository kelompok menggunakan sistem monorepo sebagai tempat pengembangan proyek akhir.
 
-**Repository:** [pemrograman-berbasis-platform-kelompok-01-Repository-Skripsi-FT-UNIRA](https://github.com/009-sofyan/pemrograman-berbasis-platform-kelompok-01-Repository-Skripsi-FT-UNIRA)
+**Repository:** [pemrograman-berbasis-platform-kelompok-01-Repository-Skripsi-peminatan-informatika-UNIRA](https://github.com/009-sofyan/pemrograman-berbasis-platform-kelompok-01-Repository-Skripsi-peminatan-informatika-UNIRA)
 
 Struktur utama repository:
 
