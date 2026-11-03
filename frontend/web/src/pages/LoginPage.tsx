@@ -9,6 +9,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, useReducedMotion } from "motion/react";
 import {
   AlertCircle,
+  ArrowLeft,
   ArrowRight,
   BrainCircuit,
   BriefcaseBusiness,
@@ -208,7 +209,13 @@ export default function LoginPage() {
           />
 
           <div className="relative z-10 flex items-center justify-between gap-3">
-            <Logo tone="light" />
+            <Link
+              to="/"
+              aria-label="Kembali ke beranda"
+              className="inline-flex min-h-11 min-w-0 items-center rounded-input transition-opacity hover:opacity-90"
+            >
+              <Logo tone="light" />
+            </Link>
             <span className="hidden items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-white/55 xl:inline-flex">
               <Sparkles className="size-3 text-gold-300" />
               Sejak 2024
@@ -265,9 +272,13 @@ export default function LoginPage() {
             aria-hidden="true"
           />
           <div className="relative mx-auto my-auto w-full max-w-md">
-            <div className="mb-5 lg:hidden">
+            <Link
+              to="/"
+              aria-label="Kembali ke beranda"
+              className="mb-5 inline-flex min-h-11 items-center rounded-input transition-opacity hover:opacity-90 lg:hidden"
+            >
               <Logo />
-            </div>
+            </Link>
             <motion.div
               initial={reduceMotion ? false : { opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
@@ -277,6 +288,13 @@ export default function LoginPage() {
                 shake && "animate-shake",
               )}
             >
+              <Link
+                to="/"
+                className="group -ml-1 mb-4 inline-flex min-h-11 items-center gap-1.5 rounded-lg px-1 text-xs font-semibold text-slate-400 transition-[color,transform] duration-200 hover:-translate-x-1 hover:text-slate-200 focus-visible:ring-cyan-400"
+              >
+                <ArrowLeft className="size-4 shrink-0" aria-hidden="true" />
+                Kembali ke Beranda
+              </Link>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary-600">
                 Selamat datang kembali
               </p>

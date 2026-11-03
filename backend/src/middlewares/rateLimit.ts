@@ -96,6 +96,22 @@ export const apiRateLimiter = rateLimit({
 });
 
 /**
+ * Unduhan PDF publik dibatasi per IP. Batasnya longgar (default 60/menit)
+ * agar pemakaian normal tidak terganggu, tetapi tetap mencegah pengambilan
+ * berkas secara massal.
+ */
+export const downloadRateLimiter = rateLimit({
+    windowMs: apiRateLimitConfig.download.windowMs,
+    limit: apiRateLimitConfig.download.limit,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    keyGenerator: clientIp,
+    handler: rateLimitHandler(
+        "Terlalu banyak permintaan unduhan. Silakan coba lagi nanti."
+    ),
+});
+
+/**
  * Upload memakai kuota per IP + akun terautentikasi. Middleware ini dipasang
  * setelah authMiddleware sehingga identitas pengguna sudah terverifikasi.
  */

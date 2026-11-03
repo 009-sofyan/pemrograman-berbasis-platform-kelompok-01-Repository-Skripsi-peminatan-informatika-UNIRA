@@ -1,13 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { PeminatanValue } from "../../types";
 import { cn } from "../../lib/cn";
-import { resolveFileUrl } from "../../lib/files";
+import { resolveCover, type CoverSkripsi } from "../../lib/cover";
+import { useCoverCacheVersion } from "../../hooks/useCoverCacheVersion";
 import { GeneratedCover } from "./GeneratedCover";
 
 /**
- * Urutan sampul: unggahan mahasiswa (coverUrl) -> GeneratedCover lokal.
- * Tidak ada permintaan gambar eksternal; kegagalan muat selalu jatuh ke
- * generator deterministik agar kartu tidak pernah kosong.
+ * Urutan sampul: cover API (coverUrl/cover_url) -> cover sementara lokal
+ * (cover-temp:<id>) -> GeneratedCover. Jika sebuah gambar gagal dimuat,
+ * komponen mencoba kandidat berikutnya agar tidak pernah menampilkan
+ * gambar rusak.
  */
 export function SkripsiCover({
   id,
@@ -16,6 +18,7 @@ export function SkripsiCover({
   tahun,
   author,
   coverUrl,
+  skripsi,
   className,
   priority = false,
 }: {
@@ -25,18 +28,25 @@ export function SkripsiCover({
   tahun: number | string;
   author?: string | null;
   coverUrl?: string | null;
+  skripsi?: CoverSkripsi;
   className?: string;
   priority?: boolean;
 }) {
-  const [imageFailed, setImageFailed] = useState(false);
+  const cacheVersion = useCoverCacheVersion();
+  const [attempt, setAttempt] = useState(0);
+
+  const coverSource = useMemo<CoverSkripsi>(
+    () => skripsi ?? { id, coverUrl },
+    [skripsi, id, coverUrl],
+  );
 
   useEffect(() => {
-    setImageFailed(false);
-  }, [coverUrl]);
+    setAttempt(0);
+  }, [coverSource.id, coverSource.coverUrl, coverSource.cover_url, cacheVersion]);
 
-  const src = coverUrl ? resolveFileUrl(coverUrl) : null;
+  const src = resolveCover(coverSource, attempt);
 
-  if (!src || imageFailed) {
+  if (!src) {
     return (
       <GeneratedCover
         id={id}
@@ -57,6 +67,7 @@ export function SkripsiCover({
       )}
     >
       <img
+        key={attempt}
         src={src}
         alt={`Sampul skripsi: ${judul}`}
         width={600}
@@ -64,7 +75,7 @@ export function SkripsiCover({
         loading={priority ? "eager" : "lazy"}
         decoding="async"
         fetchPriority={priority ? "high" : "auto"}
-        onError={() => setImageFailed(true)}
+        onError={() => setAttempt((value) => value + 1)}
         className="size-full object-cover"
       />
       <div

@@ -77,6 +77,7 @@ import { SelectMenu } from "../components/ui/SelectMenu";
 import { DataTable, type DataColumn } from "../components/ui/DataTable";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { PeminatanChart } from "../components/dashboard/PeminatanChart";
+import { SkripsiCover } from "../components/skripsi/SkripsiCover";
 import { SkripsiPdfButton } from "../components/skripsi/SkripsiPdfButton";
 
 const VERIFICATION_PAGE_SIZE = 6;
@@ -1094,9 +1095,17 @@ function OwnSubmissions({
           {items.slice(0, 4).map((item) => (
             <li key={item.id} className="group px-5 py-4 transition hover:bg-navy-50/30 sm:px-6">
               <div className="flex items-start gap-3">
-                <span className="mt-0.5 grid size-10 shrink-0 place-items-center rounded-input bg-bi-50 text-bi-600 ring-1 ring-bi-100">
-                  <FileText className="size-4" />
-                </span>
+                <div className="mt-0.5 w-10 shrink-0 overflow-hidden rounded-input ring-1 ring-white/10">
+                  <SkripsiCover
+                    skripsi={item}
+                    id={item.id}
+                    judul={item.judul}
+                    peminatan={item.peminatan}
+                    tahun={item.tahun}
+                    author={item.namaMahasiswa}
+                    coverUrl={item.coverUrl}
+                  />
+                </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <StatusBadge status={item.status} size="xs" />

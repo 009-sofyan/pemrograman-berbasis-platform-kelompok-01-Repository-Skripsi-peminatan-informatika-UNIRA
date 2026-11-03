@@ -34,6 +34,7 @@ export function SkripsiCard({
         aria-label={`Lihat detail dan abstrak skripsi: ${item.judul}`}
       >
         <SkripsiCover
+          skripsi={item}
           id={item.id}
           judul={item.judul}
           peminatan={item.peminatan}

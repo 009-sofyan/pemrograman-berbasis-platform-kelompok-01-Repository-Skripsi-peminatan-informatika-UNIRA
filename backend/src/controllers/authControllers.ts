@@ -20,7 +20,10 @@ export async function register(
 ) {
   try {
     // Body sudah dinormalisasi (trim/lowercase email) oleh registerSchema.
-    const { nama, email, password } = req.body as RegisterInput;
+    // role/status dari body tidak pernah dibaca: registrasi publik selalu
+    // menghasilkan akun mahasiswa yang menunggu verifikasi Tendik.
+    const { nama, email, password, nim, programStudi } =
+      req.body as RegisterInput;
 
     const [existingUser] = await db
       .select({ id: users.id })
@@ -36,17 +39,18 @@ export async function register(
 
     const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
-    // Role tidak pernah diambil dari body. Registrasi publik hanya boleh
-    // membuat akun mahasiswa.
     await db.insert(users).values({
       nama,
       email,
       password: hashedPassword,
       role: "mahasiswa",
+      status: "PENDING_VERIFICATION",
+      claimNim: nim ?? null,
+      claimProgramStudi: programStudi ?? null,
     });
 
     return res.status(201).json({
-      message: "Registrasi berhasil",
+      message: "Pendaftaran diterima, menunggu verifikasi Tendik",
     });
   } catch (error) {
     next(error);
@@ -78,6 +82,25 @@ export async function login(
     if (!isMatch) {
       return res.status(401).json({
         message: "Email atau password salah",
+      });
+    }
+
+    // Akun hasil registrasi baru belum boleh masuk sebelum Tendik
+    // memverifikasi. Akun lama yang belum memiliki nilai status (mis. saat
+    // migrasi belum diterapkan) tetap dianggap ACTIVE.
+    if (dataUser.status === "PENDING_VERIFICATION") {
+      return res.status(403).json({
+        message:
+          "Akun kamu masih menunggu verifikasi Tendik. Silakan coba lagi setelah disetujui.",
+      });
+    }
+
+    if (dataUser.status === "REJECTED") {
+      const reason = dataUser.rejectReason?.trim();
+      return res.status(403).json({
+        message: reason
+          ? `Pendaftaran akun kamu ditolak oleh Tendik. Alasan: ${reason}`
+          : "Pendaftaran akun kamu ditolak oleh Tendik.",
       });
     }
 

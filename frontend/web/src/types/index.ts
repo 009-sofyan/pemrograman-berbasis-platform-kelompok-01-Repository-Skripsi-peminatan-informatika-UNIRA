@@ -49,6 +49,7 @@ export interface Skripsi {
   tahun: number;
   fileUrl: string | null;
   coverUrl?: string | null;
+  cover_url?: string | null;
   status: SkripsiStatus;
   createdAt: string | null;
   mahasiswaId: number;
@@ -91,6 +92,11 @@ export interface CreateSkripsiResponse {
 export interface UploadSkripsiResponse {
   message: string;
   fileUrl: string;
+}
+
+export interface SkripsiCoverResponse {
+  message: string;
+  coverUrl: string | null;
 }
 
 export interface SimpleMessageResponse {

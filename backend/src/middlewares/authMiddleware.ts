@@ -106,6 +106,8 @@ export async function authMiddleware(
                 id: users.id,
                 email: users.email,
                 role: users.role,
+                status: users.status,
+                rejectReason: users.rejectReason,
             })
             .from(users)
             .where(eq(users.id, id))
@@ -114,6 +116,25 @@ export async function authMiddleware(
         if (!currentUser) {
             return res.status(401).json({
                 message: "Sesi tidak valid. Silakan login kembali.",
+            });
+        }
+
+        // Status dibaca ulang dari database agar token yang sudah terbit tidak
+        // tetap berlaku ketika akun kemudian ditolak/dinonaktifkan. Nilai
+        // status yang tidak ada (database lama) diperlakukan sebagai ACTIVE.
+        if (currentUser.status === "PENDING_VERIFICATION") {
+            return res.status(401).json({
+                message:
+                    "Akun kamu masih menunggu verifikasi Tendik. Silakan login kembali setelah disetujui.",
+            });
+        }
+
+        if (currentUser.status === "REJECTED") {
+            const reason = currentUser.rejectReason?.trim();
+            return res.status(401).json({
+                message: reason
+                    ? `Akun kamu ditolak oleh Tendik. Alasan: ${reason}`
+                    : "Akun kamu ditolak oleh Tendik.",
             });
         }
 

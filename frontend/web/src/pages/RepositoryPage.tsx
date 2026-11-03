@@ -36,6 +36,7 @@ import { TableSkeleton } from "../components/ui/Skeleton";
 import { Pagination } from "../components/ui/Pagination";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import { PeminatanBadge } from "../components/ui/PeminatanBadge";
+import { SkripsiCover } from "../components/skripsi/SkripsiCover";
 import { SkripsiPdfButton } from "../components/skripsi/SkripsiPdfButton";
 
 const PAGE_SIZE = 8;
@@ -334,16 +335,31 @@ export default function RepositoryPage() {
                 {pageData.map((item) => (
                   <tr key={item.id} className="table-row">
                     <td className="px-5 py-4">
-                      <Link
-                        to={`/repository/${item.id}`}
-                        className="block max-w-md text-[13px] font-bold leading-relaxed text-ink transition hover:text-primary-600"
-                      >
-                        {truncate(item.judul, 96)}
-                      </Link>
-                      <p className="mt-1.5 text-[10px] text-slate-400">
-                        {item.programStudi} · Ditambahkan{" "}
-                        {formatDate(item.createdAt)}
-                      </p>
+                      <div className="flex items-center gap-3">
+                        <div className="hidden w-12 shrink-0 overflow-hidden rounded-lg ring-1 ring-white/10 sm:block">
+                          <SkripsiCover
+                            skripsi={item}
+                            id={item.id}
+                            judul={item.judul}
+                            peminatan={item.peminatan}
+                            tahun={item.tahun}
+                            author={item.namaMahasiswa}
+                            coverUrl={item.coverUrl}
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <Link
+                            to={`/repository/${item.id}`}
+                            className="block max-w-md text-[13px] font-bold leading-relaxed text-ink transition hover:text-primary-600"
+                          >
+                            {truncate(item.judul, 96)}
+                          </Link>
+                          <p className="mt-1.5 text-[10px] text-slate-400">
+                            {item.programStudi} · Ditambahkan{" "}
+                            {formatDate(item.createdAt)}
+                          </p>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-3 py-4">
                       <p className="text-xs font-semibold text-slate-600">{item.nim}</p>
@@ -396,15 +412,30 @@ export default function RepositoryPage() {
                 to={`/repository/${item.id}`}
                 className="group rounded-2xl border border-slate-200/80 bg-white p-4 shadow-soft transition hover:-translate-y-0.5 hover:shadow-card"
               >
-                <div className="flex items-center justify-between gap-2">
-                  <StatusBadge status={item.status} size="xs" />
-                  <span className="text-[10px] font-semibold text-slate-400">
-                    {item.tahun}
-                  </span>
+                <div className="flex items-start gap-3">
+                  <div className="w-12 shrink-0 overflow-hidden rounded-lg ring-1 ring-white/10">
+                    <SkripsiCover
+                      skripsi={item}
+                      id={item.id}
+                      judul={item.judul}
+                      peminatan={item.peminatan}
+                      tahun={item.tahun}
+                      author={item.namaMahasiswa}
+                      coverUrl={item.coverUrl}
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <StatusBadge status={item.status} size="xs" />
+                      <span className="text-[10px] font-semibold text-slate-400">
+                        {item.tahun}
+                      </span>
+                    </div>
+                    <p className="mt-2 line-clamp-3 text-[13px] font-bold leading-relaxed text-ink group-hover:text-primary-600">
+                      {item.judul}
+                    </p>
+                  </div>
                 </div>
-                <p className="mt-3 line-clamp-3 text-[13px] font-bold leading-relaxed text-ink group-hover:text-primary-600">
-                  {item.judul}
-                </p>
                 <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
                   <div className="flex items-center gap-2">
                     <PeminatanBadge value={item.peminatan} size="xs" short />

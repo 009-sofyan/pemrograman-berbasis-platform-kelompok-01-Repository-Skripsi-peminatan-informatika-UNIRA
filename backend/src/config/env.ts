@@ -74,6 +74,16 @@ export const apiRateLimitConfig = {
             isProduction ? 20 : 100
         ),
     },
+    download: {
+        windowMs: readPositiveInt(
+            "DOWNLOAD_RATE_LIMIT_WINDOW_MS",
+            60_000
+        ),
+        limit: readPositiveInt(
+            "DOWNLOAD_RATE_LIMIT_MAX",
+            60
+        ),
+    },
 } as const;
 
 export function getJwtSecret(): string {

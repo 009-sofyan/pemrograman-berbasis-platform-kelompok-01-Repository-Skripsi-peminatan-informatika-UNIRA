@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
@@ -5,8 +6,9 @@ export default defineConfig({
   out: './drizzle',
   dialect: 'mysql',
   dbCredentials: {
-    host: 'localhost',
-    user: 'root',
-    database: 'repository_skripsi_ftUnira'
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'repository_skripsi_ftUnira',
   }
 });

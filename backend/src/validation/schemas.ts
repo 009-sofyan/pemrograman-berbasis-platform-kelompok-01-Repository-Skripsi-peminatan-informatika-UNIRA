@@ -7,6 +7,12 @@ export const PEMINATAN_VALUES = [
 
 export const ROLE_VALUES = ["mahasiswa", "kaprodi", "tendik"] as const;
 
+export const ACCOUNT_STATUS_VALUES = [
+    "ACTIVE",
+    "PENDING_VERIFICATION",
+    "REJECTED",
+] as const;
+
 export const SKRIPSI_STATUS_VALUES = [
     "draft",
     "diajukan",
@@ -64,13 +70,22 @@ export const passwordLoginSchema = z
         `Password maksimal ${PASSWORD_MAX_BYTES} byte`
     );
 
-export const registerSchema = z
-    .object({
-        nama: requiredString("Nama", 2, 100),
-        email: emailSchema,
-        password: passwordRegistrationSchema,
-    })
-    .strict();
+/**
+ * Registrasi publik sengaja tidak memakai .strict(): role, status, atau field
+ * lain dari body tidak boleh memengaruhi akun yang dibuat. Nilai yang tidak
+ * dikenal dibuang, sedangkan NIM/prodi hanya disimpan sebagai klaim awal.
+ */
+export const registerSchema = z.object({
+    nama: requiredString("Nama", 2, 100),
+    email: emailSchema,
+    password: passwordRegistrationSchema,
+    nim: z
+        .string({ error: "NIM harus berupa teks" })
+        .trim()
+        .regex(/^\d{5,20}$/, "NIM harus terdiri dari 5-20 digit angka")
+        .optional(),
+    programStudi: requiredString("Program studi", 2, 100).optional(),
+});
 
 export const loginSchema = z
     .object({
@@ -227,6 +242,46 @@ export const skripsiListQuerySchema = z
     })
     .strict();
 
+export const tendikRegistrationQuerySchema = z
+    .object({
+        status: z
+            .enum(ACCOUNT_STATUS_VALUES, {
+                error: "Status akun tidak valid",
+            })
+            .optional(),
+        q: searchQuerySchema,
+        page: pageQuerySchema,
+        limit: limitQuerySchema,
+    })
+    .strict();
+
+export const approveRegistrationSchema = z
+    .object({
+        nim: z
+            .string({ error: "NIM wajib diisi" })
+            .trim()
+            .regex(/^\d{5,20}$/, "NIM harus terdiri dari 5-20 digit angka"),
+        // Nama field mengikuti kontrak yang sudah dipakai frontend. "prodi"
+        // diterima sebagai alias agar endpoint tetap ramah integrasi.
+        programStudi: requiredString("Program studi", 2, 100).optional(),
+        prodi: requiredString("Program studi", 2, 100).optional(),
+    })
+    .strict()
+    .refine((value) => Boolean(value.programStudi ?? value.prodi), {
+        message: "Program studi wajib diisi",
+        path: ["programStudi"],
+    })
+    .transform((value) => ({
+        nim: value.nim,
+        programStudi: (value.programStudi ?? value.prodi) as string,
+    }));
+
+export const rejectRegistrationSchema = z
+    .object({
+        alasan: requiredString("Alasan penolakan", 3, 500),
+    })
+    .strict();
+
 /**
  * Endpoint yang tidak menerima query/body tetap divalidasi agar properti
  * tambahan tidak diam-diam diabaikan. Body kosong dari PATCH tanpa payload
@@ -249,3 +304,12 @@ export type PilihPeminatanInput = z.infer<typeof pilihPeminatanSchema>;
 export type CreateSkripsiInput = z.infer<typeof createSkripsiSchema>;
 export type UpdateSkripsiInput = z.infer<typeof updateSkripsiSchema>;
 export type SkripsiListQuery = z.infer<typeof skripsiListQuerySchema>;
+export type TendikRegistrationQuery = z.infer<
+    typeof tendikRegistrationQuerySchema
+>;
+export type ApproveRegistrationInput = z.infer<
+    typeof approveRegistrationSchema
+>;
+export type RejectRegistrationInput = z.infer<
+    typeof rejectRegistrationSchema
+>;

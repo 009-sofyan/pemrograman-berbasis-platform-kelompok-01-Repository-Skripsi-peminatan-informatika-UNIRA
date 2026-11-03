@@ -1353,6 +1353,7 @@ export default function LandingPage() {
         {selected ? (
           <div className="grid gap-5 sm:grid-cols-[0.8fr_1.2fr]">
             <SkripsiCover
+              skripsi={selected}
               id={selected.id}
               judul={selected.judul}
               peminatan={selected.peminatan}

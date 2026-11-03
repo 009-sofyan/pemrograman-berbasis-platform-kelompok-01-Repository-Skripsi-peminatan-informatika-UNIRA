@@ -44,6 +44,130 @@ async function hasPdfMagicBytes(filePath: string): Promise<boolean> {
     }
 }
 
+/**
+ * Nama unduhan dibuat dari judul, lalu dibatasi ke huruf/angka/dash. Dengan
+ * begitu tidak ada karakter kontrol, kutip, slash, atau newline yang bisa
+ * menyusup ke header Content-Disposition.
+ */
+function slugifySkripsiTitle(value: string): string {
+    const slug = value
+        .normalize("NFKD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 80)
+        .replace(/-+$/g, "");
+
+    return slug || "skripsi";
+}
+
+function pdfDownloadFileName(id: number, judul: string): string {
+    return `${slugifySkripsiTitle(judul)}-${id}.pdf`;
+}
+
+function contentDisposition(
+    mode: "inline" | "attachment",
+    fileName: string
+): string {
+    const ascii = fileName
+        .replace(/[^\x20-\x7E]/g, "_")
+        .replace(/["\\]/g, "_");
+
+    return `${mode}; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(
+        fileName
+    )}`;
+}
+
+interface ResolvedSkripsiPdf {
+    filePath: string;
+    fileName: string;
+}
+
+/**
+ * Path file selalu berasal dari kolom database, bukan dari parameter request.
+ * File juga harus benar-benar PDF (magic bytes), bukan sekadar berekstensi
+ * .pdf.
+ */
+async function resolveSkripsiPdfFile(data: {
+    id: number;
+    judul: string;
+    fileUrl: string | null;
+}): Promise<ResolvedSkripsiPdf | null> {
+    if (!data.fileUrl) return null;
+
+    const filePath = resolveStoredSkripsiPath(data.fileUrl);
+
+    if (!filePath) return null;
+
+    let fileStat: fs.Stats;
+
+    try {
+        fileStat = await fs.promises.stat(filePath);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+            return null;
+        }
+
+        throw error;
+    }
+
+    if (!fileStat.isFile()) return null;
+
+    if (!(await hasPdfMagicBytes(filePath))) {
+        return null;
+    }
+
+    return {
+        filePath,
+        fileName: pdfDownloadFileName(data.id, data.judul),
+    };
+}
+
+function sendSkripsiPdf(
+    res: Response,
+    resolved: ResolvedSkripsiPdf,
+    options: { inline: boolean; cacheControl: string }
+) {
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+        "Content-Disposition",
+        contentDisposition(
+            options.inline ? "inline" : "attachment",
+            resolved.fileName
+        )
+    );
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Cache-Control", options.cacheControl);
+
+    return res.sendFile(
+        resolved.filePath,
+        { dotfiles: "deny" },
+        (error) => {
+            if (!error) return;
+
+            console.error("Gagal mengirim file skripsi:", error);
+
+            if (res.headersSent) return;
+
+            if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+                res.status(404).json({
+                    message: "File PDF skripsi tidak ditemukan",
+                });
+                return;
+            }
+
+            res.status(500).json({
+                message: "Gagal mengunduh file skripsi",
+            });
+        }
+    );
+}
+
+function wantsInlinePdf(req: AuthRequest): boolean {
+    return req.query.inline === "1";
+}
+
 async function getMahasiswaIdByUserId(
     userId: number
 ): Promise<number | null> {
@@ -314,7 +438,6 @@ export async function getPublicSkripsi(
         coverUrl: skripsi.coverUrl,
         status: skripsi.status,
         createdAt: skripsi.createdAt,
-        mahasiswaId: mahasiswa.id,
         nim: mahasiswa.nim,
         programStudi: mahasiswa.programStudi,
         peminatan: mahasiswa.peminatan,
@@ -371,7 +494,6 @@ export async function getPublicSkripsiById(
         coverUrl: skripsi.coverUrl,
         status: skripsi.status,
         createdAt: skripsi.createdAt,
-        mahasiswaId: mahasiswa.id,
         nim: mahasiswa.nim,
         programStudi: mahasiswa.programStudi,
         peminatan: mahasiswa.peminatan,
@@ -932,7 +1054,76 @@ export async function uploadFileSkripsi(
     }
 }
 
+/**
+ * Unduhan publik: hanya skripsi berstatus disetujui. Status lain sengaja
+ * dijawab 404 agar keberadaan draft/dokumen yang belum terverifikasi tidak
+ * bisa ditebak dari perbedaan kode respons.
+ */
 export async function downloadSkripsi(
+    req: AuthRequest,
+    res: Response
+) {
+    try {
+        const id = Number(req.params.id);
+
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(400).json({
+                message: "ID skripsi tidak valid",
+            });
+        }
+
+        const [data] = await db
+            .select({
+                id: skripsi.id,
+                judul: skripsi.judul,
+                status: skripsi.status,
+                fileUrl: skripsi.fileUrl,
+            })
+            .from(skripsi)
+            .where(
+                and(
+                    eq(skripsi.id, id),
+                    eq(skripsi.status, "disetujui")
+                )
+            )
+            .limit(1);
+
+        if (!data) {
+            return res.status(404).json({
+                message: "Dokumen tidak tersedia",
+            });
+        }
+
+        const resolved = await resolveSkripsiPdfFile(data);
+
+        if (!resolved) {
+            return res.status(404).json({
+                message: "File PDF skripsi tidak ditemukan",
+            });
+        }
+
+        // Tidak ada kolom jumlah unduhan pada skema saat ini, sehingga
+        // penghitungan unduhan tidak dilakukan. Bila kolom ditambahkan,
+        // increment dapat dilakukan di sini setelah file valid.
+
+        return sendSkripsiPdf(res, resolved, {
+            inline: wantsInlinePdf(req),
+            cacheControl: "public, max-age=300",
+        });
+    } catch (error) {
+        console.error("Gagal mengunduh file skripsi:", error);
+
+        return res.status(500).json({
+            message: "Terjadi kesalahan pada server",
+        });
+    }
+}
+
+/**
+ * Unduhan internal untuk pemilik draft/pengajuan dan staf. Aturan aksesnya
+ * sama dengan endpoint detail yang sudah ada; route ini tetap memakai token.
+ */
+export async function downloadSkripsiFile(
     req: AuthRequest,
     res: Response
 ) {
@@ -961,10 +1152,10 @@ export async function downloadSkripsi(
         const [data] = await db
             .select({
                 id: skripsi.id,
+                judul: skripsi.judul,
                 mahasiswaId: skripsi.mahasiswaId,
                 status: skripsi.status,
                 fileUrl: skripsi.fileUrl,
-                coverUrl: skripsi.coverUrl,
             })
             .from(skripsi)
             .where(eq(skripsi.id, id))
@@ -989,60 +1180,18 @@ export async function downloadSkripsi(
             });
         }
 
-        if (!data.fileUrl) {
-            return res.status(404).json({
-                message: "File PDF skripsi belum tersedia",
-            });
-        }
+        const resolved = await resolveSkripsiPdfFile(data);
 
-        const filePath = resolveStoredSkripsiPath(data.fileUrl);
-
-        if (!filePath) {
+        if (!resolved) {
             return res.status(404).json({
                 message: "File PDF skripsi tidak ditemukan",
             });
         }
 
-        let fileStat: fs.Stats;
-
-        try {
-            fileStat = await fs.promises.stat(filePath);
-        } catch (error) {
-            if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-                return res.status(404).json({
-                    message: "File PDF skripsi tidak ditemukan",
-                });
-            }
-
-            throw error;
-        }
-
-        if (!fileStat.isFile()) {
-            return res.status(404).json({
-                message: "File PDF skripsi tidak ditemukan",
-            });
-        }
-
-        res.setHeader("Cache-Control", "private, no-store");
-        res.setHeader("X-Content-Type-Options", "nosniff");
-
-        return res.download(
-            filePath,
-            `skripsi-${data.id}.pdf`,
-            { dotfiles: "allow" },
-            (error) => {
-                if (!error) return;
-
-                console.error("Gagal mengirim file skripsi:", error);
-
-                if (!res.headersSent) {
-                    res.status(500).json({
-                        message: "Gagal mengunduh file skripsi",
-                    });
-                    return;
-                }
-            }
-        );
+        return sendSkripsiPdf(res, resolved, {
+            inline: wantsInlinePdf(req),
+            cacheControl: "private, no-store",
+        });
     } catch (error) {
         console.error("Gagal mengunduh file skripsi:", error);
 

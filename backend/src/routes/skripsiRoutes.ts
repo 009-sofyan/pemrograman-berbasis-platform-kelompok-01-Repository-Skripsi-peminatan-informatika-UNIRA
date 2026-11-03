@@ -9,6 +9,7 @@ import {
     deleteSkripsi,
     submitSkripsi,
     downloadSkripsi,
+    downloadSkripsiFile,
 } from "../controllers/skripsiControllers.js";
 import { uploadSkripsi } from "../middlewares/uploadSkripsi.js";
 import { uploadFileSkripsi } from "../controllers/skripsiControllers.js";
@@ -21,7 +22,10 @@ import { allowRoles } from "../middlewares/roleMiddleware.js";
 import { precheckSkripsiUpload } from "../middlewares/precheckSkripsiUpload.js";
 import { precheckSkripsiCover } from "../middlewares/precheckSkripsiCover.js";
 import { uploadSkripsiCover } from "../middlewares/uploadCover.js";
-import { uploadRateLimiter } from "../middlewares/rateLimit.js";
+import {
+    downloadRateLimiter,
+    uploadRateLimiter,
+} from "../middlewares/rateLimit.js";
 import {
     validateBody,
     validateParams,
@@ -87,12 +91,20 @@ router.get(
     validateQuery(skripsiListQuerySchema),
     getSkripsi
 );
+// Unduhan publik (tanpa token) hanya untuk skripsi disetujui. Route internal
+// /:id/file tetap memakai autentikasi untuk draft/pengajuan.
 router.get(
     "/:id/download",
+    validateParams(idParamSchema),
+    downloadRateLimiter,
+    downloadSkripsi
+);
+router.get(
+    "/:id/file",
     authMiddleware,
     allowRoles("mahasiswa", "kaprodi", "tendik"),
     validateParams(idParamSchema),
-    downloadSkripsi
+    downloadSkripsiFile
 );
 router.get(
     "/:id",

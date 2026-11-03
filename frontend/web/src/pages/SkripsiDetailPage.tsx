@@ -32,6 +32,7 @@ import { EmptyState } from "../components/ui/EmptyState";
 import { Skeleton } from "../components/ui/Skeleton";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import { PeminatanBadge } from "../components/ui/PeminatanBadge";
+import { SkripsiCover } from "../components/skripsi/SkripsiCover";
 import { SkripsiPdfButton } from "../components/skripsi/SkripsiPdfButton";
 
 export default function SkripsiDetailPage() {
@@ -153,72 +154,86 @@ export default function SkripsiDetailPage() {
 
       <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-5 shadow-soft sm:p-7">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-32 surface-gradient" />
-        <div className="relative">
-          <div className="flex flex-wrap items-center gap-2">
-            {skripsi.status === "disetujui" ? (
-              <Badge tone="gold" size="sm">
-                <BadgeCheck className="size-3" aria-hidden="true" />
-                Terverifikasi
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-start">
+          <div className="w-28 shrink-0 overflow-hidden rounded-2xl border border-white/10 sm:w-36">
+            <SkripsiCover
+              skripsi={skripsi}
+              id={skripsi.id}
+              judul={skripsi.judul}
+              peminatan={skripsi.peminatan}
+              tahun={skripsi.tahun}
+              author={skripsi.namaMahasiswa}
+              coverUrl={skripsi.coverUrl}
+              priority
+            />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              {skripsi.status === "disetujui" ? (
+                <Badge tone="gold" size="sm">
+                  <BadgeCheck className="size-3" aria-hidden="true" />
+                  Terverifikasi
+                </Badge>
+              ) : (
+                <StatusBadge status={skripsi.status} size="sm" />
+              )}
+              <PeminatanBadge value={skripsi.peminatan} size="sm" />
+              <Badge tone="slate" size="sm">
+                <CalendarDays className="size-3" />
+                {skripsi.tahun}
               </Badge>
-            ) : (
-              <StatusBadge status={skripsi.status} size="sm" />
-            )}
-            <PeminatanBadge value={skripsi.peminatan} size="sm" />
-            <Badge tone="slate" size="sm">
-              <CalendarDays className="size-3" />
-              {skripsi.tahun}
-            </Badge>
-            <Badge tone="indigo" size="sm">
-              <Hash className="size-3" />
-              Skripsi #{skripsi.id}
-            </Badge>
-          </div>
-          <h1 className="mt-4 max-w-4xl text-xl font-extrabold leading-snug tracking-tight text-ink sm:text-[26px]">
-            {skripsi.judul}
-          </h1>
-          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-ink-soft">
-            <span className="flex items-center gap-1.5">
-              <GraduationCap className="size-4 text-primary-500" />
-              NIM <span className="font-bold text-ink">{skripsi.nim}</span>
-            </span>
-            <span className="flex items-center gap-1.5">
-              <BookOpen className="size-4 text-primary-500" />
-              {skripsi.programStudi}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Clock3 className="size-4 text-primary-500" />
-              Ditambahkan {formatDate(skripsi.createdAt)}
-            </span>
-          </div>
+              <Badge tone="indigo" size="sm">
+                <Hash className="size-3" />
+                Skripsi #{skripsi.id}
+              </Badge>
+            </div>
+            <h1 className="mt-4 max-w-4xl text-xl font-extrabold leading-snug tracking-tight text-ink sm:text-[26px]">
+              {skripsi.judul}
+            </h1>
+            <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-ink-soft">
+              <span className="flex items-center gap-1.5">
+                <GraduationCap className="size-4 text-primary-500" />
+                NIM <span className="font-bold text-ink">{skripsi.nim}</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <BookOpen className="size-4 text-primary-500" />
+                {skripsi.programStudi}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Clock3 className="size-4 text-primary-500" />
+                Ditambahkan {formatDate(skripsi.createdAt)}
+              </span>
+            </div>
 
-          <div className="mt-5 flex flex-wrap items-center gap-2">
-            {skripsi.fileUrl ? (
-              <>
-                <SkripsiPdfButton
-                  id={skripsi.id}
-                  title={skripsi.judul}
-                  label="Unduh berkas PDF"
-                />
-                <SkripsiPdfButton
-                  id={skripsi.id}
-                  title={skripsi.judul}
-                  mode="open"
-                  variant="secondary"
-                  label="Buka di tab baru"
-                />
-              </>
-            ) : (
-              <Button variant="secondary" icon={<FileText />} disabled>
-                Berkas PDF belum tersedia
+            <div className="mt-5 flex flex-wrap items-center gap-2">
+              {skripsi.fileUrl ? (
+                <>
+                  <SkripsiPdfButton
+                    id={skripsi.id}
+                    title={skripsi.judul}
+                    label="Unduh berkas PDF"
+                  />
+                  <SkripsiPdfButton
+                    id={skripsi.id}
+                    title={skripsi.judul}
+                    mode="open"
+                    variant="secondary"
+                    label="Buka di tab baru"
+                  />
+                </>
+              ) : (
+                <Button variant="secondary" icon={<FileText />} disabled>
+                  Berkas PDF belum tersedia
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                icon={copied ? <Check /> : <Copy />}
+                onClick={copyLink}
+              >
+                {copied ? "Tersalin" : "Salin tautan"}
               </Button>
-            )}
-            <Button
-              variant="ghost"
-              icon={copied ? <Check /> : <Copy />}
-              onClick={copyLink}
-            >
-              {copied ? "Tersalin" : "Salin tautan"}
-            </Button>
+            </div>
           </div>
         </div>
       </div>

@@ -9,6 +9,7 @@ import persetujuanRoutes from "./routes/persetujuanRoutes.js";
 import peminatanRoutes from "./routes/peminatanRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import pemetaanRoutes from "./routes/pemetaanRoutes.js";
+import tendikRoutes from "./routes/tendikRoutes.js";
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
 import { apiRateLimiter } from "./middlewares/rateLimit.js";
 import { COVER_UPLOAD_DIR } from "./utils/uploads.js";
@@ -68,6 +69,7 @@ app.use("/api/persetujuan", persetujuanRoutes);
 app.use("/api/peminatan", peminatanRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/pemetaan", pemetaanRoutes);
+app.use("/api/tendik", tendikRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

@@ -28,6 +28,8 @@ import { skripsiService } from "../services/skripsiService";
 import { CURRENT_YEAR } from "../constants";
 import type { Skripsi, SkripsiDetailResponse } from "../types";
 import { getApiErrorMessage } from "../lib/errors";
+import { cacheCoverFile, resolveCover } from "../lib/cover";
+import { removeCoverTemp } from "../lib/coverCache";
 import { formatDate, formatNumber, truncate } from "../lib/format";
 import {
   getTrackedSkripsiIds,
@@ -198,6 +200,8 @@ export default function PengajuanPage() {
     let newId: number | null = null;
     let uploaded = false;
     let submitted = false;
+    let coverUploadFailed = false;
+    let coverCached = false;
 
     try {
       const created = await skripsiService.create({
@@ -211,6 +215,16 @@ export default function PengajuanPage() {
       if (file) {
         await skripsiService.uploadFile(created.id, file, setProgress);
         uploaded = true;
+      }
+
+      if (coverFile) {
+        try {
+          await skripsiService.uploadCover(created.id, coverFile);
+          removeCoverTemp(created.id);
+        } catch {
+          coverUploadFailed = true;
+          coverCached = await cacheCoverFile(created.id, coverFile);
+        }
       }
 
       if (submitNow) {
@@ -229,6 +243,14 @@ export default function PengajuanPage() {
           ? "Skripsi masuk ke antrean verifikasi Kaprodi."
           : "Kamu dapat melengkapi dan mengajukannya dari daftar di bawah.",
       );
+      if (coverUploadFailed) {
+        toast.warning(
+          coverCached ? "Cover disimpan sementara" : "Cover gagal disimpan",
+          coverCached
+            ? "Upload ke server gagal. Sampul tetap tampil di perangkat ini."
+            : "Sampul tidak dapat disimpan. Coba unggah ulang dari halaman pengajuan.",
+        );
+      }
       resetForm();
     } catch (err) {
       const message = getApiErrorMessage(err);
@@ -507,8 +529,8 @@ export default function PengajuanPage() {
 
             {coverFile ? (
               <p className="rounded-xl border border-amber-100 bg-amber-50/70 px-3 py-2 text-[10px] leading-relaxed text-amber-800/90">
-                Pratinjau sampul tersimpan di perangkat ini. Penyimpanan permanen ke
-                server menunggu endpoint sampul dari backend.
+                Sampul akan diunggah ke server setelah data skripsi dibuat. Jika
+                upload gagal, sampul disimpan sementara di perangkat ini.
               </p>
             ) : null}
 
@@ -1074,6 +1096,7 @@ function EditSkripsiModal({
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [removingCover, setRemovingCover] = useState(false);
 
   useEffect(() => {
     if (!target) return;
@@ -1082,6 +1105,7 @@ function EditSkripsiModal({
     setTahun(String(target.tahun));
     setCoverFile(null);
     setError(null);
+    setRemovingCover(false);
   }, [target]);
 
   const save = async () => {
@@ -1103,7 +1127,36 @@ function EditSkripsiModal({
         abstrak: abstrak.trim(),
         tahun: year,
       });
-      toast.success("Skripsi diperbarui", "Perubahan berhasil disimpan.");
+
+      let coverUploadFailed = false;
+      let coverCached = false;
+
+      if (coverFile) {
+        try {
+          await skripsiService.uploadCover(target.id, coverFile);
+          removeCoverTemp(target.id);
+        } catch {
+          coverUploadFailed = true;
+          coverCached = await cacheCoverFile(target.id, coverFile);
+        }
+      }
+
+      toast.success(
+        "Skripsi diperbarui",
+        coverUploadFailed
+          ? coverCached
+            ? "Perubahan tersimpan. Cover disimpan sementara di perangkat ini."
+            : "Perubahan tersimpan, tetapi cover gagal disimpan."
+          : "Perubahan berhasil disimpan.",
+      );
+      if (coverUploadFailed) {
+        toast.warning(
+          coverCached ? "Cover disimpan sementara" : "Cover gagal disimpan",
+          coverCached
+            ? "Upload ke server gagal. Sampul tetap tampil di perangkat ini."
+            : "Sampul tidak dapat disimpan. Coba unggah ulang.",
+        );
+      }
       onSaved();
       onClose();
     } catch (err) {
@@ -1112,6 +1165,30 @@ function EditSkripsiModal({
       toast.error("Gagal memperbarui", message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const removeExistingCover = async () => {
+    if (!target) return;
+    setRemovingCover(true);
+    setError(null);
+    try {
+      if (target.coverUrl || target.cover_url) {
+        await skripsiService.removeCover(target.id);
+      }
+      removeCoverTemp(target.id);
+      toast.success(
+        "Cover dihapus",
+        "Sampul skripsi kembali memakai cover otomatis.",
+      );
+      onSaved();
+      onClose();
+    } catch (err) {
+      const message = getApiErrorMessage(err);
+      setError(message);
+      toast.error("Gagal menghapus cover", message);
+    } finally {
+      setRemovingCover(false);
     }
   };
 
@@ -1167,13 +1244,15 @@ function EditSkripsiModal({
         <CoverUploadField
           file={coverFile}
           onChange={setCoverFile}
-          existingUrl={target?.coverUrl}
-          disabled={saving}
+          existingUrl={target ? resolveCover(target) : null}
+          onRemoveExisting={target ? () => void removeExistingCover() : undefined}
+          removingExisting={removingCover}
+          disabled={saving || removingCover}
         />
         {coverFile ? (
           <p className="rounded-xl border border-amber-100 bg-amber-50/70 px-3 py-2 text-[10px] leading-relaxed text-amber-800/90">
-            Sampul baru sudah dipratinjau. Pengiriman permanen menunggu endpoint
-            sampul dari backend.
+            Sampul baru akan dikirim ke server saat kamu menyimpan perubahan. Jika
+            gagal, sampul disimpan sementara di perangkat ini.
           </p>
         ) : null}
       </div>

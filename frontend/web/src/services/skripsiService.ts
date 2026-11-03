@@ -3,6 +3,7 @@ import type {
   CreateSkripsiPayload,
   CreateSkripsiResponse,
   SimpleMessageResponse,
+  SkripsiCoverResponse,
   SkripsiDetailResponse,
   SkripsiListParams,
   SkripsiListResponse,
@@ -91,6 +92,21 @@ export const skripsiService = {
         },
       },
     );
+    return data;
+  },
+
+  async uploadCover(id: number, file: File): Promise<SkripsiCoverResponse> {
+    const formData = new FormData();
+    formData.append("cover", file);
+    const { data } = await api.post<SkripsiCoverResponse>(
+      `/skripsi/${id}/cover`,
+      formData,
+    );
+    return data;
+  },
+
+  async removeCover(id: number): Promise<SkripsiCoverResponse> {
+    const { data } = await api.delete<SkripsiCoverResponse>(`/skripsi/${id}/cover`);
     return data;
   },
 };

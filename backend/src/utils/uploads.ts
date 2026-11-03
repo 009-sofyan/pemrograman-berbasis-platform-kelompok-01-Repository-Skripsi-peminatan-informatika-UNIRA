@@ -56,8 +56,17 @@ export function resolveStoredSkripsiPath(
 
     if (!fileName) return null;
 
-    const filePath = path.join(SKRIPSI_UPLOAD_DIR, fileName);
-    const relative = path.relative(SKRIPSI_UPLOAD_DIR, filePath);
+    const root = path.resolve(SKRIPSI_UPLOAD_DIR);
+    const filePath = path.resolve(root, fileName);
+    const prefix = `${root}${path.sep}`;
+
+    // path.resolve + cek prefix memastikan file tetap berada di folder
+    // uploads/skripsi, termasuk pada Windows yang memakai backslash.
+    if (!filePath.startsWith(prefix)) {
+        return null;
+    }
+
+    const relative = path.relative(root, filePath);
 
     if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) {
         return null;

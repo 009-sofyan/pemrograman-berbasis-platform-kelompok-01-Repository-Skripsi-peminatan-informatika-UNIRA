@@ -109,11 +109,15 @@ export function CoverUploadField({
   file,
   onChange,
   existingUrl,
+  onRemoveExisting,
+  removingExisting = false,
   disabled = false,
 }: {
   file: File | null;
   onChange: (file: File | null) => void;
   existingUrl?: string | null;
+  onRemoveExisting?: () => void;
+  removingExisting?: boolean;
   disabled?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -140,6 +144,7 @@ export function CoverUploadField({
   const existingPreview = existingUrl ? resolveFileUrl(existingUrl) : null;
   const shownPreview = previewUrl ?? existingPreview;
   const showingExisting = !previewUrl && Boolean(existingPreview);
+  const showingCached = showingExisting && Boolean(existingPreview?.startsWith("data:"));
 
   const pickFile = async (nextFile: File | null) => {
     setError(null);
@@ -213,7 +218,7 @@ export function CoverUploadField({
               className="size-full object-cover"
             />
             <span className="absolute inset-x-0 bottom-0 bg-navy-950/70 px-1.5 py-1 text-center text-[8px] font-bold uppercase tracking-[0.12em] text-white/80">
-              {showingExisting ? "Saat ini" : "Pratinjau"}
+              {showingExisting ? (showingCached ? "Sementara" : "Saat ini") : "Pratinjau"}
             </span>
           </div>
 
@@ -226,7 +231,9 @@ export function CoverUploadField({
                 ? `${formatCoverSize(file.size)} · ${
                     optimizing ? "Mengoptimalkan…" : optimized ? "Dioptimalkan otomatis" : "Siap diunggah"
                   }`
-                : "Pilih file baru untuk mengganti sampul."}
+                : showingCached
+                  ? "Sampul sementara di perangkat ini. Unggah ulang agar tersimpan permanen."
+                  : "Pilih file baru untuk mengganti sampul."}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <button
@@ -247,6 +254,20 @@ export function CoverUploadField({
                 >
                   <Trash2 className="size-3.5" />
                   Hapus
+                </button>
+              ) : onRemoveExisting ? (
+                <button
+                  type="button"
+                  onClick={onRemoveExisting}
+                  disabled={disabled || removingExisting}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-input border border-coral-100 bg-white px-3 text-[11px] font-bold text-coral-600 transition hover:border-coral-200 hover:bg-coral-50 disabled:cursor-not-allowed disabled:opacity-55"
+                >
+                  {removingExisting ? (
+                    <RefreshCw className="size-3.5 animate-spin" />
+                  ) : (
+                    <Trash2 className="size-3.5" />
+                  )}
+                  {removingExisting ? "Menghapus…" : "Hapus sampul"}
                 </button>
               ) : null}
             </div>
