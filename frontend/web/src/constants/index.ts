@@ -79,13 +79,13 @@ export const STATUS_META: Record<
     label: "Disetujui",
     description: "Sudah lolos verifikasi",
     tone: "sa",
-    color: "#10B981",
+    color: "#22D3EE",
   },
   ditolak: {
     label: "Ditolak",
     description: "Perlu diperbaiki",
     tone: "rose",
-    color: "#D32F2F",
+    color: "#FB7185",
   },
 };
 
@@ -112,7 +112,7 @@ export function getPeminatanMeta(value: PeminatanValue): {
   }
 
   if (value === BI) {
-    return { label: "Business Intelligence", short: "BI", tone: "bi", color: "#6366F1" };
+    return { label: "Business Intelligence", short: "BI", tone: "bi", color: "#8B5CF6" };
   }
 
   if (value === SA) {
@@ -120,11 +120,11 @@ export function getPeminatanMeta(value: PeminatanValue): {
       label: "Smart Agriculture",
       short: "SA",
       tone: "sa",
-      color: "#10B981",
+      color: "#22D3EE",
     };
   }
 
-  return { label: value, short: "Lainnya", tone: "violet", color: "#8B5CF6" };
+  return { label: value, short: "Lainnya", tone: "violet", color: "#A78BFA" };
 }
 
 export interface NavItem {
@@ -239,15 +239,15 @@ export const CURRENT_ROLE_HELP: Record<Role, string> = {
 };
 
 export const CHART_COLORS = {
-  indigo: "#6366F1",
-  bi: "#6366F1",
-  violet: "#8B5CF6",
+  indigo: "#818CF8",
+  bi: "#8B5CF6",
+  violet: "#A78BFA",
   sky: "#6366F1",
-  mint: "#10B981",
-  sa: "#10B981",
+  mint: "#22D3EE",
+  sa: "#22D3EE",
   amber: "#F59E0B",
-  coral: "#D32F2F",
+  coral: "#FB7185",
   navy: "#14234F",
-  gold: "#F5C518",
+  gold: "#67E8F9",
   slate: "#CBD5E1",
 };

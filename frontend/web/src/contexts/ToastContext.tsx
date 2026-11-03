@@ -59,27 +59,27 @@ const VARIANT_CONFIG: Record<
 > = {
   success: {
     icon: CheckCircle2,
-    iconClass: "bg-sa-50 text-sa-600",
-    barClass: "bg-sa-500",
-    ringClass: "ring-sa-100",
+    iconClass: "bg-cyan-400/10 text-cyan-300",
+    barClass: "bg-cyan-400",
+    ringClass: "ring-cyan-300/15",
   },
   error: {
     icon: XCircle,
-    iconClass: "bg-coral-50 text-coral-600",
-    barClass: "bg-coral-500",
-    ringClass: "ring-coral-100",
+    iconClass: "bg-rose-400/10 text-rose-300",
+    barClass: "bg-rose-400",
+    ringClass: "ring-rose-300/15",
   },
   warning: {
     icon: AlertTriangle,
-    iconClass: "bg-amber-50 text-amber-600",
-    barClass: "bg-amber-500",
-    ringClass: "ring-amber-100",
+    iconClass: "bg-amber-400/10 text-amber-300",
+    barClass: "bg-amber-400",
+    ringClass: "ring-amber-300/15",
   },
   info: {
     icon: Info,
-    iconClass: "bg-primary-50 text-primary-600",
-    barClass: "bg-primary-500",
-    ringClass: "ring-primary-100",
+    iconClass: "bg-primary-500/10 text-primary-300",
+    barClass: "bg-primary-400",
+    ringClass: "ring-primary-300/15",
   },
 };
 
@@ -173,13 +173,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 <button
                   type="button"
                   onClick={() => dismiss(item.id)}
-                  className="grid size-11 shrink-0 place-items-center rounded-input text-ink-faint transition hover:bg-white/80 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
+                  className="grid size-11 shrink-0 place-items-center rounded-full text-ink-faint transition hover:bg-white/[0.08] hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
                   aria-label="Tutup notifikasi"
                 >
                   <X className="size-4" />
                 </button>
               </div>
-              <div className="mt-3 h-1 overflow-hidden rounded-full bg-navy-50">
+              <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/[0.06]">
                 <div
                   className={cn("h-full rounded-full", config.barClass)}
                   style={{

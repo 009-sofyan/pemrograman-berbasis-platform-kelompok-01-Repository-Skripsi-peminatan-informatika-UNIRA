@@ -7,33 +7,33 @@ import { Skeleton } from "./Skeleton";
 import { CountUp } from "./CountUp";
 
 const ICON_TONES: Record<Tone, string> = {
-  indigo: "bg-primary-50 text-primary-600 ring-primary-100",
-  bi: "bg-bi-50 text-bi-600 ring-bi-100",
-  sa: "bg-sa-50 text-sa-600 ring-sa-100",
-  mint: "bg-sa-50 text-sa-600 ring-sa-100",
-  sky: "bg-sky-50 text-sky-600 ring-sky-100",
-  amber: "bg-amber-50 text-amber-600 ring-amber-100",
-  coral: "bg-coral-50 text-coral-600 ring-coral-100",
-  rose: "bg-rose-50 text-rose-600 ring-rose-100",
-  violet: "bg-violet-50 text-violet-600 ring-violet-100",
-  navy: "bg-navy-50 text-navy-700 ring-navy-100",
-  gold: "bg-gold-50 text-gold-700 ring-gold-200",
-  slate: "bg-slate-100 text-slate-500 ring-slate-200",
+  indigo: "bg-primary-500/10 text-primary-300 ring-primary-400/20",
+  bi: "bg-bi-500/12 text-bi-300 ring-bi-400/20",
+  sa: "bg-cyan-400/10 text-cyan-200 ring-cyan-300/20",
+  mint: "bg-cyan-400/10 text-cyan-200 ring-cyan-300/20",
+  sky: "bg-sky-400/10 text-sky-300 ring-sky-400/20",
+  amber: "bg-amber-400/10 text-amber-300 ring-amber-300/20",
+  coral: "bg-rose-400/10 text-rose-300 ring-rose-300/20",
+  rose: "bg-rose-400/10 text-rose-300 ring-rose-300/20",
+  violet: "bg-violet-500/12 text-violet-300 ring-violet-400/20",
+  navy: "bg-white/[0.06] text-slate-300 ring-white/10",
+  gold: "bg-gold-400/10 text-gold-300 ring-gold-400/25",
+  slate: "bg-white/[0.05] text-slate-300 ring-white/10",
 };
 
 const ACCENTS: Record<Tone, string> = {
   indigo: "from-primary-500 to-violet-500",
-  bi: "from-bi-500 to-violet-400",
-  sa: "from-sa-500 to-teal-300",
-  mint: "from-sa-500 to-teal-300",
-  sky: "from-sky-500 to-cyan-400",
-  amber: "from-amber-500 to-orange-400",
-  coral: "from-coral-500 to-rose-400",
-  rose: "from-rose-500 to-coral-400",
+  bi: "from-violet-500 to-indigo-400",
+  sa: "from-cyan-400 to-sky-500",
+  mint: "from-cyan-400 to-sky-500",
+  sky: "from-sky-400 to-cyan-300",
+  amber: "from-amber-400 to-orange-400",
+  coral: "from-rose-500 to-rose-400",
+  rose: "from-rose-500 to-rose-400",
   violet: "from-violet-500 to-fuchsia-400",
-  navy: "from-navy-700 to-navy-500",
-  gold: "from-gold-400 to-amber-300",
-  slate: "from-slate-400 to-slate-300",
+  navy: "from-slate-500 to-slate-400",
+  gold: "from-gold-300 to-amber-400",
+  slate: "from-slate-500 to-slate-400",
 };
 
 export function StatCard({
@@ -61,7 +61,7 @@ export function StatCard({
   const content = (
     <div
       className={cn(
-        "group relative h-full overflow-hidden rounded-panel border border-white/80 bg-white p-5 shadow-soft transition-all duration-200 hover:-translate-y-1 hover:border-navy-100 hover:shadow-card",
+        "ai-card group relative h-full overflow-hidden rounded-panel p-5 transition-all duration-200 hover:-translate-y-1 hover:border-white/20 hover:shadow-card",
         className,
       )}
     >
@@ -74,7 +74,7 @@ export function StatCard({
       />
       <span
         className={cn(
-          "pointer-events-none absolute -right-8 -top-10 size-28 rounded-full bg-gradient-to-br opacity-[0.07] blur-xl transition group-hover:opacity-[0.14]",
+          "pointer-events-none absolute -right-8 -top-10 size-28 rounded-full bg-gradient-to-br opacity-[0.12] blur-2xl transition group-hover:opacity-25",
           ACCENTS[tone],
         )}
         aria-hidden="true"
@@ -82,15 +82,15 @@ export function StatCard({
       <div className="flex items-start justify-between gap-3">
         <span
           className={cn(
-            "grid size-11 place-items-center rounded-input ring-1",
-            ICON_TONES[tone],
+            "grid size-11 place-items-center rounded-xl bg-gradient-to-br text-white ring-1 ring-white/15 shadow-[0_0_26px_-8px_rgba(99,102,241,0.7)]",
+            ACCENTS[tone],
           )}
           aria-hidden="true"
         >
           {icon}
         </span>
         {to ? (
-          <span className="grid size-8 place-items-center rounded-lg text-ink-faint transition group-hover:bg-navy-50 group-hover:text-navy-700">
+          <span className="grid size-8 place-items-center rounded-full text-slate-500 transition group-hover:bg-white/[0.06] group-hover:text-slate-200">
             <ArrowUpRight className="size-4" />
           </span>
         ) : null}

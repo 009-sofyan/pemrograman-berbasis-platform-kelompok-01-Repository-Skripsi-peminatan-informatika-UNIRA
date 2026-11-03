@@ -33,7 +33,7 @@ export function Pagination({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-between gap-3 border-t border-navy-50 pt-4 sm:flex-row",
+        "flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-4 sm:flex-row",
         className,
       )}
     >
@@ -71,8 +71,8 @@ export function Pagination({
                 className={cn(
                   "grid size-11 place-items-center rounded-input text-xs font-semibold transition",
                   value === current
-                    ? "bg-navy-800 text-white shadow-soft"
-                    : "text-ink-soft hover:bg-navy-50 hover:text-ink",
+                    ? "bg-[#F3F5FF] text-slate-950 shadow-[0_0_18px_-6px_rgba(165,180,252,0.7)]"
+                    : "text-slate-400 hover:bg-white/[0.06] hover:text-white",
                 )}
                 aria-current={value === current ? "page" : undefined}
                 aria-label={`Halaman ${value}`}

@@ -746,16 +746,16 @@ function TabButton({
       onClick={onClick}
       className={cn(
         "relative flex h-11 shrink-0 items-center gap-2 rounded-input px-3.5 text-xs font-bold transition-colors",
-        active ? "text-white" : "text-ink-soft hover:text-ink",
+        active ? "text-[#070812]" : "text-ink-soft hover:bg-white/[0.05] hover:text-ink",
       )}
     >
       {active ? (
         reduceMotion ? (
-          <span className="absolute inset-0 rounded-input bg-navy-800 shadow-soft" />
+          <span className="absolute inset-0 rounded-input bg-[#F3F5FF] shadow-[0_10px_28px_-18px_rgba(165,180,252,0.8)]" />
         ) : (
           <motion.span
             layoutId="kaprodi-tab-pill"
-            className="absolute inset-0 rounded-input bg-navy-800 shadow-soft"
+            className="absolute inset-0 rounded-input bg-[#F3F5FF] shadow-[0_10px_28px_-18px_rgba(165,180,252,0.8)]"
             transition={{ type: "spring", stiffness: 260, damping: 26 }}
           />
         )
@@ -766,7 +766,7 @@ function TabButton({
         <span
           className={cn(
             "rounded-full px-2 py-0.5 text-[9px] font-extrabold",
-            active ? "bg-white/15 text-white" : "bg-white text-ink-faint",
+            active ? "bg-[#070812]/10 text-[#070812]" : "bg-white/[0.06] text-ink-faint",
           )}
         >
           {formatNumber(count)}

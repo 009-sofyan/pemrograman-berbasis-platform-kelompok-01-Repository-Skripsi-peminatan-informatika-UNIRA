@@ -23,23 +23,23 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary:
-    "bg-navy-800 text-white shadow-soft hover:bg-navy-700 active:bg-navy-900 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-white/20",
+    "bg-[#F3F5FF] text-[#070812] shadow-[0_0_0_1px_rgba(255,255,255,0.16),0_18px_44px_-22px_rgba(165,180,252,0.65)] hover:bg-white active:bg-slate-200 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-white/70",
   secondary:
-    "border border-navy-100 bg-white text-navy-800 shadow-soft hover:border-navy-200 hover:bg-navy-50/60",
-  ghost: "text-ink-soft hover:bg-navy-50 hover:text-ink",
+    "border border-white/15 bg-white/[0.04] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] hover:border-white/25 hover:bg-white/[0.08]",
+  ghost: "text-slate-300 hover:bg-white/[0.06] hover:text-white",
   danger:
-    "bg-coral-600 text-white shadow-[0_14px_30px_-18px_rgba(211,47,47,0.65)] hover:bg-coral-700 active:bg-coral-700",
+    "bg-rose-500 text-white shadow-[0_14px_34px_-18px_rgba(244,63,94,0.7)] hover:bg-rose-400 active:bg-rose-500",
   outline:
-    "border border-primary-200 bg-primary-50/70 text-primary-700 hover:border-primary-300 hover:bg-primary-100/80",
-  mint: "bg-sa-600 text-white shadow-[0_14px_30px_-18px_rgba(5,150,105,0.6)] hover:bg-sa-700",
-  gold: "bg-gold-400 text-navy-900 shadow-gold-glow hover:bg-gold-300 active:bg-gold-500",
+    "border border-white/25 bg-transparent text-white hover:border-white/45 hover:bg-white/[0.07]",
+  mint: "border border-cyan-300/30 bg-cyan-400/10 text-cyan-100 shadow-[0_14px_34px_-22px_rgba(34,211,238,0.55)] hover:bg-cyan-400/[0.16]",
+  gold: "bg-[#F3F5FF] text-[#070812] shadow-[0_0_0_1px_rgba(255,255,255,0.16),0_18px_44px_-24px_rgba(245,197,24,0.45)] hover:bg-white active:bg-slate-200",
 };
 
 const SIZES: Record<ButtonSize, string> = {
-  sm: "h-11 gap-1.5 rounded-input px-3 text-xs",
-  md: "h-11 gap-2 rounded-input px-4 text-sm",
-  lg: "h-12 gap-2.5 rounded-input px-6 text-sm",
-  icon: "size-11 rounded-input",
+  sm: "h-10 gap-1.5 rounded-full px-3.5 text-xs",
+  md: "h-11 gap-2 rounded-full px-4.5 text-sm",
+  lg: "h-12 gap-2.5 rounded-full px-6 text-sm",
+  icon: "size-11 rounded-full",
 };
 
 export function Button({

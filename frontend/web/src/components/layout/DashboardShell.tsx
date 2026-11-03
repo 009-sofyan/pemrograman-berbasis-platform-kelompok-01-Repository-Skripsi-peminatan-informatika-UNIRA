@@ -17,8 +17,7 @@ export function DashboardShell() {
 
   return (
     <div className="min-h-screen bg-canvas">
-      <a href="#main-content" className="skip-link">
-        Lewati ke konten utama
+      <a href="#main-content" className="skip-link">        Lewati ke konten utama
       </a>
       <OfflineBanner />
       <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
@@ -26,7 +25,7 @@ export function DashboardShell() {
       {mobileOpen ? (
         <button
           type="button"
-          className="fixed inset-0 z-40 bg-navy-950/50 backdrop-blur-sm animate-fade-in lg:hidden"
+          className="fixed inset-0 z-40 bg-[#03040A]/70 backdrop-blur-sm animate-fade-in lg:hidden"
           onClick={() => setMobileOpen(false)}
           aria-label="Tutup navigasi"
         />
@@ -40,12 +39,12 @@ export function DashboardShell() {
               <Outlet />
             </PageTransition>
           </main>
-          <footer className="mt-auto flex flex-col items-center justify-between gap-2 border-t border-navy-100/70 pt-5 text-[10px] text-ink-faint sm:flex-row">
+          <footer className="mt-auto flex flex-col items-center justify-between gap-2 border-t border-white/10 pt-5 text-[10px] text-slate-500 sm:flex-row">
             <p>
               © {new Date().getFullYear()} {APP_NAME} · Fakultas Teknik UNIRA
             </p>
             <p className="flex items-center gap-1.5">
-              <span className="size-1.5 rounded-full bg-sa-500" />
+              <span className="size-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
               Pemetaan Peminatan Business Intelligence &amp; Smart Agriculture
             </p>
           </footer>

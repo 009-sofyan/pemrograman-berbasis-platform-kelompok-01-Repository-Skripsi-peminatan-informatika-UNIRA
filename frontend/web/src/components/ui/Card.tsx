@@ -10,10 +10,11 @@ export function Card({ className, hover = false, padded = true, ...props }: Card
   return (
     <div
       className={cn(
-        "rounded-panel border border-white/80 bg-white shadow-soft",
+        "ai-card rounded-panel",
+        "min-w-0",
         padded && "p-5 sm:p-6",
         hover &&
-          "transition-all duration-200 ease-out hover:-translate-y-1 hover:border-navy-100 hover:shadow-card",
+          "transition-all duration-200 ease-out hover:-translate-y-1 hover:border-white/20 hover:shadow-card",
         className,
       )}
       {...props}
@@ -35,10 +36,10 @@ export function CardHeader({
   className?: string;
 }) {
   return (
-    <div className={cn("flex items-start justify-between gap-4", className)}>
-      <div className="flex min-w-0 items-start gap-3">
+    <div className={cn("flex flex-wrap items-start justify-between gap-4", className)}>
+      <div className="flex min-w-0 flex-1 items-start gap-3">
         {icon ? (
-          <span className="grid size-10 shrink-0 place-items-center rounded-input bg-navy-50 text-navy-700 ring-1 ring-navy-100">
+          <span className="node-badge grid size-10 shrink-0 place-items-center rounded-xl text-white ring-1 ring-white/15">
             {icon}
           </span>
         ) : null}

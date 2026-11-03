@@ -1,8 +1,9 @@
-import { CalendarDays, Eye, FileText } from "lucide-react";
+import { BadgeCheck, CalendarDays, Eye, FileText } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { getAvatarForUser } from "../../lib/profile";
 import type { Skripsi } from "../../types";
 import { Avatar } from "../ui/Avatar";
+import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { PeminatanBadge } from "../ui/PeminatanBadge";
 import { SkripsiCover } from "./SkripsiCover";
@@ -25,7 +26,7 @@ export function SkripsiCard({
   });
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-panel border border-white/80 bg-white shadow-soft transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-card focus-within:-translate-y-1 focus-within:shadow-card">
+    <article className="group ai-card flex h-full flex-col overflow-hidden rounded-panel transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/20 hover:shadow-card focus-within:-translate-y-1 focus-within:shadow-card">
       <button
         type="button"
         onClick={onOpen}
@@ -37,8 +38,8 @@ export function SkripsiCard({
           judul={item.judul}
           peminatan={item.peminatan}
           tahun={item.tahun}
+          author={item.namaMahasiswa}
           coverUrl={item.coverUrl}
-          fileUrl={item.fileUrl}
           priority={priority}
         />
       </button>
@@ -46,17 +47,23 @@ export function SkripsiCard({
       <div className="flex flex-1 flex-col p-4 sm:p-5">
         <div className="flex flex-wrap items-center gap-1.5">
           <PeminatanBadge value={item.peminatan} size="xs" />
+          {item.status === "disetujui" ? (
+            <Badge tone="gold" size="xs">
+              <BadgeCheck className="size-3" aria-hidden="true" />
+              Terverifikasi
+            </Badge>
+          ) : null}
           <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-bold text-ink-faint">
             <CalendarDays className="size-3" aria-hidden="true" />
             {item.tahun}
           </span>
         </div>
 
-        <h3 className="mt-3 line-clamp-3 min-h-[4.2rem] font-display text-[13.5px] font-extrabold leading-relaxed text-ink transition-colors group-hover:text-primary-700">
+        <h3 className="mt-3 line-clamp-3 min-h-[4.2rem] font-display text-[13.5px] font-extrabold leading-relaxed text-ink transition-colors group-hover:text-cyan-200">
           {item.judul}
         </h3>
 
-        <div className="mt-4 flex items-center gap-2.5 rounded-input border border-navy-50 bg-canvas-soft/60 p-2.5">
+        <div className="mt-4 flex items-center gap-2.5 rounded-input border border-white/10 bg-white/[0.03] p-2.5">
           <Avatar name={authorName} src={avatarSrc} size="sm" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-[11px] font-extrabold text-ink">{authorName}</p>
@@ -66,7 +73,7 @@ export function SkripsiCard({
           </div>
         </div>
 
-        <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-navy-50 pt-4">
+        <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-white/10 pt-4">
           <Button
             variant="outline"
             size="sm"

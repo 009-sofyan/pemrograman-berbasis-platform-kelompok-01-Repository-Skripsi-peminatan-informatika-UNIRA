@@ -52,17 +52,17 @@ export function Sidebar({
     <>
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex h-screen w-[280px] flex-col overflow-hidden border-r border-white/10 bg-navy-950 text-white transition-transform duration-300 lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex h-screen w-[280px] flex-col overflow-hidden border-r border-white/10 bg-[#05060F] text-white transition-transform duration-300 lg:translate-x-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
         aria-label="Navigasi utama"
       >
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(99,102,241,0.28),transparent_48%),radial-gradient(circle_at_80%_100%,rgba(16,185,129,0.14),transparent_50%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(124,58,237,0.3),transparent_48%),radial-gradient(circle_at_80%_100%,rgba(34,211,238,0.14),transparent_50%)]"
           aria-hidden="true"
         />
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-400/60 to-transparent"
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent"
           aria-hidden="true"
         />
 
@@ -81,20 +81,22 @@ export function Sidebar({
         <div className="relative shrink-0 px-4 pt-4">
           <div className="rounded-card border border-white/10 bg-white/[0.06] p-3 backdrop-blur">
             <div className="flex items-center gap-2.5">
-              <span className="grid size-9 place-items-center rounded-input bg-gradient-to-br from-gold-400/25 to-gold-400/5 text-gold-300 ring-1 ring-white/10">
+              <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-violet-500/30 to-cyan-400/10 text-cyan-300 ring-1 ring-white/10">
                 <GraduationCap className="size-4" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[9px] font-bold uppercase tracking-[0.18em] text-white/45">
-                  Fakultas Teknik
-                </p>
-                <p className="truncate text-xs font-semibold text-white/90">
+                <div className="flex items-center justify-between gap-1.5">
+                  <p className="min-w-0 truncate text-[9px] font-bold uppercase tracking-[0.16em] text-white/55">
+                    Fakultas Teknik
+                  </p>
+                  <Badge tone={roleMeta.tone} size="xs" className="shrink-0 px-1.5 text-[9px] ring-0">
+                    {roleMeta.label}
+                  </Badge>
+                </div>
+                <p className="truncate text-[11px] font-semibold text-white/90">
                   Universitas Madura
                 </p>
               </div>
-              <Badge tone={roleMeta.tone} size="xs" className="ring-0">
-                {roleMeta.label}
-              </Badge>
             </div>
           </div>
         </div>
@@ -102,7 +104,7 @@ export function Sidebar({
         <nav className="no-scrollbar relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-3 py-4">
           {sections.map((group) => (
             <div key={group.section} className="mb-4 last:mb-0">
-              <p className="px-3 pb-2 text-[9px] font-bold uppercase tracking-[0.22em] text-white/35">
+              <p className="px-3 pb-2 text-[9px] font-bold uppercase tracking-[0.22em] text-white/45">
                 {group.section}
               </p>
               <div className="space-y-1">
@@ -117,7 +119,7 @@ export function Sidebar({
                         "group relative flex min-h-11 items-center gap-3 rounded-input px-3 py-2 text-[13px] font-semibold transition-colors duration-200",
                         isActive
                           ? "text-white"
-                          : "text-white/55 hover:bg-white/[0.06] hover:text-white",
+                          : "text-white/65 hover:bg-white/[0.06] hover:text-white",
                       )
                     }
                   >
@@ -135,21 +137,21 @@ export function Sidebar({
                           )
                         ) : null}
                         {isActive ? (
-                          <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-gold-400" />
+                          <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-cyan-300 to-indigo-400 shadow-[0_0_12px_rgba(34,211,238,0.7)]" />
                         ) : null}
                         <span
                           className={cn(
                             "relative z-10 grid size-8 shrink-0 place-items-center rounded-lg transition",
                             isActive
-                              ? "bg-gold-400/15 text-gold-300"
-                              : "text-white/40 group-hover:text-white/75",
+                              ? "bg-cyan-400/15 text-cyan-300"
+                              : "text-white/50 group-hover:text-white/80",
                           )}
                         >
                           <item.icon className="size-4.5" strokeWidth={2} />
                         </span>
                         <span className="relative z-10 truncate">{item.label}</span>
                         {isActive ? (
-                          <span className="relative z-10 ml-auto size-1.5 rounded-full bg-gold-300" />
+                          <span className="relative z-10 ml-auto size-1.5 rounded-full bg-cyan-300 shadow-[0_0_8px_rgba(103,232,249,0.9)]" />
                         ) : null}
                       </>
                     )}
@@ -170,12 +172,12 @@ export function Sidebar({
             />
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-bold text-white">{user.nama}</p>
-              <p className="truncate text-[10px] text-white/45">{user.email}</p>
+              <p className="truncate text-[10px] text-white/55">{user.email}</p>
             </div>
             <button
               type="button"
               onClick={logout}
-              className="grid size-11 shrink-0 place-items-center rounded-input text-white/45 transition hover:bg-coral-500/15 hover:text-coral-300"
+              className="grid size-11 shrink-0 place-items-center rounded-input text-white/55 transition hover:bg-coral-500/15 hover:text-coral-300"
               aria-label="Keluar dari akun"
               title="Keluar"
             >
@@ -187,8 +189,7 @@ export function Sidebar({
 
       {/* Bottom navigation khusus perangkat sentuh / layar kecil. */}
       <nav
-        className="glass fixed inset-x-3 bottom-3 z-40 flex items-center justify-around rounded-panel border px-1 py-1 shadow-elevated lg:hidden"
-        aria-label="Navigasi cepat"
+        className="glass fixed inset-x-3 bottom-3 z-40 flex items-center justify-around rounded-panel border px-1 py-1 shadow-elevated lg:hidden"        aria-label="Navigasi cepat"
       >
         {mobileItems.map((item) => (
           <NavLink
@@ -198,7 +199,7 @@ export function Sidebar({
             className={({ isActive }) =>
               cn(
                 "flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-card px-1 text-[9px] font-bold transition",
-                isActive ? "bg-navy-800 text-white shadow-soft" : "text-ink-soft",
+                isActive ? "bg-[#F3F5FF] text-slate-950 shadow-[0_0_20px_-6px_rgba(165,180,252,0.7)]" : "text-slate-400",
               )
             }
           >

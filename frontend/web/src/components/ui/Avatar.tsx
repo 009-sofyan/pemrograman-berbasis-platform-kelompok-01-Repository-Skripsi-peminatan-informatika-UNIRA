@@ -5,10 +5,10 @@ import { initials } from "../../lib/format";
 const GRADIENTS = [
   "from-primary-500 to-violet-500",
   "from-bi-500 to-sky-400",
-  "from-sa-500 to-emerald-400",
-  "from-gold-400 to-amber-500",
-  "from-coral-500 to-rose-400",
-  "from-navy-700 to-navy-500",
+  "from-sa-500 to-cyan-300",
+  "from-violet-500 to-fuchsia-500",
+  "from-rose-500 to-rose-400",
+  "from-slate-600 to-slate-400",
 ];
 
 export function Avatar({
@@ -44,7 +44,7 @@ export function Avatar({
   return (
     <span
       className={cn(
-        "relative grid shrink-0 place-items-center overflow-hidden bg-gradient-to-br font-extrabold text-white shadow-sm ring-2 ring-white",
+        "relative grid shrink-0 place-items-center overflow-hidden bg-gradient-to-br font-extrabold text-white shadow-sm ring-2 ring-white/10",
         GRADIENTS[index],
         sizeClass,
         className,

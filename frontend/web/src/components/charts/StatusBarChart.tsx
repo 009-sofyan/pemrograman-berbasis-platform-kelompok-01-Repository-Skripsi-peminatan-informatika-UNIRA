@@ -43,29 +43,32 @@ export function StatusBarChart({
     <div style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 22, right: 4, left: -18, bottom: 0 }}>
-          <CartesianGrid vertical={false} stroke="#f1f5f9" strokeDasharray="3 3" />
+          <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.07)" strokeDasharray="3 3" />
           <XAxis
             dataKey="name"
             tickLine={false}
             axisLine={false}
-            tick={{ fontSize: 11, fill: "#64748b", fontWeight: 600 }}
+            tick={{ fontSize: 11, fill: "#8B94B4", fontWeight: 600 }}
             dy={6}
           />
           <YAxis
             allowDecimals={false}
             tickLine={false}
             axisLine={false}
-            tick={{ fontSize: 10, fill: "#94a3b8" }}
+            tick={{ fontSize: 10, fill: "#646E8E" }}
             width={40}
           />
           <Tooltip
-            cursor={{ fill: "rgba(99,102,241,0.05)" }}
+            cursor={{ fill: "rgba(34,211,238,0.06)" }}
             contentStyle={{
-              borderRadius: 12,
-              border: "1px solid #e2e8f0",
-              boxShadow: "0 12px 30px -16px rgba(15,23,42,0.35)",
+              borderRadius: 14,
+              border: "1px solid rgba(255,255,255,0.12)",
+              background: "rgba(8,11,24,0.94)",
+              boxShadow: "0 22px 48px -28px rgba(0,0,0,0.9)",
               fontSize: 12,
+              color: "#F2F5FF",
             }}
+            labelStyle={{ color: "#F2F5FF" }}
             formatter={(value, name) => [
               `${formatNumber(
                 Number(Array.isArray(value) ? value[0] ?? 0 : value ?? 0),
@@ -81,7 +84,7 @@ export function StatusBarChart({
               dataKey="value"
               position="top"
               formatter={(value: unknown) => formatNumber(Number(value ?? 0))}
-              style={{ fontSize: 11, fontWeight: 700, fill: "#334155" }}
+              style={{ fontSize: 11, fontWeight: 700, fill: "#CBD1E6" }}
             />
           </Bar>
         </BarChart>

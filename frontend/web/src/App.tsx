@@ -17,7 +17,6 @@ const PersetujuanPage = lazy(() => import("./pages/PersetujuanPage"));
 const MahasiswaPage = lazy(() => import("./pages/MahasiswaPage"));
 const PemetaanPage = lazy(() => import("./pages/PemetaanPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
-const ImageCreditsPage = lazy(() => import("./pages/ImageCreditsPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 const UnauthorizedPage = lazy(() => import("./pages/UnauthorizedPage"));
 
@@ -26,7 +25,6 @@ export default function App() {
     <Suspense fallback={<LoadingScreen label="Memuat halaman…" />}>
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/credits" element={<ImageCreditsPage />} />
 
         <Route element={<PublicOnlyRoute />}>
           <Route path="/login" element={<LoginPage />} />

@@ -22,7 +22,7 @@ export function OfflineBanner() {
   return (
     <div
       role="status"
-      className="flex items-center justify-center gap-2 bg-amber-100 px-4 py-2 text-center text-[11px] font-semibold text-amber-800"
+      className="flex items-center justify-center gap-2 border-b border-amber-300/20 bg-amber-400/10 px-4 py-2 text-center text-[11px] font-semibold text-amber-300"
     >
       <WifiOff className="size-3.5 shrink-0" />
       Kamu sedang offline. Data yang tampil mungkin belum terbaru.

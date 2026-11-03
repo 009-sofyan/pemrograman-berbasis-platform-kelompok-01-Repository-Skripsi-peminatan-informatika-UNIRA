@@ -107,7 +107,7 @@ export function PeminatanChart({
   }
 
   return (
-    <div>
+    <div className="min-w-0">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-wrap items-center gap-2">
           <button
@@ -151,34 +151,34 @@ export function PeminatanChart({
       <div className="mt-4" style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} margin={{ top: 8, right: 4, left: -22, bottom: 0 }} barGap={6}>
-            <CartesianGrid vertical={false} stroke="#E9ECF5" strokeDasharray="3 3" />
+            <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.07)" strokeDasharray="3 3" />
             <XAxis
               dataKey="angkatan"
               tickLine={false}
               axisLine={false}
-              tick={{ fontSize: 10, fill: "#5B6785", fontWeight: 600 }}
+              tick={{ fontSize: 10, fill: "#8B94B4", fontWeight: 600 }}
               dy={8}
             />
             <YAxis
               allowDecimals={false}
               tickLine={false}
               axisLine={false}
-              tick={{ fontSize: 10, fill: "#8992A9" }}
+              tick={{ fontSize: 10, fill: "#646E8E" }}
               width={42}
             />
             <Tooltip
-              cursor={{ fill: "rgba(20,35,79,0.04)" }}
+              cursor={{ fill: "rgba(139,92,246,0.08)" }}
               contentStyle={{
-                borderRadius: 12,
-                border: "1px solid rgba(255,255,255,0.16)",
-                background: "rgba(8,18,42,0.9)",
-                boxShadow: "0 22px 48px -28px rgba(20,35,79,0.55)",
+                borderRadius: 14,
+                border: "1px solid rgba(255,255,255,0.12)",
+                background: "rgba(8,11,24,0.94)",
+                boxShadow: "0 22px 48px -28px rgba(0,0,0,0.9)",
                 fontSize: 12,
-                color: "#fff",
+                color: "#F2F5FF",
                 backdropFilter: "blur(14px)",
               }}
-              labelStyle={{ color: "#fff", fontWeight: 700, marginBottom: 4 }}
-              itemStyle={{ color: "#fff" }}
+              labelStyle={{ color: "#F2F5FF", fontWeight: 700, marginBottom: 4 }}
+              itemStyle={{ color: "#F2F5FF" }}
               formatter={(value, name) => {
                 const numeric = Number(Array.isArray(value) ? value[0] : value) || 0;
                 return [
@@ -191,7 +191,7 @@ export function PeminatanChart({
               <Bar
                 dataKey="bi"
                 name="bi"
-                fill="#6366F1"
+                fill="#8B5CF6"
                 radius={[6, 6, 0, 0]}
                 maxBarSize={32}
                 animationDuration={600}
@@ -201,7 +201,7 @@ export function PeminatanChart({
               <Bar
                 dataKey="sa"
                 name="sa"
-                fill="#10B981"
+                fill="#22D3EE"
                 radius={[6, 6, 0, 0]}
                 maxBarSize={32}
                 animationDuration={600}

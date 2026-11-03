@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
+  BadgeCheck,
   BookOpen,
   CalendarDays,
   Check,
@@ -154,7 +155,14 @@ export default function SkripsiDetailPage() {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-32 surface-gradient" />
         <div className="relative">
           <div className="flex flex-wrap items-center gap-2">
-            <StatusBadge status={skripsi.status} size="sm" />
+            {skripsi.status === "disetujui" ? (
+              <Badge tone="gold" size="sm">
+                <BadgeCheck className="size-3" aria-hidden="true" />
+                Terverifikasi
+              </Badge>
+            ) : (
+              <StatusBadge status={skripsi.status} size="sm" />
+            )}
             <PeminatanBadge value={skripsi.peminatan} size="sm" />
             <Badge tone="slate" size="sm">
               <CalendarDays className="size-3" />

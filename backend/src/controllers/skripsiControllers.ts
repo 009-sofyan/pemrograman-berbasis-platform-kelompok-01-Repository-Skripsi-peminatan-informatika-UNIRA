@@ -8,10 +8,12 @@ import type { AuthRequest } from "../middlewares/authMiddleware";
 import type { SkripsiUploadContext } from "../middlewares/precheckSkripsiUpload.js";
 import fs from "node:fs";
 import {
+    deleteStoredCoverFile,
     deleteStoredSkripsiFile,
     deleteUploadedTempFile,
     resolveStoredSkripsiPath,
     storedSkripsiFileExists,
+    toPublicCoverUrl,
     toSkripsiDownloadUrl,
     toStoredSkripsiFileUrl,
 } from "../utils/uploads.js";
@@ -133,6 +135,7 @@ export async function createSkripsi(
         return res.status(201).json({
             message: "Skripsi berhasil ditambahkan",
             id: result.insertId,
+            coverUrl: null,
         });
     } catch (error) {
         console.log("Gagal menambahkan skripsi:", error);
@@ -219,6 +222,7 @@ export async function getSkripsi(
         abstrak: skripsi.abstrak,
         tahun: skripsi.tahun,
         fileUrl: skripsi.fileUrl,
+        coverUrl: skripsi.coverUrl,
         status: skripsi.status,
         createdAt: skripsi.createdAt,
         mahasiswaId: mahasiswa.id,
@@ -249,6 +253,7 @@ export async function getSkripsi(
         ) && item.fileUrl
           ? toSkripsiDownloadUrl(item.id)
           : null,
+      coverUrl: toPublicCoverUrl(item.coverUrl),
     }));
 
     return res.status(200).json({
@@ -306,6 +311,7 @@ export async function getPublicSkripsi(
         abstrak: skripsi.abstrak,
         tahun: skripsi.tahun,
         fileUrl: skripsi.fileUrl,
+        coverUrl: skripsi.coverUrl,
         status: skripsi.status,
         createdAt: skripsi.createdAt,
         mahasiswaId: mahasiswa.id,
@@ -325,6 +331,7 @@ export async function getPublicSkripsi(
       fileUrl: item.fileUrl
         ? toSkripsiDownloadUrl(item.id)
         : null,
+      coverUrl: toPublicCoverUrl(item.coverUrl),
     }));
 
     return res.status(200).json({
@@ -361,6 +368,7 @@ export async function getPublicSkripsiById(
         abstrak: skripsi.abstrak,
         tahun: skripsi.tahun,
         fileUrl: skripsi.fileUrl,
+        coverUrl: skripsi.coverUrl,
         status: skripsi.status,
         createdAt: skripsi.createdAt,
         mahasiswaId: mahasiswa.id,
@@ -388,6 +396,7 @@ export async function getPublicSkripsiById(
         fileUrl: data.fileUrl
           ? toSkripsiDownloadUrl(data.id)
           : null,
+        coverUrl: toPublicCoverUrl(data.coverUrl),
       },
     });
   } catch (error) {
@@ -432,6 +441,7 @@ export async function getSkripsiById(
                 abstrak: skripsi.abstrak,
                 tahun: skripsi.tahun,
                 fileUrl: skripsi.fileUrl,
+                coverUrl: skripsi.coverUrl,
                 status: skripsi.status,
                 createdAt: skripsi.createdAt,
                 mahasiswaId: mahasiswa.id,
@@ -481,6 +491,7 @@ export async function getSkripsiById(
                     ) && data.fileUrl
                         ? toSkripsiDownloadUrl(data.id)
                         : null,
+                coverUrl: toPublicCoverUrl(data.coverUrl),
             },
         });
     } catch (error) {
@@ -562,6 +573,7 @@ export async function updateSkripsi(
             .select({
                 id: skripsi.id,
                 status: skripsi.status,
+                coverUrl: skripsi.coverUrl,
             })
             .from(skripsi)
             .where(eq(skripsi.id, id))
@@ -624,6 +636,7 @@ export async function updateSkripsi(
 
         return res.status(200).json({
             message: "Skripsi berhasil diperbarui",
+            coverUrl: toPublicCoverUrl(dataSkripsi.coverUrl),
         });
     } catch (error) {
         console.error("Gagal memperbarui skripsi:", error);
@@ -678,6 +691,7 @@ export async function deleteSkripsi(
                 mahasiswaId: skripsi.mahasiswaId,
                 status: skripsi.status,
                 fileUrl: skripsi.fileUrl,
+                coverUrl: skripsi.coverUrl,
             })
             .from(skripsi)
             .where(eq(skripsi.id, id))
@@ -710,6 +724,7 @@ export async function deleteSkripsi(
         // penghapusan file gagal, data utama tetap konsisten dan hanya
         // menyisakan file yatim yang dapat dibersihkan terpisah.
         await deleteStoredSkripsiFile(dataSkripsi.fileUrl);
+        await deleteStoredCoverFile(dataSkripsi.coverUrl);
 
         return res.status(200).json({
             message: "Skripsi berhasil dihapus",
@@ -767,6 +782,7 @@ export async function submitSkripsi(
                 mahasiswaId: skripsi.mahasiswaId,
                 status: skripsi.status,
                 fileUrl: skripsi.fileUrl,
+                coverUrl: skripsi.coverUrl,
             })
             .from(skripsi)
             .where(eq(skripsi.id, id))
@@ -948,6 +964,7 @@ export async function downloadSkripsi(
                 mahasiswaId: skripsi.mahasiswaId,
                 status: skripsi.status,
                 fileUrl: skripsi.fileUrl,
+                coverUrl: skripsi.coverUrl,
             })
             .from(skripsi)
             .where(eq(skripsi.id, id))

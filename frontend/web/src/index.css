@@ -2,9 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Batang grafik login tumbuh dari bawah; hanya transform agar ringan. */
+@keyframes bar-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
 @layer base {
   * {
-    @apply border-slate-200;
+    @apply border-white/10;
   }
 
   html {
@@ -12,14 +22,16 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     scroll-padding-top: 6rem;
+    color-scheme: dark;
   }
 
   body {
     @apply min-h-screen bg-canvas font-sans text-ink antialiased;
     background-image:
-      radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.055), transparent 30%),
-      radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.045), transparent 26%),
-      radial-gradient(circle at 50% 100%, rgba(245, 197, 24, 0.035), transparent 32%);
+      radial-gradient(1100px 700px at 88% -8%, rgba(124, 58, 237, 0.16), transparent 62%),
+      radial-gradient(820px 560px at 104% 44%, rgba(99, 102, 241, 0.1), transparent 62%),
+      radial-gradient(680px 480px at 6% 102%, rgba(34, 211, 238, 0.07), transparent 64%),
+      linear-gradient(180deg, #05060f 0%, #060814 48%, #050710 100%);
     background-attachment: fixed;
   }
 
@@ -42,7 +54,8 @@
   }
 
   ::selection {
-    @apply bg-gold-200 text-navy-900;
+    background: rgba(34, 211, 238, 0.28);
+    color: #f4f7ff;
   }
 
   :focus-visible {
@@ -55,7 +68,7 @@
   select,
   textarea,
   [tabindex] {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas;
   }
 
   input,
@@ -83,58 +96,139 @@
 
 @layer components {
   .text-gradient-gold {
-    @apply bg-gradient-to-r from-gold-200 via-gold-400 to-gold-300 bg-clip-text text-transparent;
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(
+      90deg,
+      #67e8f9 0%,
+      #38bdf8 34%,
+      #818cf8 66%,
+      #a78bfa 100%
+    );
   }
 
   .text-gradient-navy {
-    @apply bg-gradient-to-r from-navy-800 via-primary-600 to-sa-600 bg-clip-text text-transparent;
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(
+      90deg,
+      #a5f3fc 0%,
+      #7dd3fc 28%,
+      #a5b4fc 62%,
+      #c4b5fd 100%
+    );
+  }
+
+  .text-gradient-ai {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(
+      90deg,
+      #67e8f9 0%,
+      #38bdf8 30%,
+      #818cf8 64%,
+      #a78bfa 100%
+    );
+  }
+
+  .eyebrow {
+    @apply text-[10px] font-bold uppercase tracking-[0.24em] text-slate-300/80;
   }
 
   /* Glass dengan fallback solid ketika backdrop-filter tidak didukung. */
   .glass {
-    background-color: rgba(255, 255, 255, 0.92);
-    border: 1px solid rgba(255, 255, 255, 0.8);
+    background-color: rgba(10, 13, 28, 0.9);
+    background-image: linear-gradient(
+      145deg,
+      rgba(37, 32, 82, 0.42) 0%,
+      rgba(10, 13, 28, 0.86) 58%,
+      rgba(7, 9, 20, 0.94) 100%
+    );
+    border: 1px solid rgba(255, 255, 255, 0.11);
   }
 
   @supports ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) {
     .glass {
-      background-color: rgba(255, 255, 255, 0.6);
-      border-color: rgba(255, 255, 255, 0.55);
-      -webkit-backdrop-filter: blur(20px) saturate(150%);
-      backdrop-filter: blur(20px) saturate(150%);
+      background-color: rgba(9, 12, 26, 0.62);
+      border-color: rgba(255, 255, 255, 0.12);
+      -webkit-backdrop-filter: blur(22px) saturate(150%);
+      backdrop-filter: blur(22px) saturate(150%);
     }
   }
 
   .glass-navy {
-    background-color: rgba(14, 27, 61, 0.94);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background-color: rgba(9, 12, 26, 0.94);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   @supports ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) {
     .glass-navy {
-      background-color: rgba(8, 18, 42, 0.62);
-      -webkit-backdrop-filter: blur(22px) saturate(140%);
-      backdrop-filter: blur(22px) saturate(140%);
+      background-color: rgba(7, 9, 20, 0.74);
+      -webkit-backdrop-filter: blur(24px) saturate(140%);
+      backdrop-filter: blur(24px) saturate(140%);
     }
+  }
+
+  /* Kartu kaca gelap: gradien indigo tipis + border terang di kiri-atas. */
+  .ai-card {
+    position: relative;
+    isolation: isolate;
+    border-radius: 1.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background-color: rgba(10, 13, 28, 0.82);
+    background-image: linear-gradient(
+      155deg,
+      rgba(49, 42, 112, 0.42) 0%,
+      rgba(15, 18, 38, 0.72) 42%,
+      rgba(7, 9, 20, 0.92) 100%
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 26px 60px -38px rgba(0, 0, 0, 0.95);
+  }
+
+  .ai-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.3) 0%,
+      rgba(167, 139, 250, 0.28) 22%,
+      rgba(255, 255, 255, 0.055) 52%,
+      rgba(34, 211, 238, 0.14) 100%
+    );
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: -1;
   }
 
   .surface-grid {
     background-image:
-      linear-gradient(to right, rgba(20, 35, 79, 0.045) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(20, 35, 79, 0.045) 1px, transparent 1px);
+      linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
     background-size: 28px 28px;
   }
 
   .table-shell {
-    @apply overflow-hidden rounded-panel border border-white/70 bg-white shadow-soft;
+    @apply overflow-hidden rounded-panel border border-white/10 shadow-card;
+    background-color: rgba(10, 13, 28, 0.78);
+    background-image: linear-gradient(
+      160deg,
+      rgba(37, 32, 82, 0.3) 0%,
+      rgba(8, 11, 24, 0.9) 55%
+    );
   }
 
   .table-head {
-    @apply bg-navy-50/80 text-[10px] font-bold uppercase tracking-[0.16em] text-ink-faint;
+    @apply bg-white/[0.03] text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400;
   }
 
   .table-row {
-    @apply border-b border-navy-50/80 transition-colors duration-150 last:border-0 hover:bg-navy-50/40;
+    @apply border-b border-white/[0.06] transition-colors duration-150 last:border-0 hover:bg-white/[0.035];
   }
 
   .nav-pill-active {
@@ -142,14 +236,60 @@
   }
 
   .skip-link {
-    @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[120] focus:rounded-input focus:bg-gold-400 focus:px-4 focus:py-3 focus:text-sm focus:font-bold focus:text-navy-900;
+    @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[120] focus:rounded-input focus:bg-cyan-300 focus:px-4 focus:py-3 focus:text-sm focus:font-bold focus:text-slate-950;
+  }
+
+  /* Bentuk organik besar di belakang elemen utama. */
+  .ai-blob {
+    pointer-events: none;
+    border-radius: 46% 54% 58% 42% / 52% 42% 58% 48%;
+    background-image:
+      radial-gradient(circle at 34% 28%, rgba(167, 139, 250, 0.5), transparent 58%),
+      radial-gradient(circle at 72% 62%, rgba(79, 70, 229, 0.46), transparent 60%),
+      radial-gradient(circle at 48% 88%, rgba(34, 211, 238, 0.22), transparent 56%);
+    filter: blur(10px);
+    box-shadow:
+      inset 0 0 80px rgba(139, 92, 246, 0.28),
+      0 0 120px rgba(99, 102, 241, 0.22);
+  }
+
+  .neon-connector {
+    background-image: linear-gradient(
+      90deg,
+      rgba(34, 211, 238, 0.15),
+      #22d3ee 28%,
+      #38bdf8 55%,
+      #6366f1 82%,
+      rgba(99, 102, 241, 0.12)
+    );
+    box-shadow:
+      0 0 8px rgba(34, 211, 238, 0.55),
+      0 0 22px rgba(99, 102, 241, 0.28);
+  }
+
+  .neon-connector-v {
+    background-image: linear-gradient(
+      180deg,
+      rgba(34, 211, 238, 0.18),
+      #22d3ee 30%,
+      #6366f1 78%,
+      rgba(99, 102, 241, 0.12)
+    );
+    box-shadow:
+      0 0 8px rgba(34, 211, 238, 0.45),
+      0 0 20px rgba(99, 102, 241, 0.24);
+  }
+
+  .node-badge {
+    @apply grid place-items-center rounded-xl text-white shadow-[0_0_24px_-6px_rgba(99,102,241,0.65)] ring-1 ring-white/15;
+    background-image: linear-gradient(140deg, #8b5cf6 0%, #4f46e5 52%, #06b6d4 120%);
   }
 }
 
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: rgba(91, 103, 133, 0.4) transparent;
+    scrollbar-color: rgba(148, 163, 184, 0.32) transparent;
   }
 
   .scrollbar-thin::-webkit-scrollbar {
@@ -163,11 +303,11 @@
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
     border-radius: 9999px;
-    background: rgba(91, 103, 133, 0.32);
+    background: rgba(148, 163, 184, 0.26);
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: rgba(20, 35, 79, 0.45);
+    background: rgba(196, 181, 253, 0.4);
   }
 
   .no-scrollbar {
@@ -182,7 +322,6 @@
   .mask-fade-x {
     mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
   }
-
 }
 
 @media (hover: none) {
@@ -190,4 +329,112 @@
     opacity: 1 !important;
     transform: none !important;
   }
+}
+
+/* --------------------------------------------------------------------------
+   Override terpusat untuk permukaan terang lama.
+   Semua kelas bg-white bernuansa kartu diubah menjadi kaca gelap agar
+   halaman lama tetap konsisten tanpa mengubah struktur markup.
+   -------------------------------------------------------------------------- */
+.text-slate-950 {
+  color: #070812;
+}
+
+.text-slate-200 {
+  color: #cbd1e6;
+}
+
+.text-slate-300 {
+  color: #aeb6d0;
+}
+
+.text-slate-300\/80 {
+  color: rgba(174, 182, 208, 0.82);
+}
+
+.text-slate-400 {
+  color: #8b94b4;
+}
+
+.text-slate-400\/80 {
+  color: rgba(139, 148, 180, 0.82);
+}
+
+.text-slate-500 {
+  color: #9ba5c4;
+}
+
+.bg-white {
+  background-color: rgba(13, 16, 32, 0.88);
+  background-image: linear-gradient(
+    155deg,
+    rgba(49, 42, 112, 0.34) 0%,
+    rgba(15, 18, 38, 0.68) 45%,
+    rgba(8, 11, 24, 0.9) 100%
+  );
+}
+
+.bg-white\/50 {
+  background-color: rgba(12, 15, 30, 0.55);
+}
+
+.bg-white\/60 {
+  background-color: rgba(12, 15, 30, 0.62);
+}
+
+.bg-white\/70 {
+  background-color: rgba(11, 14, 29, 0.72);
+}
+
+.bg-white\/80 {
+  background-color: rgba(11, 14, 29, 0.8);
+}
+
+.bg-white\/85 {
+  background-color: rgba(10, 13, 28, 0.84);
+}
+
+.bg-white\/90 {
+  background-color: rgba(10, 13, 28, 0.9);
+}
+
+.bg-white\/95 {
+  background-color: rgba(9, 12, 26, 0.94);
+}
+
+.from-white {
+  --tw-gradient-from: #0f1226 var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(15 18 38 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.via-white {
+  --tw-gradient-to: rgb(12 15 30 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops:
+    var(--tw-gradient-from), #0c0f1e var(--tw-gradient-via-position),
+    var(--tw-gradient-to);
+}
+
+.to-white {
+  --tw-gradient-to: #080b18 var(--tw-gradient-to-position);
+}
+
+.border-white\/60,
+.border-white\/70,
+.border-white\/80 {
+  border-color: rgba(255, 255, 255, 0.09);
+}
+
+.ring-white {
+  --tw-ring-color: rgba(255, 255, 255, 0.14);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(119, 129, 162, 0.8);
+}
+
+select option {
+  background-color: #0b0e1e;
+  color: #eef1ff;
 }

@@ -86,7 +86,7 @@ export function Modal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[90] flex items-end justify-center overflow-y-auto bg-navy-950/45 p-0 backdrop-blur-sm animate-fade-in sm:items-center sm:p-6"
+      className="fixed inset-0 z-[90] flex items-end justify-center overflow-y-auto bg-[#03040A]/75 p-0 backdrop-blur-md animate-fade-in sm:items-center sm:p-6"
       onMouseDown={(event) => {
         if (!closeOnBackdrop) return;
         if (event.target === event.currentTarget) onClose();
@@ -99,18 +99,17 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
         className={cn(
-          "glass relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-panel border shadow-elevated animate-scale-in sm:rounded-panel",
-          SIZES[size],
+          "glass relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-panel border shadow-elevated animate-scale-in sm:rounded-panel",          SIZES[size],
           className,
         )}
       >
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/70 to-transparent"
+          className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-violet-400/10 to-transparent"
           aria-hidden="true"
         />
-        <div className="relative flex items-start gap-4 border-b border-white/60 px-5 py-5 sm:px-6">
+        <div className="relative flex items-start gap-4 border-b border-white/10 px-5 py-5 sm:px-6">
           {icon ? (
-            <span className="grid size-11 shrink-0 place-items-center rounded-input bg-white/80 text-navy-700 ring-1 ring-navy-100">
+            <span className="node-badge grid size-11 shrink-0 place-items-center rounded-xl text-white ring-1 ring-white/15">
               {icon}
             </span>
           ) : null}
@@ -127,7 +126,7 @@ export function Modal({
           <button
             type="button"
             onClick={onClose}
-            className="grid size-11 shrink-0 place-items-center rounded-input text-ink-soft transition hover:bg-white/80 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
+            className="grid size-11 shrink-0 place-items-center rounded-full text-ink-soft transition hover:bg-white/[0.08] hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
             aria-label="Tutup dialog"
           >
             <X className="size-4.5" />
@@ -135,7 +134,7 @@ export function Modal({
         </div>
         <div className="relative flex-1 overflow-y-auto px-5 py-5 sm:px-6">{children}</div>
         {footer ? (
-          <div className="relative flex flex-wrap items-center justify-end gap-2 border-t border-white/60 bg-white/50 px-5 py-4 sm:px-6">
+          <div className="relative flex flex-wrap items-center justify-end gap-2 border-t border-white/10 bg-white/[0.03] px-5 py-4 sm:px-6">
             {footer}
           </div>
         ) : null}

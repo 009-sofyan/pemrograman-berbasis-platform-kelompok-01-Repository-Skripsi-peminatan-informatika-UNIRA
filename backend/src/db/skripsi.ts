@@ -26,6 +26,8 @@ export const skripsi = mysqlTable("skripsi", {
 
     fileUrl: varchar("file_url", { length: 500 }),
 
+    coverUrl: varchar("cover_url", { length: 500 }),
+
     status: mysqlEnum("status", [
         "draft",
         "diajukan",

@@ -1,0 +1,1 @@
+ALTER TABLE `skripsi` ADD `cover_url` varchar(500);

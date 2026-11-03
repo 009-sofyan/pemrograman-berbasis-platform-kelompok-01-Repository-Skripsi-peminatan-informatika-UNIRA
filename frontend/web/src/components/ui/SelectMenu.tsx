@@ -84,7 +84,7 @@ export function SelectMenu({
           }
         }}
         className={cn(
-          "flex h-11 w-full items-center gap-2 rounded-input border bg-white px-3.5 text-left text-xs font-semibold text-navy-800 shadow-[0_1px_2px_rgba(20,35,79,0.04)] transition",
+          "flex h-11 w-full items-center gap-2 rounded-input border bg-[#0A0D1C] px-3.5 text-left text-xs font-semibold text-slate-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition",
           open
             ? "border-primary-400 ring-4 ring-primary-100"
             : "border-navy-100 hover:border-navy-200",
@@ -105,7 +105,7 @@ export function SelectMenu({
           role="listbox"
           aria-label={label ?? "Pilihan"}
           className={cn(
-            "absolute z-40 mt-2 max-h-72 w-full min-w-[180px] overflow-y-auto rounded-card border border-white/80 bg-white p-1.5 shadow-elevated animate-slide-down",
+            "absolute z-40 mt-2 max-h-72 w-full min-w-[180px] overflow-y-auto rounded-card border border-white/10 bg-[#0A0D1C]/98 p-1.5 shadow-elevated backdrop-blur-xl animate-slide-down",
             align === "right" ? "right-0" : "left-0",
           )}
         >
@@ -125,8 +125,8 @@ export function SelectMenu({
                 className={cn(
                   "flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold transition",
                   index === activeIndex
-                    ? "bg-navy-50 text-navy-900"
-                    : "text-ink-soft",
+                    ? "bg-white/[0.06] text-white"
+                    : "text-slate-300",
                   isSelected && "text-primary-700",
                 )}
               >

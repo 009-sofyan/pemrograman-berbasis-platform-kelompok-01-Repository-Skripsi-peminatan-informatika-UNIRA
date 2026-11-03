@@ -541,13 +541,13 @@ function ChoiceOption({
       active: "border-sky-300 bg-sky-50/70 ring-2 ring-sky-100",
       idle: "border-slate-200 bg-white hover:border-sky-200 hover:bg-sky-50/30",
       icon: "bg-sky-50 text-sky-600 ring-sky-100",
-      check: "bg-sky-600 text-white",
+      check: "bg-sky-400 text-[#070812]",
     },
     mint: {
       active: "border-mint-300 bg-mint-50/70 ring-2 ring-mint-100",
       idle: "border-slate-200 bg-white hover:border-mint-200 hover:bg-mint-50/30",
       icon: "bg-mint-50 text-mint-600 ring-mint-100",
-      check: "bg-mint-600 text-white",
+      check: "bg-cyan-400 text-[#070812]",
     },
   }[tone];
 

@@ -23,7 +23,7 @@ export function resolveFileUrl(fileUrl: string | null | undefined): string | nul
   if (!fileUrl) return null;
   const trimmed = fileUrl.trim();
   if (!trimmed) return null;
-  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  if (/^(?:https?:|data:|blob:)/i.test(trimmed)) return trimmed;
   const path = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
   return `${API_ORIGIN}${path}`;
 }

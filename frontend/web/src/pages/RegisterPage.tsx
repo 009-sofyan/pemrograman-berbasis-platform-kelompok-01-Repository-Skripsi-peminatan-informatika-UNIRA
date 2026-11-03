@@ -105,15 +105,19 @@ export default function RegisterPage() {
       <div className="pointer-events-none absolute -bottom-32 right-0 size-[360px] rounded-full bg-mint-200/40 blur-3xl" />
 
       <div className="relative mx-auto grid min-h-[calc(100vh-1.5rem)] max-w-[1180px] overflow-hidden rounded-[2rem] border border-white/80 bg-white/70 shadow-card backdrop-blur-sm lg:grid-cols-[0.95fr_1.05fr]">
-        <section className="relative hidden overflow-hidden bg-slate-950 p-10 text-white lg:flex lg:flex-col xl:p-12">
+        <section className="relative hidden overflow-hidden bg-navy-950 p-10 text-white lg:flex lg:flex-col xl:p-12">
           <div className="pointer-events-none absolute inset-0 bg-mesh opacity-55" />
           <div className="pointer-events-none absolute inset-0 bg-grid-slate bg-[size:32px_32px] opacity-25" />
+          <div
+            className="ai-blob pointer-events-none absolute -bottom-32 -right-24 size-[26rem] opacity-40 animate-drift"
+            aria-hidden="true"
+          />
           <div className="relative">
             <Logo tone="light" />
           </div>
 
           <div className="relative mt-16">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-primary-200">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-primary-300">
               <Sparkles className="size-3.5" />
               Registrasi mahasiswa
             </span>
@@ -132,7 +136,7 @@ export default function RegisterPage() {
             <div className="mt-10 space-y-5">
               {STEPS.map((step, index) => (
                 <div key={step.title} className="flex gap-3.5">
-                  <span className="grid size-8 shrink-0 place-items-center rounded-full border border-white/15 bg-white/[0.07] text-[11px] font-extrabold text-primary-200">
+                  <span className="grid size-8 shrink-0 place-items-center rounded-full border border-white/15 bg-white/[0.07] text-[11px] font-extrabold text-primary-300">
                     {index + 1}
                   </span>
                   <div>

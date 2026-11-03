@@ -11,6 +11,7 @@ import dashboardRoutes from "./routes/dashboardRoutes.js";
 import pemetaanRoutes from "./routes/pemetaanRoutes.js";
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
 import { apiRateLimiter } from "./middlewares/rateLimit.js";
+import { COVER_UPLOAD_DIR } from "./utils/uploads.js";
 
 const app = express();
 
@@ -37,6 +38,26 @@ app.get("/health", async (_req, res) => {
     return res.status(500).json({ status: "error" });
   }
 });
+
+// Cover skripsi bersifat publik. Nama file UUID membuat cache jangka panjang
+// aman karena isi URL yang sama tidak pernah berubah.
+app.use(
+    "/uploads/covers",
+    express.static(COVER_UPLOAD_DIR, {
+        dotfiles: "deny",
+        index: false,
+        redirect: false,
+        maxAge: "7d",
+        immutable: true,
+        setHeaders: (res) => {
+            res.setHeader(
+                "Cache-Control",
+                "public, max-age=604800, immutable"
+            );
+            res.setHeader("X-Content-Type-Options", "nosniff");
+        },
+    })
+);
 
 app.use("/api", apiRateLimiter);
 

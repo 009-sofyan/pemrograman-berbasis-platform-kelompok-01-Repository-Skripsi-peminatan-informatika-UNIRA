@@ -19,10 +19,14 @@ function resolveUploadRoot(): string {
 
 export const UPLOAD_ROOT = resolveUploadRoot();
 export const SKRIPSI_UPLOAD_DIR = path.join(UPLOAD_ROOT, "skripsi");
+export const COVER_UPLOAD_DIR = path.join(UPLOAD_ROOT, "covers");
 
 fs.mkdirSync(SKRIPSI_UPLOAD_DIR, { recursive: true });
+fs.mkdirSync(COVER_UPLOAD_DIR, { recursive: true });
 
 const SAFE_PDF_FILE_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]*\.pdf$/i;
+const SAFE_COVER_FILE_NAME =
+    /^[A-Za-z0-9][A-Za-z0-9._-]*\.(?:jpg|jpeg|png)$/i;
 
 function getSafePdfFileName(fileUrl: string | null | undefined): string | null {
     if (!fileUrl) return null;
@@ -127,6 +131,90 @@ export async function deleteUploadedTempFile(
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
             console.error("Gagal membersihkan file upload sementara:", error);
+        }
+    }
+}
+
+function getSafeCoverFileName(
+    coverUrl: string | null | undefined
+): string | null {
+    if (!coverUrl) return null;
+
+    const normalized = coverUrl.replace(/\\/g, "/");
+    const fileName = normalized.slice(normalized.lastIndexOf("/") + 1);
+
+    if (
+        !fileName ||
+        !SAFE_COVER_FILE_NAME.test(fileName) ||
+        fileName.includes("..")
+    ) {
+        return null;
+    }
+
+    return fileName;
+}
+
+/**
+ * Path cover hanya diambil dari nama file yang tersimpan di database.
+ * Parameter request tidak pernah dipakai langsung sebagai path filesystem.
+ */
+export function resolveStoredCoverPath(
+    coverUrl: string | null | undefined
+): string | null {
+    const fileName = getSafeCoverFileName(coverUrl);
+
+    if (!fileName) return null;
+
+    const filePath = path.join(COVER_UPLOAD_DIR, fileName);
+    const relative = path.relative(COVER_UPLOAD_DIR, filePath);
+
+    if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) {
+        return null;
+    }
+
+    return filePath;
+}
+
+export function toStoredCoverUrl(fileName: string): string {
+    if (!SAFE_COVER_FILE_NAME.test(fileName) || fileName.includes("..")) {
+        throw new Error("Nama file cover tidak valid");
+    }
+
+    return `/uploads/covers/${fileName}`;
+}
+
+/**
+ * Hanya mengembalikan URL cover yang aman untuk dikirim ke klien. Nilai
+ * arbitrary di database tidak boleh berubah menjadi URL publik.
+ */
+export function toPublicCoverUrl(
+    coverUrl: string | null | undefined
+): string | null {
+    const fileName = getSafeCoverFileName(coverUrl);
+
+    return fileName ? `/uploads/covers/${fileName}` : null;
+}
+
+export async function deleteStoredCoverFile(
+    coverUrl: string | null | undefined
+): Promise<void> {
+    const filePath = resolveStoredCoverPath(coverUrl);
+
+    if (!filePath) {
+        if (coverUrl) {
+            console.warn(
+                "File cover tidak dihapus karena path tidak valid:",
+                coverUrl
+            );
+        }
+        return;
+    }
+
+    try {
+        await fs.promises.unlink(filePath);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+            console.error("Gagal menghapus file cover:", error);
         }
     }
 }

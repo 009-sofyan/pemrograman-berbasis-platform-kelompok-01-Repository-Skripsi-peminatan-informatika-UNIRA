@@ -12,9 +12,15 @@ import {
 } from "../controllers/skripsiControllers.js";
 import { uploadSkripsi } from "../middlewares/uploadSkripsi.js";
 import { uploadFileSkripsi } from "../controllers/skripsiControllers.js";
+import {
+    deleteCoverSkripsi,
+    uploadCoverSkripsi,
+} from "../controllers/skripsiCoverControllers.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { allowRoles } from "../middlewares/roleMiddleware.js";
 import { precheckSkripsiUpload } from "../middlewares/precheckSkripsiUpload.js";
+import { precheckSkripsiCover } from "../middlewares/precheckSkripsiCover.js";
+import { uploadSkripsiCover } from "../middlewares/uploadCover.js";
 import { uploadRateLimiter } from "../middlewares/rateLimit.js";
 import {
     validateBody,
@@ -55,6 +61,24 @@ router.post(
     precheckSkripsiUpload,
     uploadSkripsi,
     uploadFileSkripsi
+);
+router.post(
+    "/:id/cover",
+    authMiddleware,
+    allowRoles("mahasiswa", "kaprodi", "tendik"),
+    validateParams(idParamSchema),
+    uploadRateLimiter,
+    precheckSkripsiCover,
+    uploadSkripsiCover,
+    uploadCoverSkripsi
+);
+router.delete(
+    "/:id/cover",
+    authMiddleware,
+    allowRoles("mahasiswa", "kaprodi", "tendik"),
+    validateParams(idParamSchema),
+    precheckSkripsiCover,
+    deleteCoverSkripsi
 );
 router.get(
     "/",

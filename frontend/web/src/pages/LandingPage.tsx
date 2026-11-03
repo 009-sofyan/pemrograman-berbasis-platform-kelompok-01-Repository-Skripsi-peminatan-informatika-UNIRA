@@ -10,7 +10,6 @@ import {
   ArrowDown,
   ArrowRight,
   ArrowUpRight,
-  BadgeCheck,
   BookOpen,
   BrainCircuit,
   CalendarDays,
@@ -48,7 +47,6 @@ import { BI, CURRENT_YEAR, SA } from "../constants";
 import type { PemetaanAngkatan, Skripsi } from "../types";
 import { formatDate, formatNumber, percent } from "../lib/format";
 import { cn } from "../lib/cn";
-import { IMAGE_CREDITS } from "../lib/imagery";
 import { Logo } from "../components/layout/Logo";
 import { Avatar } from "../components/ui/Avatar";
 import { Badge } from "../components/ui/Badge";
@@ -77,6 +75,30 @@ const TABS: { value: CatalogTab; label: string; short: string }[] = [
   { value: "all", label: "Semua karya", short: "Semua" },
   { value: BI, label: "Business Intelligence", short: "BI" },
   { value: SA, label: "Smart Agriculture", short: "SA" },
+];
+
+const WORKFLOW_STEPS = [
+  {
+    code: "01",
+    title: "Sumber data",
+    description: "Skripsi, peminatan, dan angkatan dari prodi.",
+    meta: "Input",
+    icon: BookOpen,
+  },
+  {
+    code: "02",
+    title: "Kurasi & validasi",
+    description: "Diverifikasi Kaprodi sebelum dipublikasikan.",
+    meta: "Verified",
+    icon: ShieldCheck,
+  },
+  {
+    code: "03",
+    title: "Repository pintar",
+    description: "Telusuri abstrak, peminatan, dan akses PDF.",
+    meta: "Output",
+    icon: Layers3,
+  },
 ];
 
 const PEMINATAN_CONTENT = [
@@ -293,7 +315,12 @@ export default function LandingPage() {
             )}
           >
             <Link to="/" className="min-w-0 shrink-0" aria-label="Beranda Repository Skripsi UNIRA">
-              <Logo tone={scrolled ? "dark" : "light"} compact />
+              <Logo
+                tone={scrolled ? "dark" : "light"}
+                compact
+                imageClassName="h-8 w-8 sm:h-10 sm:w-10"
+                hideTextOnMobile
+              />
             </Link>
 
             <nav className="ml-auto hidden items-center gap-1 lg:flex" aria-label="Navigasi beranda">
@@ -311,17 +338,6 @@ export default function LandingPage() {
                   {link.label}
                 </a>
               ))}
-              <Link
-                to="/credits"
-                className={cn(
-                  "inline-flex min-h-11 items-center rounded-input px-3.5 text-xs font-bold transition",
-                  scrolled
-                    ? "text-ink-soft hover:bg-navy-50 hover:text-ink"
-                    : "text-white/70 hover:bg-white/10 hover:text-white",
-                )}
-              >
-                Kredit Gambar
-              </Link>
             </nav>
 
             <div className="ml-auto flex items-center gap-2 lg:ml-2">
@@ -329,10 +345,10 @@ export default function LandingPage() {
                 <Link
                   to="/dashboard"
                   className={cn(
-                    "inline-flex min-h-11 items-center gap-2 rounded-input px-3.5 text-xs font-bold transition sm:px-4",
+                    "inline-flex min-h-11 items-center gap-2 rounded-full px-3.5 text-xs font-bold transition sm:px-4",
                     scrolled
-                      ? "bg-navy-800 text-white hover:bg-navy-700"
-                      : "bg-gold-400 text-navy-900 shadow-gold-glow hover:bg-gold-300",
+                      ? "bg-[#F3F5FF] text-[#070812] hover:bg-white"
+                      : "bg-[#F3F5FF] text-[#070812] shadow-[0_0_0_1px_rgba(255,255,255,0.2),0_18px_44px_-22px_rgba(165,180,252,0.75)] hover:bg-white",
                   )}
                 >
                   <Layers3 className="size-4" />
@@ -355,10 +371,10 @@ export default function LandingPage() {
                   <Link
                     to="/login"
                     className={cn(
-                      "inline-flex min-h-11 items-center gap-2 rounded-input px-3.5 text-xs font-bold transition sm:px-4",
+                      "inline-flex min-h-11 items-center gap-2 rounded-full px-3.5 text-xs font-bold transition sm:px-4",
                       scrolled
-                        ? "bg-navy-800 text-white hover:bg-navy-700"
-                        : "bg-gold-400 text-navy-900 shadow-gold-glow hover:bg-gold-300",
+                        ? "bg-[#F3F5FF] text-[#070812] hover:bg-white"
+                        : "bg-[#F3F5FF] text-[#070812] shadow-[0_0_0_1px_rgba(255,255,255,0.2),0_18px_44px_-22px_rgba(165,180,252,0.75)] hover:bg-white",
                     )}
                   >
                     <LogIn className="size-4" />
@@ -371,9 +387,9 @@ export default function LandingPage() {
                 type="button"
                 onClick={() => setMobileOpen(true)}
                 className={cn(
-                  "grid size-11 place-items-center rounded-input border transition lg:hidden",
+                  "grid size-11 place-items-center rounded-full border transition lg:hidden",
                   scrolled
-                    ? "border-navy-100 bg-white text-navy-800"
+                    ? "border-white/10 bg-white/[0.05] text-white"
                     : "border-white/20 bg-white/10 text-white backdrop-blur",
                 )}
                 aria-label="Buka menu navigasi"
@@ -433,20 +449,12 @@ export default function LandingPage() {
                     <ChevronRight className="size-4 text-white/40" />
                   </a>
                 ))}
-                <Link
-                  to="/credits"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex min-h-12 items-center justify-between rounded-input px-4 text-sm font-bold text-white/80 transition hover:bg-white/10 hover:text-white"
-                >
-                  Kredit Gambar
-                  <ChevronRight className="size-4 text-white/40" />
-                </Link>
               </nav>
               <div className="mt-auto space-y-2 border-t border-white/10 pt-5">
                 {user ? (
                   <Link
                     to="/dashboard"
-                    className="flex min-h-12 items-center justify-center gap-2 rounded-input bg-gold-400 text-sm font-bold text-navy-900"
+                    className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#F3F5FF] text-sm font-bold text-[#070812]"
                   >
                     Buka Dashboard
                     <ArrowRight className="size-4" />
@@ -455,14 +463,14 @@ export default function LandingPage() {
                   <>
                     <Link
                       to="/login"
-                      className="flex min-h-12 items-center justify-center gap-2 rounded-input bg-gold-400 text-sm font-bold text-navy-900"
+                      className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#F3F5FF] text-sm font-bold text-[#070812] hover:bg-white"
                     >
                       Masuk
                       <ArrowRight className="size-4" />
                     </Link>
                     <Link
                       to="/register"
-                      className="flex min-h-12 items-center justify-center rounded-input border border-white/15 text-sm font-bold text-white/85"
+                      className="flex min-h-12 items-center justify-center rounded-full border border-white/20 text-sm font-bold text-white/85 hover:bg-white/10"
                     >
                       Daftar akun mahasiswa
                     </Link>
@@ -485,56 +493,59 @@ export default function LandingPage() {
             aria-hidden="true"
           />
           <div
-            className="absolute -right-24 -top-32 size-[28rem] rounded-full bg-gold-400/20 blur-[110px]"
+            className="ai-blob absolute -left-40 top-8 size-[34rem] animate-drift opacity-50"
+            style={{ animationDuration: "22s" }}
             aria-hidden="true"
           />
           <div
-            className="absolute -left-24 top-1/3 size-80 animate-drift rounded-full bg-sa-400/15 blur-[90px]"
-            style={{ animationDuration: "18s" }}
+            className="ai-blob absolute -right-28 top-16 size-[32rem] animate-drift opacity-45"
+            style={{ animationDuration: "26s", animationDirection: "reverse" }}
             aria-hidden="true"
           />
           <div
-            className="absolute bottom-0 right-1/4 size-72 animate-drift rounded-full bg-primary-400/20 blur-[80px]"
-            style={{ animationDuration: "14s", animationDirection: "reverse" }}
+            className="absolute right-[34%] top-1/4 size-72 rounded-full bg-cyan-400/10 blur-[100px]"
             aria-hidden="true"
           />
           <div
-            className="absolute right-[8%] top-[18%] hidden size-[26rem] rounded-full border border-white/10 lg:block"
+            className="absolute -bottom-20 left-1/3 size-80 rounded-full bg-primary-500/15 blur-[110px]"
             aria-hidden="true"
-          >
-            <div className="absolute inset-0 animate-orbit rounded-full border border-dashed border-white/15 [animation-duration:26s]">
-              <span className="absolute -top-1 left-1/2 size-2 rounded-full bg-gold-300 shadow-gold-glow" />
-              <span className="absolute bottom-8 left-4 size-1.5 rounded-full bg-sa-300" />
-            </div>
-            <div className="absolute inset-16 rounded-full border border-white/10" />
-          </div>
+          />
 
-          <div className="relative mx-auto grid w-full max-w-[1280px] gap-10 px-5 sm:px-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+          <div className="relative mx-auto grid w-full max-w-[1280px] gap-14 px-5 sm:px-8 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-10">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/80 backdrop-blur">
-                <Sparkles className="size-3.5 text-gold-300" />
-                Repository Skripsi · Fakultas Teknik UNIRA
-              </div>
+              <motion.p
+                initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="eyebrow flex items-center gap-3"
+              >
+                <span className="h-px w-9 bg-gradient-to-r from-cyan-300/80 to-primary-400/0" />
+                Repository Skripsi · Fakultas Teknik
+              </motion.p>
 
-              <h1 className="mt-6 max-w-3xl font-display text-[40px] font-extrabold leading-[1.04] tracking-tight sm:text-[56px] lg:text-[64px]">
+              <h1 className="mt-6 max-w-3xl font-display text-[40px] font-extrabold leading-[1.04] tracking-tight sm:text-[54px] lg:text-[62px]">
                 <StaggerWords
                   words={["Jejaki", "karya,", "temukan"]}
                   reduceMotion={Boolean(reduceMotion)}
                 />{" "}
-                <span className="text-gradient-gold">
-                  <StaggerWords
-                    words={["arah", "riset."]}
-                    reduceMotion={Boolean(reduceMotion)}
-                    offset={3}
-                  />
-                </span>
+                <StaggerWords
+                  words={["arah"]}
+                  reduceMotion={Boolean(reduceMotion)}
+                  offset={3}
+                  wordClassName="text-gradient-ai"
+                />{" "}
+                <StaggerWords
+                  words={["riset."]}
+                  reduceMotion={Boolean(reduceMotion)}
+                  offset={4}
+                />
               </h1>
 
               <motion.p
                 initial={reduceMotion ? false : { opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.45, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                className="mt-5 max-w-xl text-sm leading-relaxed text-white/70 sm:text-base"
+                className="mt-6 max-w-xl text-sm leading-relaxed text-slate-300/80 sm:text-base"
               >
                 Telusuri repository skripsi Informatika UNIRA, pahami sebaran
                 peminatan Business Intelligence dan Smart Agriculture, lalu mulai
@@ -549,7 +560,7 @@ export default function LandingPage() {
               >
                 <a
                   href="#katalog"
-                  className="group inline-flex min-h-12 items-center gap-2 rounded-input bg-gold-400 px-5 text-sm font-bold text-navy-900 shadow-gold-glow transition hover:-translate-y-0.5 hover:bg-gold-300 focus-visible:ring-offset-navy-950"
+                  className="group inline-flex min-h-12 items-center gap-2 rounded-full bg-[#F3F5FF] px-6 text-sm font-bold text-[#070812] shadow-[0_0_0_1px_rgba(255,255,255,0.2),0_22px_50px_-22px_rgba(165,180,252,0.8)] transition hover:-translate-y-0.5 hover:bg-white focus-visible:ring-offset-navy-950"
                 >
                   <LibraryBig className="size-4" />
                   Jelajahi Katalog
@@ -557,95 +568,181 @@ export default function LandingPage() {
                 </a>
                 <Link
                   to={user ? "/dashboard" : "/login"}
-                  className="inline-flex min-h-12 items-center gap-2 rounded-input border border-white/20 bg-white/10 px-5 text-sm font-bold text-white backdrop-blur transition hover:bg-white/15 focus-visible:ring-offset-navy-950"
+                  className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/20 px-6 text-sm font-bold text-white transition hover:border-white/35 hover:bg-white/[0.06] focus-visible:ring-offset-navy-950"
                 >
                   <LogIn className="size-4" />
-                  {user ? "Buka Dashboard" : "Masuk"}
+                  {user ? "Buka Dashboard" : "Masuk ke akun"}
                 </Link>
               </motion.div>
 
-              <div className="mt-10 grid max-w-xl grid-cols-1 gap-2.5 sm:grid-cols-3">
+              <motion.div
+                initial={reduceMotion ? false : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.9, duration: 0.6 }}
+                className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] font-medium text-slate-400"
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  <ShieldCheck className="size-3.5 text-gold-300" />
+                  Terverifikasi Kaprodi
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <BookOpen className="size-3.5 text-cyan-300" />
+                  Akses abstrak &amp; PDF
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Sparkles className="size-3.5 text-violet-300" />
+                  Pencarian cepat
+                </span>
+              </motion.div>
+            </div>
+
+            <div className="relative hidden lg:block" aria-label="Alur kerja repository">
+              <div
+                className="absolute -inset-10 rounded-[3rem] bg-[radial-gradient(circle_at_60%_35%,rgba(124,58,237,0.22),transparent_62%)] blur-2xl"
+                aria-hidden="true"
+              />
+              <motion.div
+                initial={reduceMotion ? false : { opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                className="relative mx-auto max-w-[27rem]"
+              >
+                <div className="mb-5 flex items-center justify-between px-1">
+                  <span className="eyebrow">Alur kerja</span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-300/20 bg-cyan-400/[0.08] px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-cyan-200">
+                    <span className="size-1.5 animate-pulse-glow rounded-full bg-cyan-300 shadow-[0_0_8px_#22d3ee]" />
+                    Terhubung
+                  </span>
+                </div>
+
+                <div className="relative pl-[4.5rem]">
+                  <div
+                    className="neon-connector-v absolute bottom-9 left-[1.45rem] top-8 w-px"
+                    aria-hidden="true"
+                  />
+                  {WORKFLOW_STEPS.map((step, index) => {
+                    const Icon = step.icon;
+                    return (
+                      <motion.div
+                        key={step.code}
+                        initial={reduceMotion ? false : { opacity: 0, x: 18 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{
+                          delay: 0.55 + index * 0.12,
+                          duration: 0.55,
+                          ease: [0.22, 1, 0.36, 1],
+                        }}
+                        className="relative pb-4 last:pb-0"
+                      >
+                        <span className="node-badge absolute -left-[4.5rem] top-3 hidden size-12 rounded-2xl sm:grid">
+                          <Icon className="size-5" />
+                        </span>
+                        <div className="glass rounded-card p-4 transition duration-300 hover:border-white/20 hover:bg-white/[0.06]">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                                Langkah {step.code}
+                              </p>
+                              <h3 className="mt-1 font-display text-sm font-bold text-white">
+                                {step.title}
+                              </h3>
+                            </div>
+                            <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-slate-300">
+                              {step.meta}
+                            </span>
+                          </div>
+                          <p className="mt-2 text-xs leading-relaxed text-slate-400">
+                            {step.description}
+                          </p>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+
+                <motion.div
+                  initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1, duration: 0.55 }}
+                  className="mt-5 flex items-center justify-between rounded-full border border-cyan-300/20 bg-cyan-400/[0.06] px-4 py-3"
+                >
+                  <span className="inline-flex items-center gap-2 text-[10px] font-semibold text-cyan-100">
+                    <Sparkles className="size-3.5 text-cyan-300" />
+                    Siap ditelusuri
+                  </span>
+                  <span className="font-display text-xs font-extrabold text-white">
+                    {statsUnavailable ? "—" : `${formatNumber(all.length)} karya`}
+                  </span>
+                </motion.div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        <section aria-label="Ringkasan repository" className="relative z-10 -mt-8 pb-2">
+          <div className="mx-auto w-full max-w-[1280px] px-4 sm:px-6">
+            <div className="ai-card overflow-hidden">
+              <div className="grid divide-y divide-white/10 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
                 {stats.map((stat, index) => {
                   const Icon = stat.icon;
                   return (
                     <motion.div
                       key={stat.label}
-                      initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+                      initial={reduceMotion ? false : { opacity: 0, y: 16 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{
-                        delay: 0.8 + index * 0.08,
+                        delay: 0.7 + index * 0.08,
                         duration: 0.55,
                         ease: [0.22, 1, 0.36, 1],
                       }}
-                      className="rounded-card border border-white/15 bg-white/[0.07] p-3.5 backdrop-blur"
+                      className="flex items-center gap-4 px-5 py-5 sm:px-6"
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/55">
+                      <span className="grid size-11 shrink-0 place-items-center rounded-2xl border border-white/10 bg-gradient-to-br from-violet-500/80 via-primary-500/70 to-cyan-400/80 text-white shadow-[0_0_26px_-8px_rgba(99,102,241,0.8)]">
+                        <Icon className="size-5" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400">
                           {stat.label}
                         </p>
-                        <Icon className="size-3.5 text-gold-300" />
+                        {statsUnavailable ? (
+                          <Skeleton className="mt-2 h-6 w-24 bg-white/10" />
+                        ) : stat.format === "number" ? (
+                          <p className="mt-1 font-display text-xl font-extrabold text-white">
+                            <LandingCountUp
+                              value={Number(stat.value)}
+                              reduceMotion={Boolean(reduceMotion)}
+                            />
+                          </p>
+                        ) : (
+                          <p className="mt-1 truncate font-display text-lg font-extrabold text-white">
+                            {stat.display}
+                          </p>
+                        )}
+                        <p className="mt-0.5 truncate text-[10px] text-slate-500">
+                          {stat.caption}
+                        </p>
                       </div>
-                      {statsUnavailable ? (
-                        <Skeleton className="mt-2 h-7 w-24 bg-white/10" />
-                      ) : stat.format === "number" ? (
-                        <p className="mt-1 font-display text-xl font-extrabold text-white">
-                          <LandingCountUp value={Number(stat.value)} reduceMotion={Boolean(reduceMotion)} />
-                        </p>
-                      ) : (
-                        <p className="mt-1 truncate font-display text-lg font-extrabold text-white">
-                          {stat.display}
-                        </p>
-                      )}
-                      <p className="mt-0.5 truncate text-[9px] text-white/45">{stat.caption}</p>
                     </motion.div>
                   );
                 })}
               </div>
             </div>
 
-            <div className="relative hidden lg:block">
-              <div className="relative mx-auto max-w-md">
-                <div className="absolute -inset-6 rounded-[2.4rem] border border-white/10" aria-hidden="true" />
-                <div className="relative overflow-hidden rounded-panel border border-white/15 bg-white/[0.07] p-5 shadow-elevated backdrop-blur-xl">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">
-                      Sorotan repository
+            <div className="mt-7 flex flex-col items-center justify-between gap-3 border-b border-white/[0.06] pb-7 sm:flex-row">
+              <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-slate-500">
+                Didukung oleh
+              </span>
+              <div className="flex flex-wrap items-center justify-center gap-x-7 gap-y-3 text-slate-400">
+                {["Fakultas Teknik", "Prodi Informatika", "Universitas Madura", "Repository Skripsi"].map(
+                  (partner) => (
+                    <span
+                      key={partner}
+                      className="font-display text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400/80 transition hover:text-slate-200"
+                    >
+                      {partner}
                     </span>
-                    <Badge tone="gold" variant="solid" size="xs">
-                      <BadgeCheck className="size-3" />
-                      Terverifikasi
-                    </Badge>
-                  </div>
-                  <div className="mt-4 grid grid-cols-2 gap-2.5">
-                    <div className="col-span-2 overflow-hidden rounded-card">
-                      <SkripsiCover
-                        id={all[0]?.id ?? 1}
-                        judul={all[0]?.judul ?? "Kumpulan referensi skripsi Informatika UNIRA"}
-                        peminatan={all[0]?.peminatan ?? BI}
-                        tahun={all[0]?.tahun ?? CURRENT_YEAR}
-                        coverUrl={all[0]?.coverUrl}
-                        fileUrl={all[0]?.fileUrl}
-                        priority
-                      />
-                    </div>
-                    <div className="rounded-input border border-white/10 bg-white/[0.06] p-3">
-                      <p className="text-[9px] uppercase tracking-[0.14em] text-white/45">Peminatan</p>
-                      <p className="mt-1 text-sm font-extrabold text-white">BI &amp; SA</p>
-                      <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/10">
-                        <div className="h-full w-[64%] rounded-full bg-gradient-to-r from-primary-300 to-sa-300" />
-                      </div>
-                    </div>
-                    <div className="rounded-input border border-white/10 bg-white/[0.06] p-3">
-                      <p className="text-[9px] uppercase tracking-[0.14em] text-white/45">Akses</p>
-                      <p className="mt-1 text-sm font-extrabold text-white">Terbuka</p>
-                      <p className="mt-1 text-[9px] text-white/45">PDF &amp; abstrak</p>
-                    </div>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between rounded-input border border-white/10 bg-navy-950/30 px-3 py-2.5">
-                    <span className="text-[10px] text-white/55">Karya terbaru</span>
-                    <span className="text-[10px] font-bold text-gold-300">{latestYear ?? "—"}</span>
-                  </div>
-                </div>
+                  ),
+                )}
               </div>
             </div>
           </div>
@@ -655,7 +752,7 @@ export default function LandingPage() {
           <div className="mx-auto w-full max-w-[1280px] px-4 sm:px-6">
             <div className="grid gap-6 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
               <div>
-                <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-primary-600">
+                <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300">
                   <ChartPie className="size-3.5" />
                   Pemetaan peminatan
                 </p>
@@ -677,18 +774,18 @@ export default function LandingPage() {
                     Smart Agriculture
                   </span>
                 </div>
-                <div className="mt-5 rounded-card border border-navy-50 bg-white p-4 shadow-soft">
-                  <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-ink-faint">
-                    <Sparkles className="size-3.5 text-gold-500" />
+                <div className="mt-5 rounded-card border border-white/10 bg-white/[0.04] p-4">
+                  <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                    <Sparkles className="size-3.5 text-cyan-300" />
                     Ringkasan otomatis
                   </div>
-                  <p className="mt-2 text-sm font-semibold leading-relaxed text-navy-800">
+                  <p className="mt-2 text-sm font-semibold leading-relaxed text-slate-200">
                     {chartSummary}
                   </p>
                 </div>
               </div>
 
-              <div className="rounded-panel border border-white/80 bg-white p-4 shadow-card sm:p-6">
+              <div className="ai-card p-4 sm:p-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <h3 className="font-display text-base font-bold text-ink">Distribusi per angkatan</h3>
@@ -783,28 +880,28 @@ export default function LandingPage() {
                           margin={{ top: 12, right: 4, left: -20, bottom: 0 }}
                           barGap={6}
                         >
-                          <CartesianGrid vertical={false} stroke="#E9ECF5" strokeDasharray="3 3" />
+                          <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.08)" strokeDasharray="3 3" />
                           <XAxis
                             dataKey="angkatan"
                             tickLine={false}
                             axisLine={false}
-                            tick={{ fontSize: 10, fill: "#5B6785", fontWeight: 600 }}
+                            tick={{ fontSize: 10, fill: "#8B94B4", fontWeight: 600 }}
                             dy={8}
                           />
                           <YAxis
                             allowDecimals={false}
                             tickLine={false}
                             axisLine={false}
-                            tick={{ fontSize: 10, fill: "#8992A9" }}
+                            tick={{ fontSize: 10, fill: "#646E8E" }}
                             width={42}
                           />
                           <Tooltip
-                            cursor={{ fill: "rgba(20,35,79,0.04)" }}
+                            cursor={{ fill: "rgba(255,255,255,0.04)" }}
                             contentStyle={{
                               borderRadius: 12,
-                              border: "1px solid rgba(255,255,255,0.16)",
-                              background: "rgba(8,18,42,0.9)",
-                              boxShadow: "0 22px 48px -28px rgba(20,35,79,0.55)",
+                              border: "1px solid rgba(255,255,255,0.14)",
+                              background: "rgba(8,11,24,0.94)",
+                              boxShadow: "0 22px 48px -28px rgba(0,0,0,0.9)",
                               fontSize: 12,
                               color: "#fff",
                               backdropFilter: "blur(14px)",
@@ -823,7 +920,7 @@ export default function LandingPage() {
                             <Bar
                               dataKey="bi"
                               name="bi"
-                              fill="#6366F1"
+                              fill="#8B5CF6"
                               radius={[6, 6, 0, 0]}
                               maxBarSize={34}
                               animationDuration={600}
@@ -834,7 +931,7 @@ export default function LandingPage() {
                             <Bar
                               dataKey="sa"
                               name="sa"
-                              fill="#10B981"
+                              fill="#22D3EE"
                               radius={[6, 6, 0, 0]}
                               maxBarSize={34}
                               animationDuration={600}
@@ -867,30 +964,30 @@ export default function LandingPage() {
         <section
           id="katalog"
           ref={catalogRef}
-          className="relative scroll-mt-20 border-y border-navy-100/60 bg-white/60 py-14 sm:py-20"
+          className="relative scroll-mt-20 border-y border-white/[0.06] bg-white/[0.015] py-14 sm:py-20"
         >
           <div className="mx-auto w-full max-w-[1280px] px-4 sm:px-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-primary-600">
+                <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300">
                   <LibraryBig className="size-3.5" />
                   Katalog skripsi
                 </p>
                 <h2 className="mt-3 font-display text-[28px] font-extrabold leading-tight tracking-tight text-ink sm:text-[40px]">
-                  Referensi yang siap <span className="text-gradient-navy">menginspirasi.</span>
+                  Referensi yang siap <span className="text-gradient-ai">menginspirasi.</span>
                 </h2>
                 <p className="mt-2 max-w-xl text-sm leading-relaxed text-ink-soft">
                   Satu pencarian untuk menjangkau judul, penulis, dan peminatan.
                   Semua karya telah melewati verifikasi Kaprodi.
                 </p>
               </div>
-              <span className="inline-flex w-fit items-center gap-2 rounded-full border border-navy-100 bg-white px-3.5 py-2 text-[11px] font-bold text-ink-soft shadow-soft">
-                <BookOpen className="size-3.5 text-primary-500" />
+              <span className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-[11px] font-bold text-slate-300">
+                <BookOpen className="size-3.5 text-cyan-300" />
                 {formatNumber(all.length)} karya terverifikasi
               </span>
             </div>
 
-            <div className="sticky top-[80px] z-30 mt-6 rounded-panel border border-white/80 bg-white/85 p-3 shadow-card backdrop-blur-xl sm:p-4">
+            <div className="sticky top-[80px] z-30 mt-6 rounded-panel border border-white/10 bg-[#080B18]/85 p-3 shadow-card backdrop-blur-xl sm:p-4">
               <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
                 <div className="relative min-w-0 flex-1">
                   <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-ink-faint" />
@@ -900,7 +997,7 @@ export default function LandingPage() {
                     onChange={(event) => setSearchInput(event.target.value)}
                     placeholder="Cari judul skripsi, nama mahasiswa, atau NIM…"
                     aria-label="Cari katalog skripsi"
-                    className="h-12 w-full rounded-input border border-navy-100 bg-white pl-12 pr-11 text-sm text-ink shadow-sm transition placeholder:text-ink-faint/80 focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100"
+                    className="h-12 w-full rounded-input border border-white/10 bg-[#0B0E1D] pl-12 pr-11 text-sm text-ink shadow-sm transition placeholder:text-slate-500 focus:border-cyan-300/50 focus:outline-none focus:ring-4 focus:ring-cyan-400/10"
                   />
                   {searchInput ? (
                     <button
@@ -926,11 +1023,11 @@ export default function LandingPage() {
                           "inline-flex min-h-10 items-center rounded-full border px-3 text-[11px] font-bold transition",
                           tab === item.value
                             ? item.value === BI
-                              ? "border-bi-200 bg-bi-50 text-bi-700"
+                              ? "border-violet-400/40 bg-violet-500/20 text-violet-300"
                               : item.value === SA
-                                ? "border-sa-200 bg-sa-50 text-sa-700"
-                                : "border-navy-800 bg-navy-800 text-white"
-                            : "border-navy-100 bg-white text-ink-soft hover:border-navy-200 hover:text-ink",
+                                ? "border-cyan-300/40 bg-cyan-400/15 text-cyan-200"
+                                : "border-white/20 bg-[#F3F5FF] text-[#070812] shadow-[0_10px_28px_-18px_rgba(165,180,252,0.8)]"
+                            : "border-white/10 bg-white/[0.03] text-slate-400 hover:border-white/20 hover:text-white",
                         )}
                       >
                         {item.short}
@@ -1066,11 +1163,11 @@ export default function LandingPage() {
         <section id="peminatan" className="scroll-mt-24 py-14 sm:py-20">
           <div className="mx-auto w-full max-w-[1280px] px-4 sm:px-6">
             <div className="text-center">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary-600">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300">
                 Dua jalur riset
               </p>
               <h2 className="mt-3 font-display text-[28px] font-extrabold leading-tight tracking-tight text-ink sm:text-[40px]">
-                Pilih peminatan yang <span className="text-gradient-navy">selaras.</span>
+                Pilih peminatan yang <span className="text-gradient-ai">selaras.</span>
               </h2>
               <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-ink-soft">
                 Business Intelligence dan Smart Agriculture membuka perspektif
@@ -1085,37 +1182,34 @@ export default function LandingPage() {
                 return (
                   <article
                     key={item.label}
-                    className={cn(
-                      "group relative overflow-hidden rounded-panel border bg-white p-5 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-card sm:p-7",
-                      isBi ? "border-bi-100" : "border-sa-100",
-                    )}
+                    className="ai-card group relative overflow-hidden p-5 transition-all duration-300 hover:-translate-y-1 hover:border-white/20 sm:p-7"
                   >
                     <div
                       className={cn(
                         "pointer-events-none absolute -right-12 -top-12 size-48 rounded-full blur-3xl",
-                        isBi ? "bg-bi-200/40" : "bg-sa-200/40",
+                        isBi ? "bg-violet-500/20" : "bg-cyan-400/15",
                       )}
                       aria-hidden="true"
                     />
                     <div className="relative flex items-start justify-between gap-3">
                       <span
                         className={cn(
-                          "grid size-12 place-items-center rounded-card ring-1",
+                          "node-badge size-12 rounded-2xl",
                           isBi
-                            ? "bg-bi-50 text-bi-600 ring-bi-100"
-                            : "bg-sa-50 text-sa-600 ring-sa-100",
+                            ? "bg-gradient-to-br from-fuchsia-500 via-violet-500 to-indigo-600"
+                            : "bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-600",
                         )}
                       >
                         <Icon className="size-6" />
                       </span>
-                      <span className="font-display text-[28px] font-extrabold text-navy-100">
+                      <span className="font-display text-[28px] font-extrabold text-white/[0.08]">
                         {item.code}
                       </span>
                     </div>
-                    <h3 className="mt-5 font-display text-lg font-extrabold text-ink">
+                    <h3 className="mt-5 font-display text-lg font-extrabold text-white">
                       {item.label}
                     </h3>
-                    <p className="mt-2 max-w-lg text-sm leading-relaxed text-ink-soft">
+                    <p className="mt-2 max-w-lg text-sm leading-relaxed text-slate-400">
                       {item.description}
                     </p>
                     <div className="mt-4 flex flex-wrap gap-1.5">
@@ -1125,8 +1219,8 @@ export default function LandingPage() {
                           className={cn(
                             "rounded-full border px-2.5 py-1 text-[10px] font-semibold",
                             isBi
-                              ? "border-bi-100 bg-bi-50/70 text-bi-700"
-                              : "border-sa-100 bg-sa-50/70 text-sa-700",
+                              ? "border-violet-400/20 bg-violet-500/10 text-violet-300/90"
+                              : "border-cyan-300/20 bg-cyan-400/10 text-cyan-200/90",
                           )}
                         >
                           {topic}
@@ -1139,12 +1233,7 @@ export default function LandingPage() {
                         setTab(item.value);
                         catalogRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
                       }}
-                      className={cn(
-                        "mt-5 inline-flex min-h-11 items-center gap-1.5 rounded-input px-3 text-xs font-bold transition",
-                        isBi
-                          ? "bg-bi-50 text-bi-700 hover:bg-bi-100"
-                          : "bg-sa-50 text-sa-700 hover:bg-sa-100",
-                      )}
+                      className="mt-5 inline-flex min-h-11 items-center gap-1.5 rounded-full border border-white/15 px-4 text-xs font-bold text-white transition hover:border-white/30 hover:bg-white/[0.06]"
                     >
                       Lihat karya {isBi ? "BI" : "SA"}
                       <ArrowUpRight className="size-3.5" />
@@ -1163,12 +1252,12 @@ export default function LandingPage() {
               <div className="absolute inset-0 bg-dot-grid bg-[size:24px_24px] opacity-20" aria-hidden="true" />
               <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                 <div className="max-w-2xl">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-gold-200">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-200">
                     <ShieldCheck className="size-3.5" />
                     Siap mulai?
                   </span>
                   <h2 className="mt-4 font-display text-[28px] font-extrabold leading-tight sm:text-[40px]">
-                    Punya karya? Jadikan bagian dari <span className="text-gradient-gold">repository.</span>
+                    Punya karya? Jadikan bagian dari <span className="text-gradient-ai">repository.</span>
                   </h2>
                   <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/65">
                     Masuk untuk mengajukan skripsi, memilih peminatan, dan memantau
@@ -1178,14 +1267,14 @@ export default function LandingPage() {
                 <div className="flex flex-wrap gap-2.5">
                   <Link
                     to={user ? "/pengajuan" : "/login"}
-                    className="inline-flex min-h-12 items-center gap-2 rounded-input bg-gold-400 px-5 text-sm font-bold text-navy-900 shadow-gold-glow transition hover:bg-gold-300"
+                    className="inline-flex min-h-12 items-center gap-2 rounded-full bg-[#F3F5FF] px-6 text-sm font-bold text-[#070812] shadow-[0_0_0_1px_rgba(255,255,255,0.2),0_22px_50px_-22px_rgba(165,180,252,0.8)] transition hover:-translate-y-0.5 hover:bg-white"
                   >
                     {user ? "Ajukan Skripsi" : "Masuk ke Akun"}
                     <ArrowRight className="size-4" />
                   </Link>
                   <a
                     href="#katalog"
-                    className="inline-flex min-h-12 items-center gap-2 rounded-input border border-white/20 bg-white/10 px-5 text-sm font-bold text-white backdrop-blur transition hover:bg-white/15"
+                    className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/20 px-6 text-sm font-bold text-white transition hover:border-white/35 hover:bg-white/[0.06]"
                   >
                     Jelajahi Katalog
                     <Download className="size-4" />
@@ -1200,7 +1289,7 @@ export default function LandingPage() {
       <footer className="border-t border-navy-100/70 bg-white/70 py-10">
         <div className="mx-auto grid w-full max-w-[1280px] gap-8 px-4 sm:px-6 lg:grid-cols-[1.4fr_0.6fr_0.8fr]">
           <div>
-            <Logo />
+            <Logo compact imageClassName="h-8 w-8" />
             <p className="mt-4 max-w-md text-xs leading-relaxed text-ink-soft">
               Repository Skripsi dan Pemetaan Peminatan Program Studi Informatika,
               Fakultas Teknik, Universitas Madura. Dibangun untuk memudahkan
@@ -1222,14 +1311,6 @@ export default function LandingPage() {
                   </a>
                 </li>
               ))}
-              <li>
-                <Link
-                  to="/credits"
-                  className="inline-flex min-h-8 items-center text-xs font-semibold text-ink-soft transition hover:text-primary-600"
-                >
-                  Kredit Gambar
-                </Link>
-              </li>
             </ul>
           </div>
           <div>
@@ -1245,7 +1326,7 @@ export default function LandingPage() {
             </p>
             <p className="mt-3 flex items-center gap-1.5 text-[10px] text-ink-faint">
               <GraduationCap className="size-3.5" />
-              {IMAGE_CREDITS.length} foto Pexels terverifikasi
+              Sampul dibuat otomatis dari data skripsi
             </p>
           </div>
         </div>
@@ -1276,8 +1357,8 @@ export default function LandingPage() {
               judul={selected.judul}
               peminatan={selected.peminatan}
               tahun={selected.tahun}
+              author={selected.namaMahasiswa}
               coverUrl={selected.coverUrl}
-              fileUrl={selected.fileUrl}
             />
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
@@ -1338,17 +1419,19 @@ function StaggerWords({
   words,
   reduceMotion,
   offset = 0,
+  wordClassName = "",
 }: {
   words: string[];
   reduceMotion: boolean;
   offset?: number;
+  wordClassName?: string;
 }) {
   return (
     <>
       {words.map((word, index) => (
         <motion.span
           key={word + index}
-          className="inline-block"
+          className={`inline-block ${wordClassName}`.trim()}
           initial={reduceMotion ? false : { opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{

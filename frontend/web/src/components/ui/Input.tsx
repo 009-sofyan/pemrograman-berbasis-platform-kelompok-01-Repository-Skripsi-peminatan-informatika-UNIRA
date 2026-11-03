@@ -10,12 +10,12 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "../../lib/cn";
 
 const fieldBase =
-  "w-full rounded-input border bg-white text-sm text-ink placeholder:text-ink-faint/80 shadow-[0_1px_2px_rgba(20,35,79,0.04)] transition-all duration-200 focus:outline-none focus:ring-4 disabled:cursor-not-allowed disabled:bg-navy-50/60 disabled:text-ink-faint";
+  "w-full rounded-input border bg-[#0A0D1C] text-sm text-ink placeholder:text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-200 focus:outline-none focus:ring-4 disabled:cursor-not-allowed disabled:bg-white/[0.03] disabled:text-slate-500";
 
 const stateClass = (invalid: boolean) =>
   invalid
-    ? "border-coral-300 focus:border-coral-400 focus:ring-coral-100"
-    : "border-navy-100 hover:border-navy-200 focus:border-primary-400 focus:ring-primary-100";
+    ? "border-rose-400/60 focus:border-rose-400 focus:ring-rose-500/15"
+    : "border-white/10 hover:border-white/20 focus:border-cyan-300/60 focus:ring-cyan-400/10";
 
 function FieldShell({
   id,
@@ -39,7 +39,7 @@ function FieldShell({
       {label ? (
         <label
           htmlFor={id}
-          className="flex items-center gap-1 text-xs font-bold text-navy-800"
+          className="flex items-center gap-1 text-xs font-bold text-slate-200"
         >
           {label}
           {required ? (
@@ -195,7 +195,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
         className={cn(
           fieldBase,
           stateClass(Boolean(error)),
-          "h-11 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22none%22%20stroke%3D%22%235B6785%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m4%206%204%204%204-4%22/%3E%3C/svg%3E')] bg-[position:right_0.9rem_center] bg-no-repeat py-0 pl-3.5 pr-10",
+          "h-11 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22none%22%20stroke%3D%22%23A9B2D0%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m4%206%204%204%204-4%22/%3E%3C/svg%3E')] bg-[position:right_0.9rem_center] bg-no-repeat py-0 pl-3.5 pr-10",
           className,
         )}
         {...props}

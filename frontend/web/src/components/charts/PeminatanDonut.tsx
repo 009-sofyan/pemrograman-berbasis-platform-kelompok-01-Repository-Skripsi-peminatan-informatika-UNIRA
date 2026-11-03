@@ -63,11 +63,14 @@ export function PeminatanDonut({
           <Tooltip
             cursor={false}
             contentStyle={{
-              borderRadius: 12,
-              border: "1px solid #e2e8f0",
-              boxShadow: "0 12px 30px -16px rgba(15,23,42,0.35)",
+              borderRadius: 14,
+              border: "1px solid rgba(255,255,255,0.12)",
+              background: "rgba(8,11,24,0.94)",
+              boxShadow: "0 22px 48px -28px rgba(0,0,0,0.9)",
               fontSize: 12,
+              color: "#F2F5FF",
             }}
+            labelStyle={{ color: "#F2F5FF" }}
             formatter={(value, name) => [
               `${formatNumber(
                 Number(Array.isArray(value) ? value[0] ?? 0 : value ?? 0),

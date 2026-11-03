@@ -8,22 +8,22 @@ type ConfirmTone = "primary" | "danger" | "mint" | "amber";
 const TONE = {
   primary: {
     icon: Info,
-    iconClass: "bg-primary-50 text-primary-600 ring-primary-100",
+    iconClass: "bg-primary-500/10 text-primary-300 ring-primary-400/20",
     button: "primary" as const,
   },
   danger: {
     icon: AlertTriangle,
-    iconClass: "bg-coral-50 text-coral-600 ring-coral-100",
+    iconClass: "bg-rose-400/10 text-rose-300 ring-rose-300/20",
     button: "danger" as const,
   },
   mint: {
     icon: CheckCircle2,
-    iconClass: "bg-sa-50 text-sa-600 ring-sa-100",
+    iconClass: "bg-cyan-400/10 text-cyan-300 ring-cyan-300/20",
     button: "mint" as const,
   },
   amber: {
     icon: AlertTriangle,
-    iconClass: "bg-amber-50 text-amber-600 ring-amber-100",
+    iconClass: "bg-amber-400/10 text-amber-300 ring-amber-300/20",
     button: "secondary" as const,
   },
 };

@@ -5,7 +5,7 @@ export function Skeleton({ className }: { className?: string }) {
     <div
       aria-hidden="true"
       className={cn(
-        "relative overflow-hidden rounded-xl bg-navy-50 before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/70 before:to-transparent",
+        "relative overflow-hidden rounded-xl bg-white/[0.05] before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/[0.07] before:to-transparent",
         className,
       )}
     />
@@ -18,7 +18,7 @@ export function TableSkeleton({ rows = 6 }: { rows?: number }) {
       {Array.from({ length: rows }).map((_, index) => (
         <div
           key={index}
-          className="flex items-center gap-4 rounded-input border border-navy-50 bg-white px-4 py-3"
+          className="flex items-center gap-4 rounded-input border border-white/10 bg-white/[0.03] px-4 py-3"
         >
           <Skeleton className="size-10 shrink-0 rounded-input" />
           <div className="min-w-0 flex-1 space-y-2">
@@ -34,7 +34,7 @@ export function TableSkeleton({ rows = 6 }: { rows?: number }) {
 
 export function CardSkeleton() {
   return (
-    <div className="overflow-hidden rounded-panel border border-white/80 bg-white shadow-soft">
+    <div className="ai-card overflow-hidden rounded-panel">
       <Skeleton className="aspect-[3/4] w-full rounded-none" />
       <div className="space-y-3 p-5">
         <Skeleton className="h-4 w-24 rounded-full" />

@@ -1,18 +1,21 @@
-import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+} from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, useReducedMotion } from "motion/react";
 import {
   AlertCircle,
   ArrowRight,
-  BadgeCheck,
   BrainCircuit,
   BriefcaseBusiness,
-  ChartPie,
   CheckCircle2,
   Eye,
   EyeOff,
   GraduationCap,
-  LibraryBig,
   LockKeyhole,
   Mail,
   ShieldCheck,
@@ -21,9 +24,12 @@ import {
 } from "lucide-react";
 import { RoleMismatchError, useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
+import { useApiQuery } from "../hooks/useApiQuery";
+import { pemetaanService } from "../services/dashboardService";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Logo } from "../components/layout/Logo";
+import { AngkatanWidget } from "../components/login/AngkatanWidget";
 import { ROLE_LANDING, ROLE_META } from "../constants";
 import type { Role } from "../types";
 import { getApiErrorMessage } from "../lib/errors";
@@ -47,24 +53,6 @@ const ROLE_HELP: Record<Role, string> = {
   tendik: "Masuk dengan email dinas yang terhubung dengan NIP kamu.",
 };
 
-const FEATURES = [
-  {
-    icon: LibraryBig,
-    title: "Repository terpusat",
-    description: "Telusuri referensi berdasarkan judul, tahun, dan peminatan.",
-  },
-  {
-    icon: ChartPie,
-    title: "Pemetaan BI & SA",
-    description: "Pantau distribusi mahasiswa Business Intelligence dan Smart Agriculture.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Akses sesuai peran",
-    description: "Mahasiswa, Kaprodi, dan Tendik mendapat ruang kerja yang terpisah.",
-  },
-];
-
 export default function LoginPage() {
   const { login } = useAuth();
   const toast = useToast();
@@ -84,9 +72,25 @@ export default function LoginPage() {
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>(
     {},
   );
-  const [parallax, setParallax] = useState({ x: 0, y: 0 });
+  const [viewportHeight, setViewportHeight] = useState(() =>
+    typeof window === "undefined" ? 900 : window.innerHeight,
+  );
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const expired = new URLSearchParams(location.search).get("expired") === "1";
+
+  /**
+   * Jumlah tahun menyesuaikan tinggi viewport agar widget tetap utuh pada
+   * layar 600-1080 px maupun saat zoom 90-125%.
+   */
+  useEffect(() => {
+    const onResize = () => setViewportHeight(window.innerHeight);
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const maxYears = viewportHeight < 720 ? 3 : viewportHeight < 880 ? 4 : 5;
+  const pemetaan = useApiQuery(() => pemetaanService.get(), []);
 
   const selectRole = (next: Role) => {
     setRole(next);
@@ -169,159 +173,113 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-canvas p-3 sm:p-5 lg:p-6">
-      <div className="pointer-events-none absolute -left-24 -top-24 size-[420px] rounded-full bg-primary-300/25 blur-3xl" aria-hidden="true" />
-      <div className="pointer-events-none absolute -bottom-32 right-0 size-[380px] rounded-full bg-sa-200/40 blur-3xl" aria-hidden="true" />
-      <div className="pointer-events-none absolute left-1/2 top-1/2 size-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold-200/25 blur-3xl" aria-hidden="true" />
+    <div className="relative min-h-screen overflow-hidden bg-canvas p-3 sm:p-5 lg:p-0">
+      <div
+        className="pointer-events-none absolute -left-24 -top-24 size-[420px] rounded-full bg-primary-300/25 blur-3xl"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute -bottom-32 right-0 size-[380px] rounded-full bg-sa-200/40 blur-3xl"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute left-1/2 top-1/2 size-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold-200/25 blur-3xl"
+        aria-hidden="true"
+      />
 
-      <div className="relative mx-auto grid min-h-[calc(100vh-1.5rem)] max-w-[1280px] overflow-hidden rounded-panel border border-white/80 bg-white/60 shadow-card backdrop-blur-sm lg:grid-cols-[1.02fr_0.98fr]">
-        <section
-          className="relative hidden overflow-hidden bg-navy-950 p-10 text-white lg:flex lg:flex-col xl:p-12"
-          onMouseMove={(event) => {
-            if (reduceMotion || !window.matchMedia("(min-width: 1024px)").matches) return;
-            const rect = event.currentTarget.getBoundingClientRect();
-            const x = (event.clientX - rect.left) / rect.width - 0.5;
-            const y = (event.clientY - rect.top) / rect.height - 0.5;
-            setParallax({ x: x * 14, y: y * 14 });
-          }}
-          onMouseLeave={() => setParallax({ x: 0, y: 0 })}
-        >
+      <div className="relative mx-auto grid min-h-[calc(100vh-1.5rem)] w-full min-w-0 max-w-[1440px] overflow-hidden rounded-panel border border-white/80 bg-white/60 shadow-card backdrop-blur-sm sm:min-h-[calc(100vh-2.5rem)] lg:h-screen lg:min-h-0 lg:max-w-none lg:grid-cols-[1.05fr_0.95fr] lg:rounded-none lg:border-0 lg:bg-canvas-soft lg:shadow-none">
+        {/* Panel kiri: tinggi penuh, logo di atas, sambutan di tengah, widget di bawah. */}
+        <section className="relative hidden min-h-screen overflow-hidden bg-navy-950 p-8 text-white [@media(max-height:560px)]:p-5 lg:flex lg:h-screen lg:min-h-0 lg:flex-col xl:p-12">
           <div className="pointer-events-none absolute inset-0 bg-hero-navy" aria-hidden="true" />
           <div className="pointer-events-none absolute inset-0 bg-hero-glow opacity-90" aria-hidden="true" />
-          <div className="pointer-events-none absolute inset-0 bg-dot-grid bg-[size:28px_28px] opacity-25 [mask-image:radial-gradient(circle_at_60%_40%,black,transparent_80%)]" aria-hidden="true" />
-          <div className="pointer-events-none absolute -right-20 top-10 size-72 animate-drift rounded-full bg-primary-400/25 blur-3xl" style={{ animationDuration: "16s" }} aria-hidden="true" />
-          <div className="pointer-events-none absolute -bottom-24 -left-16 size-80 animate-drift rounded-full bg-sa-400/20 blur-3xl" style={{ animationDuration: "20s", animationDirection: "reverse" }} aria-hidden="true" />
+          <div
+            className="pointer-events-none absolute inset-0 bg-dot-grid bg-[size:28px_28px] opacity-25 [mask-image:radial-gradient(circle_at_60%_40%,black,transparent_80%)]"
+            aria-hidden="true"
+          />
+          <div
+            className="pointer-events-none absolute -right-20 top-10 size-72 animate-drift rounded-full bg-primary-400/25 blur-3xl"
+            style={{ animationDuration: "16s" }}
+            aria-hidden="true"
+          />
+          <div
+            className="pointer-events-none absolute -bottom-24 -left-16 size-80 animate-drift rounded-full bg-sa-400/20 blur-3xl"
+            style={{ animationDuration: "20s", animationDirection: "reverse" }}
+            aria-hidden="true"
+          />
 
-          <div className="relative">
+          <div className="relative z-10 flex items-center justify-between gap-3">
             <Logo tone="light" />
+            <span className="hidden items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-white/55 xl:inline-flex">
+              <Sparkles className="size-3 text-gold-300" />
+              Sejak 2024
+            </span>
           </div>
 
-          <div className="relative mt-12 max-w-xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-gold-200 backdrop-blur">
+          <div className="relative z-10 flex min-h-0 flex-1 flex-col justify-center py-6 [@media(max-height:560px)]:py-3 xl:py-8">
+            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-gold-200 backdrop-blur">
               <Sparkles className="size-3.5" />
               Fakultas Teknik · Universitas Madura
             </span>
-            <h1 className="mt-6 font-display text-[42px] font-extrabold leading-[1.06] tracking-tight xl:text-[52px]">
+            <h1 className="mt-5 max-w-xl font-display text-[clamp(2rem,3vw,3.4rem)] font-extrabold leading-[1.06] tracking-tight [@media(max-height:720px)]:text-[1.75rem]">
               Satu ruang untuk{" "}
               <span className="text-gradient-gold">skripsi &amp; peminatan</span>{" "}
               risetmu.
             </h1>
-            <p className="mt-5 max-w-md text-sm leading-relaxed text-white/65">
+            <p className="mt-4 max-w-md text-sm leading-relaxed text-white/65 [@media(max-height:780px)]:hidden">
               Repository skripsi Informatika UNIRA dengan alur pengajuan yang rapi,
               verifikasi Kaprodi, dan pemetaan peminatan Business Intelligence serta
               Smart Agriculture.
             </p>
 
-            <div className="mt-9 space-y-4">
-              {FEATURES.map((feature) => (
-                <div key={feature.title} className="flex items-start gap-3.5">
-                  <span className="grid size-10 shrink-0 place-items-center rounded-input border border-white/10 bg-white/[0.07] text-gold-200 backdrop-blur">
-                    <feature.icon className="size-4.5" />
-                  </span>
-                  <div>
-                    <p className="text-sm font-bold text-white">{feature.title}</p>
-                    <p className="mt-0.5 text-xs leading-relaxed text-white/55">
-                      {feature.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Kartu dekoratif: pola antarmuka, bukan foto stok. */}
-          <div
-            className="relative mt-10 hidden xl:block"
-            style={{
-              transform: `translate3d(${parallax.x}px, ${parallax.y}px, 0)`,
-              transition: reduceMotion ? undefined : "transform 180ms ease-out",
-            }}
-            aria-hidden="true"
-          >
-            <div className="absolute -right-6 -top-8 w-52 rotate-3 animate-float rounded-card border border-white/15 bg-white/[0.08] p-3 backdrop-blur-md [animation-delay:-2s]">
-              <div className="flex items-center justify-between">
-                <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-white/50">
-                  Status
-                </span>
-                <BadgeCheck className="size-3.5 text-gold-300" />
-              </div>
-              <p className="mt-2 text-xs font-bold text-white">Pengajuan terverifikasi</p>
-              <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/10">
-                <div className="h-full w-[86%] rounded-full bg-gradient-to-r from-gold-300 to-sa-300" />
-              </div>
-            </div>
-            <div className="ml-16 w-[min(100%,24rem)] -rotate-1 animate-float rounded-card border border-white/15 bg-white/10 p-4 shadow-elevated backdrop-blur-xl [animation-delay:-5s]">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="size-2 rounded-full bg-sa-400" />
-                  <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/50">
-                    Pemetaan angkatan
-                  </span>
-                </div>
-                <ChartPie className="size-4 text-white/50" />
-              </div>
-              <div className="mt-4 flex h-20 items-end gap-2">
-                {[38, 62, 48, 78, 56, 88, 66].map((height, index) => (
-                  <div key={index} className="flex flex-1 items-end gap-1">
-                    <div
-                      className="w-1/2 rounded-t bg-bi-400"
-                      style={{ height: `${height * 0.72}%` }}
-                    />
-                    <div
-                      className="w-1/2 rounded-t bg-sa-400"
-                      style={{ height: `${height}%` }}
-                    />
-                  </div>
-                ))}
-              </div>
-              <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-2 text-[9px] text-white/50">
-                <span className="flex items-center gap-1">
-                  <span className="size-1.5 rounded-full bg-bi-400" /> BI
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="size-1.5 rounded-full bg-sa-400" /> SA
-                </span>
-                <span className="font-bold text-white/75">2026</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="relative mt-auto pt-8">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-bi-400/20 bg-bi-400/10 px-3 py-1.5 text-[11px] font-semibold text-bi-200">
+            <div className="mt-5 flex flex-wrap items-center gap-2 [@media(max-height:560px)]:hidden">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-bi-400/20 bg-bi-400/10 px-3 py-1.5 text-[11px] font-semibold text-bi-300">
                 <BrainCircuit className="size-3.5" />
                 Business Intelligence
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-sa-400/20 bg-sa-400/10 px-3 py-1.5 text-[11px] font-semibold text-sa-200">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-sa-400/20 bg-sa-400/10 px-3 py-1.5 text-[11px] font-semibold text-sa-300">
                 <Sprout className="size-3.5" />
                 Smart Agriculture
               </span>
             </div>
-            <p className="mt-4 flex items-center gap-2 text-[11px] text-white/45">
-              <GraduationCap className="size-4" />
+          </div>
+
+          <div className="relative z-10 mt-auto min-h-0 max-w-xl">
+            <AngkatanWidget
+              data={pemetaan.data?.byAngkatan ?? []}
+              loading={pemetaan.loading}
+              error={pemetaan.error}
+              onRetry={pemetaan.refetch}
+              maxYears={maxYears}
+            />
+            <p className="mt-3 flex items-center gap-2 text-[10px] text-white/40 [@media(max-height:720px)]:hidden">
+              <GraduationCap className="size-3.5" />
               Sistem Repository Skripsi dan Pemetaan Peminatan
             </p>
           </div>
         </section>
 
-        <section className="relative flex flex-col justify-center px-5 py-9 sm:px-10 lg:px-12 xl:px-16">
-          <div className="pointer-events-none absolute right-0 top-0 size-40 rounded-full bg-primary-100/50 blur-3xl" aria-hidden="true" />
-          <motion.div
-            initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className={cn(
-              "glass relative mx-auto w-full max-w-md rounded-panel border p-5 shadow-card sm:p-7",
-              shake && "animate-shake",
-            )}
-          >
-            <div className="mb-7 lg:hidden">
+        {/* Panel kanan: formulir login. */}
+        <section className="relative flex min-h-[calc(100vh-1.5rem)] w-full min-w-0 flex-col justify-center px-5 py-9 sm:min-h-[calc(100vh-2.5rem)] sm:px-10 lg:h-screen lg:min-h-0 lg:justify-start lg:overflow-y-auto lg:px-12 xl:px-16">
+          <div
+            className="pointer-events-none absolute right-0 top-0 size-40 rounded-full bg-primary-100/50 blur-3xl"
+            aria-hidden="true"
+          />
+          <div className="relative mx-auto my-auto w-full max-w-md">
+            <div className="mb-5 lg:hidden">
               <Logo />
             </div>
-
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary-600">
-              Selamat datang kembali
-            </p>
+            <motion.div
+              initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              className={cn(
+                "glass relative w-full rounded-panel border p-5 shadow-card sm:p-7 [@media(max-height:720px)]:sm:p-5",
+                shake && "animate-shake",
+              )}
+            >
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary-600">
+                Selamat datang kembali
+              </p>
             <h2 className="mt-2 font-display text-[28px] font-extrabold tracking-tight text-ink">
               Masuk ke ruang kerja
             </h2>
@@ -395,16 +353,16 @@ export default function LoginPage() {
                         onKeyDown={(event) => onTabKeyDown(event, index)}
                         className={cn(
                           "relative flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-1.5 py-2 text-center text-[10px] font-bold transition-colors duration-200",
-                          active ? "text-white" : "text-ink-soft hover:text-ink",
+                          active ? "text-[#070812]" : "text-slate-400 hover:text-white",
                         )}
                       >
                         {active ? (
                           reduceMotion ? (
-                            <span className="absolute inset-0 rounded-lg bg-navy-800 shadow-soft" />
+                            <span className="absolute inset-0 rounded-lg bg-[#F3F5FF] shadow-[0_10px_28px_-18px_rgba(165,180,252,0.8)]" />
                           ) : (
                             <motion.span
                               layoutId="login-role-indicator"
-                              className="absolute inset-0 rounded-lg bg-navy-800 shadow-soft"
+                              className="absolute inset-0 rounded-lg bg-[#F3F5FF] shadow-[0_10px_28px_-18px_rgba(165,180,252,0.8)]"
                               transition={{ type: "spring", stiffness: 260, damping: 26 }}
                             />
                           )
@@ -412,7 +370,7 @@ export default function LoginPage() {
                         <span
                           className={cn(
                             "relative z-10 grid size-6 place-items-center rounded-md",
-                            active ? "text-gold-300" : "text-primary-500",
+                            active ? "text-[#4C1D95]" : "text-slate-500",
                           )}
                         >
                           <Icon className="size-4" />
@@ -485,7 +443,7 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <p className="mt-6 text-center text-xs text-ink-soft">
+            <p className="mt-6 text-center text-xs text-ink-soft [@media(max-height:720px)]:mt-4">
               Belum memiliki akun mahasiswa?{" "}
               <Link
                 to="/register"
@@ -495,11 +453,12 @@ export default function LoginPage() {
               </Link>
             </p>
 
-            <p className="mt-6 flex items-center justify-center gap-1.5 text-center text-[10px] leading-relaxed text-ink-faint">
+            <p className="mt-6 flex items-center justify-center gap-1.5 text-center text-[10px] leading-relaxed text-ink-faint [@media(max-height:720px)]:hidden">
               <GraduationCap className="size-3.5" />
               © {new Date().getFullYear()} Universitas Madura · Fakultas Teknik
             </p>
-          </motion.div>
+            </motion.div>
+          </div>
         </section>
       </div>
     </div>

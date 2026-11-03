@@ -46,6 +46,7 @@ import { TableSkeleton } from "../components/ui/Skeleton";
 import { PageHeader } from "../components/ui/PageHeader";
 import { cn } from "../lib/cn";
 import { SkripsiPdfButton } from "../components/skripsi/SkripsiPdfButton";
+import { CoverUploadField } from "../components/skripsi/CoverUploadField";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -80,6 +81,7 @@ export default function PengajuanPage() {
   const [abstrak, setAbstrak] = useState("");
   const [tahun, setTahun] = useState(String(CURRENT_YEAR));
   const [file, setFile] = useState<File | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ judul?: string; tahun?: string; file?: string }>({});
   const [submitNow, setSubmitNow] = useState(true);
@@ -161,6 +163,7 @@ export default function PengajuanPage() {
     setAbstrak("");
     setTahun(String(CURRENT_YEAR));
     setFile(null);
+    setCoverFile(null);
     setFileError(null);
     setErrors({});
     setSubmitNow(true);
@@ -424,7 +427,7 @@ export default function PengajuanPage() {
                       step > item.number
                         ? "bg-mint-100 text-mint-700"
                         : step === item.number
-                          ? "bg-primary-600 text-white shadow-sm"
+                          ? "bg-primary-500 text-[#070812] shadow-sm"
                           : "bg-slate-100 text-slate-400",
                     )}
                   >
@@ -499,6 +502,15 @@ export default function PengajuanPage() {
                 </p>
               </div>
             </div>
+
+            <CoverUploadField file={coverFile} onChange={setCoverFile} disabled={submitting} />
+
+            {coverFile ? (
+              <p className="rounded-xl border border-amber-100 bg-amber-50/70 px-3 py-2 text-[10px] leading-relaxed text-amber-800/90">
+                Pratinjau sampul tersimpan di perangkat ini. Penyimpanan permanen ke
+                server menunggu endpoint sampul dari backend.
+              </p>
+            ) : null}
 
             <div>
               <p className="mb-1.5 flex items-center gap-1 text-xs font-semibold text-slate-700">
@@ -1059,6 +1071,7 @@ function EditSkripsiModal({
   const [judul, setJudul] = useState("");
   const [abstrak, setAbstrak] = useState("");
   const [tahun, setTahun] = useState("");
+  const [coverFile, setCoverFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -1067,6 +1080,7 @@ function EditSkripsiModal({
     setJudul(target.judul);
     setAbstrak(target.abstrak ?? "");
     setTahun(String(target.tahun));
+    setCoverFile(null);
     setError(null);
   }, [target]);
 
@@ -1150,6 +1164,18 @@ function EditSkripsiModal({
           onChange={(event) => setTahun(event.target.value)}
           required
         />
+        <CoverUploadField
+          file={coverFile}
+          onChange={setCoverFile}
+          existingUrl={target?.coverUrl}
+          disabled={saving}
+        />
+        {coverFile ? (
+          <p className="rounded-xl border border-amber-100 bg-amber-50/70 px-3 py-2 text-[10px] leading-relaxed text-amber-800/90">
+            Sampul baru sudah dipratinjau. Pengiriman permanen menunggu endpoint
+            sampul dari backend.
+          </p>
+        ) : null}
       </div>
     </Modal>
   );

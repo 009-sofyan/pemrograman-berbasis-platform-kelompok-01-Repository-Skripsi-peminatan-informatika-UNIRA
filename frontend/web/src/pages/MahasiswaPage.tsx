@@ -776,7 +776,7 @@ export default function MahasiswaPage() {
                   className={cn(
                     "inline-flex h-11 items-center gap-1.5 rounded-full border px-3.5 text-[11px] font-bold transition duration-150",
                     active
-                      ? "border-navy-800 bg-navy-800 text-white shadow-soft"
+                      ? "border-white/20 bg-[#F3F5FF] text-[#070812] shadow-[0_10px_28px_-18px_rgba(165,180,252,0.8)]"
                       : "border-navy-100 bg-white text-ink-soft hover:border-navy-200 hover:bg-navy-50/60",
                   )}
                 >
@@ -784,7 +784,7 @@ export default function MahasiswaPage() {
                   <span
                     className={cn(
                       "rounded-full px-1.5 py-0.5 text-[9px] font-extrabold",
-                      active ? "bg-white/15 text-white" : "bg-navy-50 text-ink-faint",
+                      active ? "bg-[#070812]/10 text-[#070812]" : "bg-navy-50 text-ink-faint",
                     )}
                   >
                     {formatNumber(chip.count)}
@@ -941,16 +941,16 @@ function TabButton({
       onClick={onClick}
       className={cn(
         "relative flex h-11 shrink-0 items-center gap-2 rounded-input px-3.5 text-xs font-bold transition-colors",
-        active ? "text-white" : "text-ink-soft hover:bg-navy-50/70 hover:text-ink",
+        active ? "text-[#070812]" : "text-ink-soft hover:bg-white/[0.05] hover:text-ink",
       )}
     >
       {active ? (
         reduceMotion ? (
-          <span className="absolute inset-0 rounded-input bg-navy-800 shadow-soft" />
+          <span className="absolute inset-0 rounded-input bg-[#F3F5FF] shadow-[0_10px_28px_-18px_rgba(165,180,252,0.8)]" />
         ) : (
           <motion.span
             layoutId="tendik-tab-pill"
-            className="absolute inset-0 rounded-input bg-navy-800 shadow-soft"
+            className="absolute inset-0 rounded-input bg-[#F3F5FF] shadow-[0_10px_28px_-18px_rgba(165,180,252,0.8)]"
             transition={{ type: "spring", stiffness: 260, damping: 26 }}
           />
         )
@@ -961,7 +961,7 @@ function TabButton({
         <span
           className={cn(
             "rounded-full px-2 py-0.5 text-[9px] font-extrabold",
-            active ? "bg-white/15 text-white" : "bg-navy-50 text-ink-faint",
+            active ? "bg-[#070812]/10 text-[#070812]" : "bg-navy-50 text-ink-faint",
           )}
         >
           {formatNumber(count)}
