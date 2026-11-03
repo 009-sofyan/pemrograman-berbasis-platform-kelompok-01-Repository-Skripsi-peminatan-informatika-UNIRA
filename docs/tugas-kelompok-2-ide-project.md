@@ -2,14 +2,14 @@
 
 ## 1. Judul Final dan Cerita Terpilih
 
-- **Judul Final**: Sistem Repository Skripsi dan Pemetaan Peminatan Mahasiswa (Studi Kasus: Fakultas Teknik UNIRA)
+- **Judul Final**: Repository Skripsi Peminatan Informatika UNIRA
 - **Cerita yang Dipilih**: Repository / Eprint
 
 ---
 
 ## 2. Paragraf Pilihan Cerita dan Alasan Pemilihan
 
-Kelompok memilih cerita **Repository / Eprint** sebagai acuan utama ide project akhir karena project yang dikembangkan berkaitan dengan pengelolaan repository skripsi sekaligus pemetaan peminatan mahasiswa di Fakultas Teknik UNIRA. Sistem ini tidak hanya digunakan sebagai tempat untuk menyimpan dan mencari data skripsi, tetapi juga memanfaatkan data mahasiswa dan peminatan untuk menghasilkan informasi mengenai jumlah mahasiswa yang mengambil bidang peminatan tertentu.
+Kelompok memilih cerita **Repository / Eprint** sebagai acuan utama ide project akhir karena project yang dikembangkan berkaitan dengan pengelolaan repository skripsi sekaligus pemetaan peminatan mahasiswa di Informatika UNIRA. Sistem ini tidak hanya digunakan sebagai tempat untuk menyimpan dan mencari data skripsi, tetapi juga memanfaatkan data mahasiswa dan peminatan untuk menghasilkan informasi mengenai jumlah mahasiswa yang mengambil bidang peminatan tertentu.
 
 Project ini memiliki keterkaitan dengan kebutuhan mahasiswa, Kaprodi, dan Tendik sebagai calon pengguna sistem. Mahasiswa dapat memanfaatkan repository untuk mencari referensi skripsi dan mengunggah berkas skripsinya. Kaprodi dapat menggunakan informasi yang tersedia untuk memantau jumlah mahasiswa berdasarkan peminatan serta melihat pemetaan topik penelitian mahasiswa. Sementara itu, Tendik berperan dalam mengelola data mahasiswa, data skripsi, data peminatan, serta administrasi repository.
 
@@ -19,9 +19,9 @@ Pemilihan cerita Repository / Eprint juga didukung oleh ketersediaan data contoh
 
 ## 3. Tiga Kalimat Masalah – Pengguna – Fitur MVP
 
-1. **Masalah**: Pengarsipan skripsi di Fakultas Teknik UNIRA masih belum terpusat sehingga mahasiswa kesulitan mencari referensi skripsi yang sesuai dengan bidang peminatan riset mereka. Selain itu, informasi mengenai jumlah mahasiswa yang mengambil peminatan **BI (Business Intelligence)** dan **SA (Smart Agriculture)** belum dapat dipantau secara terpusat.
+1. **Masalah**: Pengarsipan skripsi di Informatika UNIRA masih belum terpusat sehingga mahasiswa kesulitan mencari referensi skripsi yang sesuai dengan bidang peminatan riset mereka. Selain itu, informasi mengenai jumlah mahasiswa yang mengambil peminatan **BI (Business Intelligence)** dan **SA (Smart Agriculture)** belum dapat dipantau secara terpusat.
 
-2. **Pengguna**: Aplikasi ini dirancang untuk **Mahasiswa, Kaprodi, dan Tendik** di lingkungan Fakultas Teknik UNIRA. Ketiga pengguna tersebut memiliki kebutuhan yang berbeda, mulai dari mencari dan mengunggah skripsi, memantau pemetaan peminatan, hingga mengelola data repository dan administrasi skripsi.
+2. **Pengguna**: Aplikasi ini dirancang untuk **Mahasiswa, Kaprodi, dan Tendik** di lingkungan Informatika UNIRA. Ketiga pengguna tersebut memiliki kebutuhan yang berbeda, mulai dari mencari dan mengunggah skripsi, memantau pemetaan peminatan, hingga mengelola data repository dan administrasi skripsi.
 
 3. **Fitur MVP**: Sistem menyediakan fitur **pencarian dan pengunggahan skripsi berbasis kategori peminatan serta dasbor rekapitulasi pemetaan jumlah mahasiswa berdasarkan peminatan BI dan SA**. Dasbor tersebut digunakan untuk menampilkan jumlah mahasiswa yang mengambil peminatan **Business Intelligence (BI)** dan **Smart Agriculture (SA)** sehingga informasi peminatan dapat dipantau dengan lebih mudah.
 
