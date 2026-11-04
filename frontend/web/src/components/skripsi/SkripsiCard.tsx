@@ -7,7 +7,7 @@ import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { PeminatanBadge } from "../ui/PeminatanBadge";
 import { SkripsiCover } from "./SkripsiCover";
-import { SkripsiPdfButton } from "./SkripsiPdfButton";
+import { PublicSkripsiPdfButton } from "./SkripsiPdfButton";
 
 export function SkripsiCard({
   item,
@@ -85,8 +85,8 @@ export function SkripsiCard({
             Detail
           </Button>
 
-          {item.fileUrl ? (
-            <SkripsiPdfButton
+          {item.fileUrl && item.status === "disetujui" ? (
+            <PublicSkripsiPdfButton
               id={item.id}
               title={item.judul}
               mode="open"
@@ -99,8 +99,12 @@ export function SkripsiCard({
             <button
               type="button"
               disabled
-              title="Berkas PDF belum tersedia"
-              className="inline-flex h-11 shrink-0 cursor-not-allowed items-center justify-center gap-1.5 rounded-input border border-navy-50 bg-canvas-soft px-2.5 text-[10px] font-semibold text-ink-faint"
+              title={
+                item.fileUrl
+                  ? "PDF hanya tersedia setelah skripsi terverifikasi"
+                  : "Berkas PDF belum tersedia"
+              }
+              className="inline-flex h-10 shrink-0 cursor-not-allowed items-center justify-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3.5 text-[10px] font-semibold text-ink-faint"
             >
               <FileText className="size-3.5" aria-hidden="true" />
               Akses PDF

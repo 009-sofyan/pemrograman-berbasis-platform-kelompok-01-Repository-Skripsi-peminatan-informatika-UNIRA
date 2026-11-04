@@ -472,11 +472,16 @@ test("katalog publik hanya berisi skripsi disetujui", async () => {
     }
 });
 
-test("download PDF wajib autentikasi dan tetap berfungsi untuk data sah", async (t) => {
+test("download PDF publik tidak memerlukan token, route file internal tetap 401", async (t) => {
     const anonymous = await request(app).get(
         "/api/skripsi/1/download"
     );
-    assert.equal(anonymous.status, 401);
+    assert.notEqual(anonymous.status, 401);
+
+    const internalAnonymous = await request(app).get(
+        "/api/skripsi/1/file"
+    );
+    assert.equal(internalAnonymous.status, 401);
 
     const [files] = await pool.query(
         "SELECT id FROM skripsi WHERE status = 'disetujui' AND file_url IS NOT NULL LIMIT 1"
@@ -488,12 +493,11 @@ test("download PDF wajib autentikasi dan tetap berfungsi untuk data sah", async 
         return;
     }
 
-    const res = await request(app)
-        .get(`/api/skripsi/${file.id}/download`)
-        .set("Authorization", authHeader(mahasiswaUser));
+    const res = await request(app).get(`/api/skripsi/${file.id}/download`);
 
     assert.equal(res.status, 200);
     assert.match(String(res.headers["content-type"]), /application\/pdf/);
+    assert.equal(res.headers["x-content-type-options"], "nosniff");
 });
 
 test("upload ditolak untuk skripsi yang tidak berstatus draft/ditolak", async (t) => {

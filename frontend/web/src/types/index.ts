@@ -202,3 +202,42 @@ export interface PeminatanSayaResponse {
   message: string;
   data: PeminatanSaya;
 }
+
+export type AccountStatus = "ACTIVE" | "PENDING_VERIFICATION" | "REJECTED";
+
+export interface RegistrationItem {
+  id: number;
+  nama: string;
+  email: string;
+  nimClaim: string | null;
+  programStudiClaim: string | null;
+  createdAt: string | null;
+  status: AccountStatus;
+  verifiedAt: string | null;
+  rejectReason: string | null;
+}
+
+export interface RegistrationListParams {
+  status?: AccountStatus;
+  q?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface RegistrationListResponse {
+  message: string;
+  data: RegistrationItem[];
+  total: number;
+  page: number;
+  limit: number;
+  counts: Record<AccountStatus, number>;
+}
+
+export interface ApproveRegistrationPayload {
+  nim: string;
+  programStudi: string;
+}
+
+export interface RejectRegistrationPayload {
+  alasan: string;
+}

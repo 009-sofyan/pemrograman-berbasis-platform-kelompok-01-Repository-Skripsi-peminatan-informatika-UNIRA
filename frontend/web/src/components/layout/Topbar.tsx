@@ -42,7 +42,7 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const roleMeta = ROLE_META[user.role];
 
   return (
-    <header className="glass sticky top-3 z-40 flex h-16 items-center gap-3 rounded-panel border px-2.5 shadow-soft sm:px-4">
+    <header className="relative z-40 flex h-16 items-center gap-3 rounded-panel border border-white/10 bg-canvas-elevated/90 px-2.5 shadow-soft backdrop-blur-xl sm:px-4">
       <button
         type="button"
         onClick={onOpenMenu}

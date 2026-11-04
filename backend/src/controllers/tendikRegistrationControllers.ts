@@ -29,7 +29,11 @@ function isDuplicateEntry(error: unknown): boolean {
     );
 }
 
-function parseId(value: string | undefined): number {
+function parseId(value: string | string[] | undefined): number {
+    if (typeof value !== "string") {
+        throw new AppError(400, "ID pendaftar tidak valid");
+    }
+
     const id = Number(value);
 
     if (!Number.isInteger(id) || id <= 0) {

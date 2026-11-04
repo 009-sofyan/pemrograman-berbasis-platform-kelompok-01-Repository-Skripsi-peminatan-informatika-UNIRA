@@ -1,4 +1,5 @@
-import { api } from "../lib/api";
+import { api, publicApi } from "../lib/api";
+import { API_BASE_URL } from "../lib/files";
 import type {
   CreateSkripsiPayload,
   CreateSkripsiResponse,
@@ -73,6 +74,24 @@ export const skripsiService = {
       responseType: "blob",
     });
     return data;
+  },
+
+  /**
+   * Unduhan publik tidak membawa header Authorization sama sekali, bahkan
+   * ketika pengguna sedang login. Dengan begitu kartu katalog tidak pernah
+   * memicu sesi berakhir atau redirect login saat PDF tidak tersedia.
+   */
+  async downloadPublicFile(id: number, inline = false): Promise<Blob> {
+    const { data } = await publicApi.get<Blob>(`/skripsi/${id}/download`, {
+      params: inline ? { inline: "1" } : undefined,
+      responseType: "blob",
+    });
+    return data;
+  },
+
+  publicPdfUrl(id: number, inline = false): string {
+    const base = API_BASE_URL.replace(/\/+$/, "");
+    return `${base}/skripsi/${id}/download${inline ? "?inline=1" : ""}`;
   },
 
   async uploadFile(

@@ -42,6 +42,27 @@ const SIZES: Record<ButtonSize, string> = {
   icon: "size-11 rounded-full",
 };
 
+/**
+ * Dipakai juga oleh elemen <a> agar tautan unduhan publik tetap memiliki
+ * tampilan yang sama dengan Button tanpa kehilangan atribut target/rel.
+ */
+export function buttonClassName({
+  variant = "primary",
+  size = "md",
+  className,
+}: {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  className?: string;
+} = {}) {
+  return cn(
+    "relative inline-flex shrink-0 items-center justify-center overflow-hidden font-semibold transition-all duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-55",
+    VARIANTS[variant],
+    SIZES[size],
+    className,
+  );
+}
+
 export function Button({
   variant = "primary",
   size = "md",
@@ -58,12 +79,7 @@ export function Button({
     <button
       type={type}
       disabled={disabled || loading}
-      className={cn(
-        "relative inline-flex shrink-0 items-center justify-center overflow-hidden font-semibold transition-all duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-55",
-        VARIANTS[variant],
-        SIZES[size],
-        className,
-      )}
+      className={buttonClassName({ variant, size, className })}
       {...props}
     >
       {loading ? (

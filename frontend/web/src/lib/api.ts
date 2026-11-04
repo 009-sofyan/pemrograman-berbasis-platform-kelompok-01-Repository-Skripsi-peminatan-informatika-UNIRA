@@ -14,6 +14,19 @@ export const api = axios.create({
   },
 });
 
+/**
+ * Instance khusus endpoint publik. Tidak memiliki interceptor token maupun
+ * handler 401 sehingga permintaan tetap anonim dan kegagalan tidak memicu
+ * logout/redirect ke halaman login.
+ */
+export const publicApi = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 20_000,
+  headers: {
+    Accept: "application/pdf, application/json",
+  },
+});
+
 function isAuthEndpoint(url: string | undefined): boolean {
   if (!url) return false;
   return url.includes("/auth/login") || url.includes("/auth/register");

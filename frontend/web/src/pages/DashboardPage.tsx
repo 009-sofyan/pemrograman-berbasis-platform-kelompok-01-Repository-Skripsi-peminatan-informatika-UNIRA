@@ -79,6 +79,7 @@ import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { PeminatanChart } from "../components/dashboard/PeminatanChart";
 import { SkripsiCover } from "../components/skripsi/SkripsiCover";
 import { SkripsiPdfButton } from "../components/skripsi/SkripsiPdfButton";
+import { TendikRegistrationQueue } from "../components/tendik/TendikRegistrationQueue";
 
 const VERIFICATION_PAGE_SIZE = 6;
 const TENDIK_REPO_PAGE_SIZE = 6;
@@ -305,7 +306,7 @@ export default function DashboardPage() {
   const firstName = user.nama.split(" ")[0] ?? user.nama;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {user.role === "mahasiswa" ? (
         <StudentHero
           user={user}
@@ -571,7 +572,7 @@ export default function DashboardPage() {
 
       {user.role === "tendik" ? (
         <>
-          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <section className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard
               label="Total Mahasiswa"
               value={totalMahasiswa}
@@ -612,16 +613,18 @@ export default function DashboardPage() {
             />
           </section>
 
-          <section className="grid gap-4 xl:grid-cols-[1.4fr_0.6fr]">
+          <TendikRegistrationQueue />
+
+          <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] 2xl:grid-cols-[minmax(0,1fr)_360px]">
             <TendikRepositoryWorkspace
               items={allItems}
               loading={recent.loading}
               error={recent.error}
               onRetry={recent.refetch}
             />
-            <div className="space-y-4">
+            <div className="space-y-6">
               <QuickActions role="tendik" />
-              <Card>
+              <Card className="p-6 md:p-8">
                 <CardHeader
                   title="Kesiapan Data"
                   description="Kelengkapan peminatan mahasiswa."
@@ -1851,7 +1854,7 @@ function TendikRepositoryWorkspace({
 
   return (
     <Card padded={false}>
-      <div className="relative overflow-hidden rounded-t-panel bg-navy-950 px-5 py-5 text-white sm:px-6">
+      <div className="relative overflow-hidden rounded-t-panel bg-navy-950 px-4 py-6 text-white sm:px-6 md:px-8 md:py-8">
         <div
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(34,211,238,0.16),transparent_38%),radial-gradient(circle_at_88%_100%,rgba(139,92,246,0.2),transparent_42%)]"
           aria-hidden="true"
@@ -1860,30 +1863,31 @@ function TendikRepositoryWorkspace({
           className="pointer-events-none absolute inset-0 surface-grid opacity-[0.07]"
           aria-hidden="true"
         />
-        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
           <div className="min-w-0">
             <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-gold-300">
               <span className="size-1.5 rounded-full bg-gold-400" />
               Pusat arsip
             </p>
-            <h2 className="mt-2 font-display text-xl font-extrabold tracking-tight sm:text-2xl">
+            <h2 className="mt-2 max-w-[18ch] font-display text-2xl font-extrabold leading-[1.05] tracking-tight md:text-4xl">
               Repositori Skripsi
             </h2>
-            <p className="mt-1.5 max-w-xl text-xs leading-relaxed text-white/60 sm:text-sm">
+            <p className="mt-2 max-w-[46ch] text-xs leading-relaxed text-white/60 sm:text-sm">
               Cari, saring, dan pantau seluruh karya mahasiswa tanpa meninggalkan
               dashboard.
             </p>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="grid grid-cols-3 gap-1.5 rounded-card border border-white/10 bg-white/[0.06] p-1.5 backdrop-blur sm:gap-2 sm:p-2">
+          <div className="flex min-w-0 flex-col gap-3 xl:w-[184px] xl:shrink-0 xl:flex-row xl:flex-wrap xl:items-end xl:justify-end 2xl:w-auto 2xl:flex-nowrap">
+            <div className="grid w-full grid-cols-2 gap-2 sm:w-fit sm:self-start xl:self-auto">
               <RepositoryMetric label="Total" value={items.length} />
+              <RepositoryMetric label="Menunggu" value={counts.diajukan} />
               <RepositoryMetric label="Disetujui" value={counts.disetujui} />
-              <RepositoryMetric label="Antrean" value={counts.diajukan} />
+              <RepositoryMetric label="Ditolak" value={counts.ditolak} />
             </div>
             <Link
               to="/repository"
-              className="inline-flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-full bg-[#F3F5FF] px-4 text-xs font-bold text-[#070812] shadow-[0_0_0_1px_rgba(255,255,255,0.16),0_18px_44px_-22px_rgba(165,180,252,0.65)] transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-navy-950"
+              className="inline-flex h-11 w-full shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-[#F3F5FF] px-4 text-xs font-bold text-[#070812] shadow-[0_0_0_1px_rgba(255,255,255,0.16),0_18px_44px_-22px_rgba(165,180,252,0.65)] transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-navy-950 sm:w-auto sm:self-start xl:w-full xl:self-stretch 2xl:w-auto 2xl:self-auto"
             >
               Buka halaman
               <ArrowUpRight className="size-3.5" />
@@ -1892,21 +1896,22 @@ function TendikRepositoryWorkspace({
         </div>
       </div>
 
-      <div className="border-b border-navy-100/70 bg-white px-4 pt-4 sm:px-5">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-end">
+      <div className="border-b border-white/10 bg-white/[0.02] px-4 pt-5 sm:px-6 md:px-8 md:pt-6">
+        <div className="grid grid-cols-1 gap-3 pb-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-[minmax(0,1fr)_200px_180px_auto]">
           <Input
             label="Cari arsip"
-            placeholder="Judul, nama mahasiswa, atau NIM…"
+            placeholder="Cari judul atau nama"
             icon={Search}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            wrapperClassName="flex-1"
+            wrapperClassName="min-w-0 sm:col-span-2 xl:col-span-3 2xl:col-span-1"
+            className="text-[13px] sm:text-sm"
             rightElement={
               search ? (
                 <button
                   type="button"
                   onClick={() => setSearch("")}
-                  className="grid size-8 place-items-center rounded-lg text-ink-faint transition hover:bg-navy-50 hover:text-ink"
+                  className="grid size-8 place-items-center rounded-lg text-ink-faint transition hover:bg-white/[0.08] hover:text-ink"
                   aria-label="Hapus pencarian"
                 >
                   <X className="size-3.5" />
@@ -1914,37 +1919,37 @@ function TendikRepositoryWorkspace({
               ) : null
             }
           />
-          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:w-[430px]">
-            <SelectMenu
-              label="Peminatan"
-              value={peminatan}
-              options={peminatanOptions}
-              onChange={(value) => setPeminatan(value as PeminatanFilter)}
-            />
-            <SelectMenu
-              label="Tahun"
-              value={tahun}
-              options={yearOptions}
-              onChange={setTahun}
-              align="right"
-            />
-            <Button
-              variant="secondary"
-              icon={<RotateCcw />}
-              onClick={resetFilters}
-              disabled={activeFilters === 0 && tab === "semua"}
-              className="col-span-2 self-end sm:col-span-1"
-            >
-              Reset
-            </Button>
-          </div>
+          <SelectMenu
+            label="Peminatan"
+            value={peminatan}
+            options={peminatanOptions}
+            onChange={(value) => setPeminatan(value as PeminatanFilter)}
+            className="min-w-[180px] xl:min-w-0 2xl:min-w-[180px]"
+          />
+          <SelectMenu
+            label="Tahun"
+            value={tahun}
+            options={yearOptions}
+            onChange={setTahun}
+            align="right"
+            className="min-w-[180px] xl:min-w-0 2xl:min-w-[180px]"
+          />
+          <Button
+            variant="secondary"
+            icon={<RotateCcw />}
+            onClick={resetFilters}
+            disabled={activeFilters === 0 && tab === "semua"}
+            className="w-full self-end sm:col-span-2 sm:w-auto xl:col-span-1 xl:justify-self-start"
+          >
+            Reset
+          </Button>
         </div>
 
         <div className="mt-3 flex items-end justify-between gap-3">
           <div
             role="tablist"
             aria-label="Tab repositori skripsi"
-            className="no-scrollbar -mb-px flex min-w-0 flex-1 gap-1 overflow-x-auto"
+            className="no-scrollbar -mb-px flex min-w-0 flex-1 gap-1.5 overflow-x-auto overscroll-x-contain"
           >
             {TENDIK_REPO_TABS.map((option, index) => {
               const active = tab === option.value;
@@ -1963,7 +1968,7 @@ function TendikRepositoryWorkspace({
                   onClick={() => setTab(option.value)}
                   onKeyDown={(event) => onTabKeyDown(event, index)}
                   className={cn(
-                    "relative flex min-h-11 shrink-0 items-center gap-1.5 px-2.5 pb-3 pt-1 text-[11px] font-bold transition-colors duration-200",
+                    "relative flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap px-2.5 pb-3 pt-1 text-[11px] font-bold transition-colors duration-200",
                     active
                       ? "text-cyan-200"
                       : "text-ink-faint hover:text-ink-soft",
@@ -1997,7 +2002,7 @@ function TendikRepositoryWorkspace({
           </div>
           <p
             aria-live="polite"
-            className="hidden shrink-0 pb-3 text-[10px] font-semibold text-ink-faint sm:block"
+            className="hidden shrink-0 whitespace-nowrap pb-3 pl-2 text-[10px] font-semibold text-ink-faint sm:block"
           >
             {formatNumber(filtered.length)} hasil
           </p>
@@ -2206,11 +2211,11 @@ function RepositoryMetric({
   value: number;
 }) {
   return (
-    <div className="min-w-[64px] px-1 text-center sm:min-w-[84px] sm:px-1.5">
-      <p className="font-display text-lg font-extrabold tabular-nums text-white">
+    <div className="min-w-[88px] rounded-input border border-white/10 bg-white/[0.05] px-3 py-2.5 text-center">
+      <p className="font-display text-lg font-extrabold leading-none tabular-nums text-white">
         {formatNumber(value)}
       </p>
-      <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-white/45 sm:text-[10px]">
+      <p className="mt-1 whitespace-nowrap text-[11px] font-semibold leading-none text-white/55">
         {label}
       </p>
     </div>
@@ -2223,13 +2228,13 @@ function RepositoryMetric({
 
 function QuickActions({ role }: { role: Role }) {
   return (
-    <Card>
+    <Card className="p-6 md:p-8">
       <CardHeader
         title="Akses Cepat"
         description="Pintasan sesuai peranmu."
         icon={<Sparkles className="size-5" />}
       />
-      <div className="mt-4 grid gap-2 sm:grid-cols-3 xl:grid-cols-1">
+      <div className="mt-5 grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
         {QUICK_ACTIONS[role].map((action) => (
           <Link
             key={action.to}
@@ -2246,7 +2251,7 @@ function QuickActions({ role }: { role: Role }) {
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-xs font-bold text-ink">{action.title}</span>
-              <span className="mt-0.5 block truncate text-[10px] text-ink-soft">
+              <span className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-ink-soft">
                 {action.description}
               </span>
             </span>

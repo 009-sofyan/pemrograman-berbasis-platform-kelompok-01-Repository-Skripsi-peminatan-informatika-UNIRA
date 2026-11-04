@@ -5,6 +5,7 @@ import { downloadBlob } from "../lib/files";
 import { skripsiService } from "../services/skripsiService";
 
 type PdfAction = "download" | "open";
+export type PdfSource = "internal" | "public";
 
 interface ActiveAction {
   id: number;
@@ -15,7 +16,11 @@ export function useSkripsiPdfDownload() {
   const toast = useToast();
   const [active, setActive] = useState<ActiveAction | null>(null);
 
-  const run = async (id: number, action: PdfAction) => {
+  const run = async (
+    id: number,
+    action: PdfAction,
+    source: PdfSource = "internal",
+  ) => {
     if (active) return;
 
     const popup =
@@ -38,7 +43,10 @@ export function useSkripsiPdfDownload() {
     setActive({ id, action });
 
     try {
-      const blob = await skripsiService.downloadFile(id);
+      const blob =
+        source === "public"
+          ? await skripsiService.downloadPublicFile(id, action === "open")
+          : await skripsiService.downloadFile(id);
 
       if (action === "open" && popup) {
         const objectUrl = URL.createObjectURL(blob);
@@ -50,10 +58,12 @@ export function useSkripsiPdfDownload() {
     } catch (error) {
       popup?.close();
       toast.error(
-        "Gagal mengunduh PDF",
+        action === "open" ? "Gagal membuka PDF" : "Gagal mengunduh PDF",
         getApiErrorMessage(
           error,
-          "Berkas tidak dapat diunduh. Silakan coba lagi.",
+          action === "open"
+            ? "Berkas tidak dapat dibuka. Silakan coba lagi."
+            : "Berkas tidak dapat diunduh. Silakan coba lagi.",
         ),
       );
     } finally {
@@ -62,8 +72,10 @@ export function useSkripsiPdfDownload() {
   };
 
   return {
-    download: (id: number) => run(id, "download"),
-    open: (id: number) => run(id, "open"),
+    download: (id: number, source: PdfSource = "internal") =>
+      run(id, "download", source),
+    open: (id: number, source: PdfSource = "internal") =>
+      run(id, "open", source),
     isLoading: (id: number, action: PdfAction) =>
       active?.id === id && active.action === action,
   };

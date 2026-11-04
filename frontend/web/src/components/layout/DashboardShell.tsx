@@ -32,9 +32,11 @@ export function DashboardShell() {
       ) : null}
 
       <div className="min-h-screen lg:pl-[280px]">
-        <div className="mx-auto flex min-h-screen w-full max-w-[1440px] flex-col px-3 pb-28 pt-3 sm:px-5 sm:pb-24 lg:px-6 lg:pb-8 xl:px-8">
-          <Topbar onOpenMenu={() => setMobileOpen(true)} />
-          <main id="main-content" className="mt-5 flex-1 pb-10 sm:mt-6">
+        <div className="mx-auto flex min-h-screen w-full max-w-[1440px] flex-col px-3 pb-28 sm:px-5 sm:pb-24 lg:px-6 lg:pb-8 xl:px-8">
+          <div className="sticky top-0 z-40 -mx-3 bg-canvas px-3 pb-3 pt-3 sm:-mx-5 sm:px-5 lg:-mx-6 lg:px-6 xl:-mx-8 xl:px-8">
+            <Topbar onOpenMenu={() => setMobileOpen(true)} />
+          </div>
+          <main id="main-content" className="mt-5 flex-1 scroll-mt-24 pb-10 sm:mt-6">
             <PageTransition>
               <Outlet />
             </PageTransition>

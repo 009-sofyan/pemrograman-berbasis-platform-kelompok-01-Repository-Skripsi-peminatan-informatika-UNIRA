@@ -14,6 +14,7 @@ import {
   BrainCircuit,
   BriefcaseBusiness,
   CheckCircle2,
+  Clock3,
   Eye,
   EyeOff,
   GraduationCap,
@@ -22,6 +23,7 @@ import {
   ShieldCheck,
   Sparkles,
   Sprout,
+  XCircle,
 } from "lucide-react";
 import { RoleMismatchError, useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
@@ -54,6 +56,15 @@ const ROLE_HELP: Record<Role, string> = {
   tendik: "Masuk dengan email dinas yang terhubung dengan NIP kamu.",
 };
 
+type LoginErrorKind = "auth" | "pending" | "rejected" | "role";
+
+const LOGIN_ERROR_TITLE: Record<LoginErrorKind, string> = {
+  auth: "Gagal masuk",
+  pending: "Menunggu verifikasi Tendik",
+  rejected: "Pendaftaran akun ditolak",
+  role: "Role tidak sesuai",
+};
+
 export default function LoginPage() {
   const { login } = useAuth();
   const toast = useToast();
@@ -69,6 +80,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorKind, setErrorKind] = useState<LoginErrorKind>("auth");
   const [shake, setShake] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>(
     {},
@@ -96,6 +108,7 @@ export default function LoginPage() {
   const selectRole = (next: Role) => {
     setRole(next);
     setError(null);
+    setErrorKind("auth");
     setFieldErrors({});
   };
 
@@ -125,6 +138,7 @@ export default function LoginPage() {
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setError(null);
+    setErrorKind("auth");
 
     const nextErrors: { email?: string; password?: string } = {};
     if (!email.trim()) {
@@ -159,6 +173,15 @@ export default function LoginPage() {
       const message = getApiErrorMessage(err, "Email atau password salah.");
       const mismatch =
         err instanceof RoleMismatchError || /role\s+tidak\s+sesuai/i.test(message);
+      const pending = /menunggu verifikasi tendik/i.test(message);
+      const rejected = /ditolak oleh tendik/i.test(message);
+      const kind: LoginErrorKind = pending
+        ? "pending"
+        : rejected
+          ? "rejected"
+          : mismatch
+            ? "role"
+            : "auth";
       const visibleMessage = mismatch
         ? `Akun ini bukan terdaftar sebagai ${ROLE_META[role].label}. Coba pilih role lain.`
         : message;
@@ -166,8 +189,9 @@ export default function LoginPage() {
       setPassword("");
       setShowPassword(false);
       setError(visibleMessage);
+      setErrorKind(kind);
       failWithShake();
-      toast.error(mismatch ? "Role tidak sesuai" : "Gagal masuk", visibleMessage);
+      toast.error(LOGIN_ERROR_TITLE[kind], visibleMessage);
     } finally {
       setLoading(false);
     }
@@ -316,9 +340,10 @@ export default function LoginPage() {
               <div className="mt-5 flex items-start gap-2.5 rounded-input border border-sa-200 bg-sa-50 px-3.5 py-3 text-xs text-sa-800 animate-slide-up">
                 <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-sa-600" />
                 <p>
-                  Pendaftaran berhasil. Akun <span className="font-bold">{registeredEmail}</span>{" "}
-                  sudah dibuat. Masuk untuk melanjutkan, lalu minta Tendik melengkapi data
-                  akademikmu.
+                  Pendaftaran diterima. Akun{" "}
+                  <span className="font-bold">{registeredEmail}</span> sedang
+                  menunggu verifikasi Tendik. Kamu bisa masuk setelah pendaftaran
+                  disetujui.
                 </p>
               </div>
             ) : null}
@@ -326,10 +351,24 @@ export default function LoginPage() {
             {error ? (
               <div
                 role="alert"
-                className="mt-5 flex items-start gap-2.5 rounded-input border border-coral-200 bg-coral-50 px-3.5 py-3 text-xs text-coral-700 animate-slide-up"
+                className={cn(
+                  "mt-5 flex items-start gap-2.5 rounded-input border px-3.5 py-3 text-xs animate-slide-up",
+                  errorKind === "pending"
+                    ? "border-amber-200 bg-amber-50 text-amber-800"
+                    : "border-coral-200 bg-coral-50 text-coral-700",
+                )}
               >
-                <AlertCircle className="mt-0.5 size-4 shrink-0" />
-                <p>{error}</p>
+                {errorKind === "pending" ? (
+                  <Clock3 className="mt-0.5 size-4 shrink-0" />
+                ) : errorKind === "rejected" ? (
+                  <XCircle className="mt-0.5 size-4 shrink-0" />
+                ) : (
+                  <AlertCircle className="mt-0.5 size-4 shrink-0" />
+                )}
+                <div className="min-w-0">
+                  <p className="font-bold">{LOGIN_ERROR_TITLE[errorKind]}</p>
+                  <p className="mt-0.5 leading-relaxed">{error}</p>
+                </div>
               </div>
             ) : null}
 
